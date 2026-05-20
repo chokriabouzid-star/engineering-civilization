@@ -377,7 +377,7 @@ impl IterativePipeline {
                 .record_from_builder(builder)
                 .expect("record in memory");
 
-            let node = self.memory.get(node_id).unwrap().clone();
+            let node = self.memory.get(node_id).expect("node just recorded must exist").clone();
 
             // ─── Step 7: Track attempt ─────────────────────────
             attempts.push(AttemptRecord {
@@ -490,11 +490,11 @@ fn build_epistemic_from_fitness(fitness: &FitnessVector) -> EpistemicState {
 
     EpistemicState::new(
         avg_score.clamp(0.3, 0.95),
-        Evidence::new(1, 0, avg_score, 0.8).unwrap(),
-        UncertaintyDecomposition::new(0.2, 0.2, 0.1).unwrap(),
+        Evidence::new(1, 0, avg_score, 0.8).expect("valid evidence"),
+        UncertaintyDecomposition::new(0.2, 0.2, 0.1).expect("valid uncertainty"),
         CalibrationState::default(),
     )
-    .unwrap()
+    .expect("valid epistemic state")
 }
 
 /// بناء EpistemicState من RealityVector.

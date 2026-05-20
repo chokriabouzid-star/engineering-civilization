@@ -31,7 +31,12 @@ impl ConservativePropagation for ConservativeCombiner {
                 .map(|s| s.evidence.clone())
                 .collect::<Vec<_>>(),
         )
-        .unwrap();
+        .ok_or(EpistemicError::OutOfRange {
+            field: "evidence",
+            value: 0.0,
+            min: 1.0,
+            max: f64::INFINITY,
+        })?;
         let aleatoric = states
             .iter()
             .map(|s| s.uncertainty.aleatoric.powi(2))

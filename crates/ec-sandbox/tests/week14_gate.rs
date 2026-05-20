@@ -16,6 +16,7 @@ use ec_sandbox::*;
 // ─── Gate 1: Docker compiles and runs real Rust ──────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_docker_compiles_and_runs_real_rust() {
     let config = SandboxConfig::new(SandboxMode::Docker);
     let executor = SandboxExecutor::new(config).unwrap();
@@ -33,6 +34,7 @@ fn gate_docker_compiles_and_runs_real_rust() {
 // ─── Gate 2: RealityVector من تنفيذ فعلي ────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_reality_vector_from_real_execution() {
     let config = SandboxConfig::new(SandboxMode::Docker);
     let executor = SandboxExecutor::new(config).unwrap();
@@ -54,6 +56,7 @@ fn gate_reality_vector_from_real_execution() {
 // ─── Gate 3: Correctness ─────────────────────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_correct_program_produces_trustworthy_reality() {
     let mut config = SandboxConfig::new(SandboxMode::Docker);
     config.runs_for_reproducibility = 3;
@@ -83,6 +86,7 @@ fn gate_correct_program_produces_trustworthy_reality() {
 // ─── Gate 4: Compilation failure handled cleanly ─────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_compilation_failure_handled() {
     let config = SandboxConfig::new(SandboxMode::Docker);
     let executor = SandboxExecutor::new(config).unwrap();
@@ -102,6 +106,7 @@ fn gate_compilation_failure_handled() {
 // ─── Gate 5: Real latency measurement ────────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_real_latency_measured() {
     let mut config = SandboxConfig::new(SandboxMode::Docker);
     config.runs_for_reproducibility = 3;
@@ -125,6 +130,7 @@ fn gate_real_latency_measured() {
 // ─── Gate 6: Reproducibility from real hash comparison ───────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_reproducibility_from_hash_comparison() {
     let mut config = SandboxConfig::new(SandboxMode::Docker);
     config.runs_for_reproducibility = 3;
@@ -149,6 +155,7 @@ fn gate_reproducibility_from_hash_comparison() {
 // ─── Gate 7: Empirical confidence formula ────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_empirical_confidence_from_runs() {
     let mut config1 = SandboxConfig::new(SandboxMode::Docker);
     config1.runs_for_reproducibility = 1;
@@ -184,6 +191,7 @@ fn gate_empirical_confidence_from_runs() {
 // ─── Gate 8: Escape Vector 1 — /proc/sysrq-trigger ──────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_escape_vector_1_proc_sysrq() {
     // محاولة الوصول لـ /proc/sysrq-trigger
     // يجب أن تفشل: /proc غير مُعرَّض داخل container
@@ -219,6 +227,7 @@ fn main() {
 // ─── Gate 9: Escape Vector 2 — mount syscall ─────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_escape_vector_2_mount_syscall() {
     // محاولة mount — محظورة بـ --cap-drop ALL
     let config = SandboxConfig::new(SandboxMode::Docker);
@@ -249,6 +258,7 @@ fn main() {
 // ─── Gate 10: Escape Vector 3 — ptrace ──────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_escape_vector_3_ptrace() {
     // محاولة ptrace — محظورة بـ --cap-drop ALL + no-new-privileges
     let config = SandboxConfig::new(SandboxMode::Docker);
@@ -280,6 +290,7 @@ fn main() {
 // ─── Gate 11: Escape Vector 4 — /dev/mem ────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_escape_vector_4_dev_mem() {
     // محاولة الوصول لـ /dev/mem
     let config = SandboxConfig::new(SandboxMode::Docker);
@@ -307,6 +318,7 @@ fn main() {
 // ─── Gate 12: Escape Vector 5 — fork bomb (resource exhaustion) ──────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_escape_vector_5_fork_bomb() {
     // fork bomb — memory limit يقطعه
     let mut config = SandboxConfig::new(SandboxMode::Docker);
@@ -345,6 +357,7 @@ fn main() {
 // ─── Gate 13: 20 executions — 0 escapes ─────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_zero_escapes_in_20_executions() {
     let config = SandboxConfig::new(SandboxMode::Docker);
     let executor = SandboxExecutor::new(config).unwrap();
@@ -405,6 +418,7 @@ fn gate_simulated_mode_unchanged() {
 // ─── Final Gate ───────────────────────────────────────────────────────
 
 #[test]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn week14_gate_complete() {
     println!("=== WEEK 14 GATE ===");
 

@@ -137,7 +137,7 @@ impl<'a> HistoricalDriftAnalyzer<'a> {
 
         let baseline_avg = average_fitness(&baseline_vecs);
         let current_avg  = average_fitness(&current_vecs);
-        let angle = cosine_angle_degrees(&baseline_avg, &current_avg);
+        let angle = baseline_avg.cosine_angle_degrees(&current_avg);
 
         // معدل الرفض
         let baseline_rejections = baseline_nodes
@@ -197,38 +197,6 @@ fn average_fitness(vectors: &[&FitnessVector]) -> FitnessVector {
         architectural_stability:
             vectors.iter().map(|v| v.architectural_stability).sum::<f64>() / n,
     }
-}
-
-fn cosine_angle_degrees(a: &FitnessVector, b: &FitnessVector) -> f64 {
-    let dot = a.security * b.security
-        + a.reversibility * b.reversibility
-        + a.test_coverage * b.test_coverage
-        + a.maintainability * b.maintainability
-        + a.performance * b.performance
-        + a.architectural_stability * b.architectural_stability;
-
-    let mag_a = (a.security.powi(2)
-        + a.reversibility.powi(2)
-        + a.test_coverage.powi(2)
-        + a.maintainability.powi(2)
-        + a.performance.powi(2)
-        + a.architectural_stability.powi(2))
-        .sqrt();
-
-    let mag_b = (b.security.powi(2)
-        + b.reversibility.powi(2)
-        + b.test_coverage.powi(2)
-        + b.maintainability.powi(2)
-        + b.performance.powi(2)
-        + b.architectural_stability.powi(2))
-        .sqrt();
-
-    if mag_a < 1e-10 || mag_b < 1e-10 {
-        return 0.0;
-    }
-
-    let cosine = (dot / (mag_a * mag_b)).clamp(-1.0, 1.0);
-    cosine.acos().to_degrees()
 }
 
 fn classify(

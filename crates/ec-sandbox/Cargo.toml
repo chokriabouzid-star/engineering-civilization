@@ -19,3 +19,6 @@ rand              = "0.8"
 [dev-dependencies]
 ec-epistemic = { path = "../ec-epistemic" }
 proptest     = "1.6"
+
+[features]
+slow_tests = []
