@@ -15,7 +15,7 @@ proptest! {
             c.record(p, a).unwrap();
         }
         let ece = c.ece();
-        prop_assert!(ece >= 0.0 && ece <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&ece));
     }
 
     #[test]
