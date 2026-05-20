@@ -1,3 +1,4 @@
+#![allow(clippy::field_reassign_with_default)]
 #![deny(warnings)]
 #![forbid(unsafe_code)]
 

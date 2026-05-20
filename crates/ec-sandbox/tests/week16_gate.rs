@@ -203,7 +203,7 @@ fn gate_zero_escapes_in_100_executions() {
     let mut escape_count = 0;
     let total = 100;
 
-    let codes = vec![
+    let codes = [
         r#"fn main() { println!("ok"); }"#,
         r#"fn main() { let x = 42; println!("{}", x); }"#,
         r#"fn main() { for i in 0..10 { print!("{} ", i); } println!(); }"#,

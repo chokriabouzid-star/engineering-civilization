@@ -5,7 +5,6 @@
 //!
 //! الشروط الإلزامية لإتمام Phase 2.
 
-use ec_analysis;
 use ec_app::pipeline::{
     IntegrationPipeline,
     build_epistemic_from_reality,
