@@ -23,6 +23,9 @@ pub mod graph;
 /// استعلامات الذاكرة (Week 23).
 pub mod query;
 
+/// تخزين SQLite (Week 27).
+pub mod storage;
+
 pub use graph::{CausalMemoryGraph, MemoryError};
 pub use node::{DecisionNode, DecisionNodeBuilder, RejectedAlternative, SandboxOutcome};
 pub use query::{
@@ -35,6 +38,8 @@ pub use types::{
 
 /// كشف الانجراف القيمي من الذاكرة التاريخية (Week 24).
 pub mod drift;
+
+pub use storage::{MemoryStorage, SqliteStorage, StorageError};
 
 pub use drift::{
     DriftAction, DriftClassification, DriftReport,

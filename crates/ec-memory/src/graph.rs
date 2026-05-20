@@ -39,6 +39,13 @@ impl CausalMemoryGraph {
         Self { nodes: Vec::new() }
     }
 
+    /// إنشاء من عقد محملة (pub(crate) — للتخزين فقط).
+    ///
+    /// يتجاوز validate_acyclic لأن البيانات خُزنت بعد التحقق.
+    pub(crate) fn from_nodes(nodes: Vec<DecisionNode>) -> Self {
+        Self { nodes }
+    }
+
     /// عدد القرارات المُسجلة.
     pub fn len(&self) -> usize {
         self.nodes.len()

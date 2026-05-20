@@ -21,6 +21,16 @@ impl NodeId {
     pub fn from_uuid(uuid: Uuid) -> Self {
         Self(uuid)
     }
+
+    /// UUID الكامل كنص (للتخزين).
+    pub fn to_uuid_string(&self) -> String {
+        self.0.to_string()
+    }
+
+    /// تحليل UUID من نص.
+    pub fn parse_uuid_str(s: &str) -> Option<Self> {
+        Uuid::parse_str(s).ok().map(Self)
+    }
 }
 
 impl Default for NodeId {
@@ -42,13 +52,37 @@ pub type ArtifactHash = u64;
 ///
 /// **Design:** نستخدم Arc<str> لتجنب تكرار الكود.
 /// آلاف القرارات قد تشير لنفس الكود.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArtifactSnapshot {
     /// تجزئة المحتوى.
     pub hash: ArtifactHash,
     /// الكود الفعلي (shared ownership).
-    #[serde(skip)]  // لا نخزن الكود في JSON — فقط hash
     pub code: Arc<str>,
+}
+
+impl Serialize for ArtifactSnapshot {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut s = serializer.serialize_struct("ArtifactSnapshot", 2)?;
+        s.serialize_field("hash", &self.hash)?;
+        s.serialize_field("code", &*self.code)?;
+        s.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for ArtifactSnapshot {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        struct Helper {
+            hash: ArtifactHash,
+            code: String,
+        }
+        let h = Helper::deserialize(deserializer)?;
+        Ok(Self {
+            hash: h.hash,
+            code: Arc::from(h.code.as_str()),
+        })
+    }
 }
 
 impl ArtifactSnapshot {
