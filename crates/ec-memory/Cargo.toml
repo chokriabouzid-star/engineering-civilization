@@ -1,0 +1,21 @@
+[package]
+name = "ec-memory"
+version = "0.1.0"
+edition = "2021"
+description = "Causal Memory – append-only decision graph"
+
+[dependencies]
+ec-fitness        = { path = "../ec-fitness" }
+serde             = { version = "1.0", features = ["derive"] }
+thiserror         = "2.0"
+anyhow            = "1.0"
+uuid              = { version = "1.6", features = ["v4", "serde"] }
+chrono            = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+rand     = "0.8"
+proptest = "1.6"
+
+[[test]]
+name = "week23_gate"
+path = "tests/week23_gate.rs"

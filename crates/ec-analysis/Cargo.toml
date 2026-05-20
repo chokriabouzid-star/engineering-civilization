@@ -1,0 +1,10 @@
+[package]
+name = "ec-analysis"
+version = "0.1.0"
+edition = "2021"
+description = "Static code analysis"
+
+[dependencies]
+ec-fitness = { path = "../ec-fitness" }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"

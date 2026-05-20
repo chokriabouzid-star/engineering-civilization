@@ -1,0 +1,51 @@
+{
+  "defaultAction": "SCMP_ACT_ERRNO",
+  "architectures": ["SCMP_ARCH_X86_64"],
+  "syscalls": [
+    {
+      "names": [
+        "read", "write", "open", "openat", "close",
+        "stat", "fstat", "lstat", "poll", "lseek",
+        "mmap", "mprotect", "munmap", "brk",
+        "rt_sigaction", "rt_sigprocmask", "rt_sigreturn",
+        "ioctl", "access", "pipe", "select", "sched_yield",
+        "mremap", "msync", "mincore", "madvise",
+        "dup", "dup2", "nanosleep", "getitimer",
+        "alarm", "setitimer", "getpid", "sendfile",
+        "socket", "connect", "accept", "sendto", "recvfrom",
+        "shutdown", "bind", "listen", "getsockname",
+        "getpeername", "socketpair", "setsockopt", "getsockopt",
+        "clone", "fork", "vfork", "execve",
+        "exit", "wait4", "kill", "uname",
+        "fcntl", "flock", "fsync", "fdatasync",
+        "truncate", "ftruncate", "getdents", "getcwd",
+        "chdir", "rename", "mkdir", "rmdir",
+        "creat", "link", "unlink", "symlink",
+        "readlink", "chmod", "fchmod", "chown",
+        "fchown", "lchown", "umask", "gettimeofday",
+        "getrlimit", "getrusage", "sysinfo", "times",
+        "getuid", "getgid", "geteuid", "getegid",
+        "setuid", "setgid", "getgroups",
+        "getppid", "getpgrp", "setsid",
+        "arch_prctl", "setrlimit", "sync",
+        "gettid", "futex", "sched_getaffinity",
+        "set_tid_address", "clock_gettime", "clock_getres",
+        "clock_nanosleep", "exit_group", "epoll_wait",
+        "epoll_ctl", "tgkill", "utimes",
+        "waitid", "ioprio_set", "ioprio_get",
+        "openat2", "newfstatat", "getdents64",
+        "set_robust_list", "get_robust_list",
+        "splice", "tee", "sync_file_range",
+        "vmsplice", "move_pages", "utimensat",
+        "epoll_pwait", "signalfd", "timerfd_create",
+        "eventfd", "fallocate", "timerfd_settime",
+        "timerfd_gettime", "accept4", "signalfd4",
+        "eventfd2", "epoll_create1", "dup3", "pipe2",
+        "preadv", "pwritev", "prlimit64",
+        "getrandom", "memfd_create", "statx",
+        "rseq", "mlock", "munlock", "mlockall", "munlockall"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    }
+  ]
+}

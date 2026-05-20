@@ -1,0 +1,38 @@
+[workspace]
+members = [
+    "crates/ec-fitness",
+    "crates/ec-epistemic",
+    "crates/ec-constitutional",
+    "crates/ec-sandbox",
+    "crates/ec-app",
+    "crates/ec-analysis",
+    "crates/ec-memory",
+    "crates/ec-codegen",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+serde        = { version = "1.0", features = ["derive"] }
+serde_json   = "1.0"
+proptest     = "1.6"
+thiserror    = "2.0"
+chrono       = { version = "0.4", features = ["serde"] }
+tokio        = { version = "1.35", features = ["full"] }
+anyhow       = "1.0"
+uuid         = { version = "1.6", features = ["v4", "serde"] }
+rand         = "0.8"
+sha2         = "0.10"
+
+ec-fitness         = { path = "crates/ec-fitness" }
+ec-epistemic       = { path = "crates/ec-epistemic" }
+ec-constitutional  = { path = "crates/ec-constitutional" }
+ec-sandbox         = { path = "crates/ec-sandbox" }
+ec-app             = { path = "crates/ec-app" }
+ec-analysis        = { path = "crates/ec-analysis" }
+ec-memory          = { path = "crates/ec-memory" }
+ec-codegen         = { path = "crates/ec-codegen" }

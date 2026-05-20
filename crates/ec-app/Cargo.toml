@@ -1,0 +1,19 @@
+[package]
+name = "ec-app"
+version = "0.1.0"
+edition = "2021"
+description = "Integration pipeline"
+
+[dependencies]
+ec-fitness = { path = "../ec-fitness" }
+ec-epistemic = { path = "../ec-epistemic" }
+ec-constitutional = { path = "../ec-constitutional" }
+ec-sandbox = { path = "../ec-sandbox" }
+ec-analysis = { path = "../ec-analysis" }
+ec-codegen = { path = "../ec-codegen" }
+ec-memory = { path = "../ec-memory" }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+anyhow = "1.0"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }

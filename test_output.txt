@@ -1,0 +1,288 @@
+   Compiling ec-sandbox v0.1.0 (/home/chokribouzid/projects/engineering-civilization/crates/ec-sandbox)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.53s
+     Running unittests src/lib.rs (target/debug/deps/ec_constitutional-ebcd6033e11e9f11)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/phase_0_gate.rs (target/debug/deps/phase_0_gate-d882774e2656ed94)
+
+running 1 test
+test phase_0_gate_test ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/week10_integration.rs (target/debug/deps/week10_integration-87db19b83df8dc5a)
+
+running 10 tests
+test scenario_3_temporal_decay_reduces_confidence ... ok
+test scenario_4_conservative_propagation ... ok
+test scenario_2_constitution_learns_from_reality ... ok
+test scenario_1_epistemic_flows_through_evaluation ... ok
+test scenario_10_multi_artifact_comparison ... ok
+test scenario_6_value_drift_detector ... ok
+test scenario_9_full_pipeline_intent_to_learning ... ok
+test scenario_8_cache_frontier_pareto_integration ... ok
+test scenario_5_ossification_detector ... ok
+test scenario_7_policy_set_loads_from_toml ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/week11_fuzzing.rs (target/debug/deps/week11_fuzzing-ccea4f2cbd1e8c18)
+
+running 4 tests
+test validate_fitness_vector_catches_invalid ... ok
+test fuzz_artifact_id_never_panics ... ok
+test fuzz_epistemic_confidence_never_panics ... ok
+test fuzz_fitness_vector_never_panics ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/week3_gate.rs (target/debug/deps/week3_gate-5a3d66822e15150c)
+
+running 4 tests
+test epistemic_uncertainty_should_not_crash ... ok
+test catastrophic_security_should_be_rejected ... ok
+test low_coverage_should_be_rejected ... ok
+test secure_artifact_should_be_accepted ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/week4_integration.rs (target/debug/deps/week4_integration-65e55d0c1273ab75)
+
+running 5 tests
+test safe_artifact_should_pass ... ok
+test catastrophic_artifact_should_fail ... ok
+test pareto_comparison_should_work ... ok
+test uncertainty_should_propagate ... ok
+test frontier_should_exclude_dominated ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/week5_engine.rs (target/debug/deps/week5_engine-574972db86304d01)
+
+running 17 tests
+test cache_hit_is_fast ... ok
+test cache_miss_then_hit ... ok
+test cache_different_hashes_are_independent ... ok
+test engine_compare_equal_fitness_vectors ... ok
+test engine_creates_with_default_cache ... ok
+test engine_evaluate_catastrophic_security ... ok
+test engine_evaluate_stores_artifact_id ... ok
+test engine_evaluate_valid_artifact ... ok
+test engine_frontier_excludes_invalid ... ok
+test concurrent_access_no_deadlocks ... ok
+test engine_version_is_unique ... ok
+test engine_frontier_single_valid ... ok
+test single_evaluation_under_1ms ... ok
+test cache_purge_removes_expired ... ok
+test cache_ttl_expires_and_reevaluates ... ok
+test test_100_simultaneous_evaluations ... ok
+test load_test_1000_evaluations_per_second ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running tests/week6_meta.rs (target/debug/deps/week6_meta-708d8e028ef10e64)
+
+running 10 tests
+test drift_45_degrees_simple ... ok
+test drift_90_degrees_simple ... ok
+test drift_complex_vector_triggers_review ... ok
+test drift_no_drift_when_identical ... ok
+test drift_no_samples ... ok
+test ossification_all_rejected ... ok
+test ossification_all_accepted ... ok
+test ossification_no_evaluations ... ok
+test ossification_mixed_rate ... ok
+test ossification_triggers_above_threshold ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/week7_hybrid.rs (target/debug/deps/week7_hybrid-05f934efdcaa131a)
+
+running 6 tests
+test learn_correct_prediction_invalid ... ok
+test learn_correct_prediction_valid ... ok
+test learn_incorrect_prediction_false_negative ... ok
+test learn_incorrect_prediction_false_positive ... ok
+test policy_set_fails_on_invalid_toml ... ok
+test policy_set_loads_from_valid_toml ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/week9_edge_cases.rs (target/debug/deps/week9_edge_cases-57696bdbf3220fd8)
+
+running 10 tests
+test duplicate_artifact_ids ... ok
+test extremely_high_values ... ok
+test empty_artifact_id ... ok
+test all_dimensions_catastrophic ... ok
+test extremely_small_positive_values ... ok
+test nan_in_fitness_vector ... ok
+test negative_fitness_values ... ok
+test invalid_toml_policy ... ok
+test valid_toml_wrong_types ... ok
+test frontier_with_1000_artifacts ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running unittests src/lib.rs (target/debug/deps/ec_epistemic-b0f49cc1f24296cd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/calibration_props.rs (target/debug/deps/calibration_props-7d8a871edeb08e80)
+
+running 3 tests
+test worst_case_is_high_ece ... ok
+test perfect_calibration_has_zero_ece ... ok
+test ece_in_range ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.52s
+
+     Running tests/epistemic_props.rs (target/debug/deps/epistemic_props-5e9cd32379bc4054)
+
+running 4 tests
+test decay_never_increases_confidence ... ok
+test decay_zero_is_identity ... ok
+test combine_total_uncertainty_is_monotone ... ok
+test combine_is_conservative_confidence ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running unittests src/lib.rs (target/debug/deps/ec_fitness-52698b9b51fb2e0e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/ec_sandbox-cc675a248c4dc409)
+
+running 52 tests
+test compiler::tests::fails_on_syntax_error ... ok
+test compiler::tests::compiles_hello_world ... ok
+test config::tests::default_config_is_valid ... ok
+test config::tests::default_mode_is_simulated ... ok
+test config::tests::default_network_is_isolated ... ok
+test config::tests::invalid_cpu_percent_fails ... ok
+test config::tests::zero_memory_fails ... ok
+test compiler::tests::network_access_fails_inside_container ... ok
+test docker::tests::docker_available ... ok
+test docker::tests::docker_network_is_isolated ... ok
+test docker::tests::docker_runner_default_values ... ok
+test docker::tests::docker_compiles_hello_world ... ok
+test docker::tests::docker_runs_echo ... ok
+test compiler::tests::deterministic_output_has_same_hash ... ok
+test compiler::tests::runs_multiple_times ... ok
+test executor::tests::docker_fails_on_invalid_code ... ok
+test docker::tests::docker_workspace_tmpfs_is_writable ... ok
+test executor::tests::executor_creation_validates_config ... ok
+test executor::tests::local_execution_not_implemented_yet ... ok
+test executor::tests::simulated_execution_detects_escape_attempt ... ok
+test executor::tests::simulated_execution_detects_unsafe_syscall ... ok
+test executor::tests::simulated_execution_fails_for_fail_artifact ... ok
+test executor::tests::simulated_execution_measures_latency ... ok
+test executor::tests::simulated_execution_reports_flaky_reproducibility ... ok
+test executor::tests::simulated_execution_succeeds_for_normal_artifact ... ok
+test metrics::tests::compute_metrics_all_succeeded ... ok
+test metrics::tests::compute_metrics_partial_failure ... ok
+test metrics::tests::different_outputs_reduce_reproducibility ... ok
+test metrics::tests::empty_runs_gives_zero_reproducibility ... ok
+test metrics::tests::identical_runs_give_full_reproducibility ... ok
+test metrics::tests::latency_extracted_correctly ... ok
+test metrics::tests::single_failed_run_gives_zero_reproducibility ... ok
+test metrics::tests::single_successful_run_gives_full_reproducibility ... ok
+test reality::tests::empirical_confidence_formula_verification ... ok
+test reality::tests::latency_from_empty_samples_returns_none ... ok
+test reality::tests::latency_from_single_sample ... ok
+test reality::tests::latency_percentiles_are_sorted ... ok
+test reality::tests::reality_vector_empirical_confidence_increases_with_runs ... ok
+test reality::tests::reality_vector_is_correct_when_correctness_high ... ok
+test reality::tests::reality_vector_is_not_correct_when_correctness_low ... ok
+test reality::tests::reality_vector_is_reproducible_when_high ... ok
+test reality::tests::reality_vector_rejects_invalid_correctness ... ok
+test reality::tests::reality_vector_rejects_zero_runs ... ok
+test reality::tests::reality_vector_trustworthy_requires_all_criteria ... ok
+test security::tests::forbidden_syscall_is_not_catastrophic ... ok
+test security::tests::resource_limit_is_not_catastrophic ... ok
+test security::tests::sandbox_escape_is_catastrophic ... ok
+test security::tests::unauthorized_file_access_is_catastrophic ... ok
+test security::tests::violation_description_is_informative ... ok
+test executor::tests::docker_compiles_and_runs_hello_world ... ok
+test executor::tests::docker_reproducibility_from_real_runs ... ok
+test executor::tests::docker_measures_real_latency ... ok
+
+test result: ok. 52 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.38s
+
+     Running tests/week13_gate.rs (target/debug/deps/week13_gate-ccc216c51f6b8893)
+
+running 18 tests
+test gate_default_config_is_valid ... ok
+test gate_detects_sandbox_escape_attempt ... ok
+test gate_detects_forbidden_syscall ... ok
+test gate_default_safe_syscalls_list ... ok
+test gate_empirical_confidence_increases_with_runs ... ok
+test gate_execution_measures_latency ... ok
+test gate_latency_measurement_from_samples ... ok
+test gate_multiple_executions_independent ... ok
+test gate_network_policies ... ok
+test gate_reality_vector_requires_executor ... ok
+test gate_reproducibility_measurement ... ok
+test gate_reality_vector_validates_ranges ... ok
+test gate_resource_limits_validation ... ok
+test gate_security_violation_descriptions ... ok
+test gate_simulated_execution_failing_artifact ... ok
+test gate_simulated_execution_flaky_artifact ... ok
+test gate_simulated_execution_normal_artifact ... ok
+test week13_gate_full_pipeline ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/week14_gate.rs (target/debug/deps/week14_gate-b8c76db421613958)
+
+running 15 tests
+test gate_compilation_failure_handled ... ok
+test gate_docker_compiles_and_runs_real_rust ... ok
+test gate_correct_program_produces_trustworthy_reality ... ok
+test gate_escape_vector_1_proc_sysrq ... ok
+test gate_empirical_confidence_from_runs ... ok
+test gate_escape_vector_3_ptrace ... ok
+test gate_escape_vector_2_mount_syscall ... ok
+test gate_escape_vector_4_dev_mem ... ok
+test gate_reality_vector_from_real_execution ... ok
+test gate_simulated_mode_unchanged ... ok
+test gate_real_latency_measured ... ok
+test gate_reproducibility_from_hash_comparison ... ok
+test gate_escape_vector_5_fork_bomb ... ok
+test week14_gate_complete ... ok
+test gate_zero_escapes_in_20_executions has been running for over 60 seconds
+test gate_zero_escapes_in_20_executions ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 127.04s
+
+   Doc-tests ec_constitutional
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ec_epistemic
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ec_fitness
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests ec_sandbox
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

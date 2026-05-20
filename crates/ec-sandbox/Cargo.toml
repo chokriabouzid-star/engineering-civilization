@@ -1,0 +1,21 @@
+[package]
+name = "ec-sandbox"
+version = "0.1.0"
+edition = "2021"
+description = "Sandbox execution"
+
+[dependencies]
+ec-fitness        = { path = "../ec-fitness" }
+ec-constitutional = { path = "../ec-constitutional" }
+serde             = { version = "1.0", features = ["derive"] }
+thiserror         = "2.0"
+anyhow            = "1.0"
+uuid              = { version = "1.6", features = ["v4", "serde"] }
+chrono            = { version = "0.4", features = ["serde"] }
+sha2              = "0.10"
+tokio             = { version = "1.35", features = ["full"] }
+rand              = "0.8"
+
+[dev-dependencies]
+ec-epistemic = { path = "../ec-epistemic" }
+proptest     = "1.6"

@@ -1,0 +1,11 @@
+[package]
+name = "ec-fitness"
+version = "0.1.0"
+edition = "2021"
+description = "Fitness Vector – 6-dimensional quality metrics with Pareto dominance"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+proptest = "1.6"
