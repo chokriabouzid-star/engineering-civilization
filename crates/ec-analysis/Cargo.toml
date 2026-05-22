@@ -8,3 +8,7 @@ description = "Static code analysis"
 ec-fitness = { path = "../ec-fitness" }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0"
+syn = { version = "2", features = ["full", "visit"] }
+
+[dev-dependencies]
+syn = { version = "2", features = ["full", "visit"] }
