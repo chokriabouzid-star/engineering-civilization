@@ -793,3 +793,135 @@ mod tests_iterative {
         assert!(result.total_iterations > 0);
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Week 41: Bayesian Integration — إضافة فقط
+// ═══════════════════════════════════════════════════════════════════
+
+/// بناء EpistemicState من BayesianEvidence + CalibrationState
+pub fn build_epistemic_from_bayesian(
+    evidence: &ec_epistemic::BayesianEvidence,
+    calibration: &CalibrationState,
+) -> EpistemicResult<EpistemicState> {
+    let raw_confidence = evidence.credible_confidence();
+    let adjusted = ec_epistemic::BayesianCalibration::adjusted_credible_confidence(
+        evidence, calibration,
+    );
+
+    EpistemicState::new(
+        adjusted.clamp(0.10, 0.95),
+        Evidence::new(
+            evidence.total_observations() as u64,
+            0,
+            evidence.mean_score,
+            raw_confidence,
+        )?,
+        UncertaintyDecomposition::new(0.2, 0.2, 0.1)?,
+        calibration.clone(),
+    )
+}
+
+/// نتيجة pipeline مع Bayesian confidence
+#[derive(Debug, Clone)]
+pub struct BayesianPipelineResult {
+    /// معرف التشغيل
+    pub run_id: Uuid,
+    /// Bayesian confidence (بعد التعديل)
+    pub bayesian_confidence: f64,
+    /// Wilson confidence (قبل التعديل)
+    pub raw_confidence: f64,
+    /// تشخيص المعايرة
+    pub calibration_diagnosis: ec_epistemic::CalibrationDiagnosis,
+    /// عدد المشاهدات
+    pub total_observations: u32,
+    /// الحكم
+    pub verdict: PipelineVerdict,
+}
+
+/// Pipeline مع Bayesian tracking
+pub struct BayesianPipeline {
+    engine: ConstitutionalEngine,
+    executor: SandboxExecutor,
+    tracker: ec_sandbox::BayesianTracker,
+    calibration: CalibrationState,
+}
+
+impl BayesianPipeline {
+    /// إنشاء pipeline جديد
+    pub fn new(constitution: Constitution) -> anyhow::Result<Self> {
+        let config = ec_sandbox::config::SandboxConfig::default();
+        let executor = SandboxExecutor::new(config)?;
+        let engine = ConstitutionalEngine::with_default_cache(constitution);
+        Ok(Self {
+            engine,
+            executor,
+            tracker: ec_sandbox::BayesianTracker::new(),
+            calibration: CalibrationState::default(),
+        })
+    }
+
+    /// تشغيل مع Bayesian tracking
+    pub fn run(&mut self, artifact_id: &str, code: &str) -> BayesianPipelineResult {
+        let run_id = Uuid::new_v4();
+
+        // Step 1: Analysis
+        let fitness = analyze_code(code);
+
+        // Step 2: Build Bayesian epistemic
+        let bayesian_evidence = self.tracker.evidence().clone();
+        let epistemic = build_epistemic_from_bayesian(
+            &bayesian_evidence, &self.calibration,
+        ).unwrap_or_else(|_| build_epistemic_from_fitness(&fitness));
+
+        // Step 3: Constitutional evaluation
+        let artifact_hash = hash_code(code);
+        let evaluation = self.engine.evaluate(
+            artifact_id, artifact_hash, &fitness, &epistemic,
+            &EvaluationContext::default(),
+        );
+
+        // Step 4: Sandbox
+        let execution = self.executor.execute(artifact_id, code);
+
+        // Step 5: Verdict
+        let verdict = determine_verdict(&evaluation, &execution);
+
+        // Step 6: Record outcome
+        let was_correct = matches!(verdict, PipelineVerdict::Accepted);
+        let score = if was_correct { 0.9 } else { 0.1 };
+        self.tracker.record(was_correct, score);
+
+        // Step 7: Record calibration
+        let actual = execution.reality.as_ref()
+            .map(|r| r.correctness)
+            .unwrap_or(0.0);
+        let predicted = evaluation.epistemic.confidence;
+        let _ = self.calibration.record(predicted, actual);
+
+        // Step 8: Diagnosis
+        let diagnosis = ec_epistemic::BayesianCalibration::diagnose(&self.calibration);
+        let raw_confidence = bayesian_evidence.credible_confidence();
+        let bayesian_confidence = ec_epistemic::BayesianCalibration::adjusted_credible_confidence(
+            self.tracker.evidence(), &self.calibration,
+        );
+
+        BayesianPipelineResult {
+            run_id,
+            bayesian_confidence,
+            raw_confidence,
+            calibration_diagnosis: diagnosis,
+            total_observations: self.tracker.total_observations(),
+            verdict,
+        }
+    }
+
+    /// Tracker reference
+    pub fn tracker(&self) -> &ec_sandbox::BayesianTracker {
+        &self.tracker
+    }
+
+    /// Calibration reference
+    pub fn calibration(&self) -> &CalibrationState {
+        &self.calibration
+    }
+}

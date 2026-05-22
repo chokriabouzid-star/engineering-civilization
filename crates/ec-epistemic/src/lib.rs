@@ -24,3 +24,5 @@ pub use error::*;
 pub use propagation::*;
 pub use state::*;
 pub use bayesian::BayesianEvidence;
+pub mod bayesian_calibration;
+pub use bayesian_calibration::{BayesianCalibration, CalibrationDiagnosis};
