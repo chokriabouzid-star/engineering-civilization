@@ -241,6 +241,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "ec-epistemic",
  "ec-fitness",
  "proptest",
  "rand 0.8.6",

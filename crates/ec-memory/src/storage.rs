@@ -118,7 +118,7 @@ impl SqliteStorage {
         })
     }
 
-    fn with_conn<F, T>(&self, f: F) -> Result<T, StorageError>
+    pub(crate) fn with_conn<F, T>(&self, f: F) -> Result<T, StorageError>
     where
         F: FnOnce(&rusqlite::Connection) -> Result<T, StorageError>,
     {

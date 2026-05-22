@@ -15,9 +15,12 @@ pub mod error;
 pub mod propagation;
 /// موديول تعريف الحالات الأساسية والأدلة وتحليل عدم اليقين.
 pub mod state;
+/// Week 35: Bayesian Evidence — إضافة فقط
+pub mod bayesian;
 
 pub use calibration::*;
 pub use decay::*;
 pub use error::*;
 pub use propagation::*;
 pub use state::*;
+pub use bayesian::BayesianEvidence;

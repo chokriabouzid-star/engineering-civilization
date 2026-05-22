@@ -5,6 +5,7 @@
 //! Safe execution environment with 5-layer security,
 //! reproducibility measurement, and reality feedback.
 
+pub mod bayesian;
 pub mod compiler;
 pub mod config;
 pub mod docker;
@@ -24,3 +25,4 @@ pub use executor::{ExecutionResult, SandboxExecutor};
 pub use feedback::{PredictionError, PredictionRecord, RealityFeedback};
 pub use reality::{LatencyMeasurement, RealityVector};
 pub use security::SecurityViolation;
+pub use bayesian::BayesianTracker;

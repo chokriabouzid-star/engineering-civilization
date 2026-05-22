@@ -45,3 +45,7 @@ pub use drift::{
     DriftAction, DriftClassification, DriftReport,
     HistoricalDriftAnalyzer,
 };
+pub mod outcome_storage;
+pub use outcome_storage::OutcomeStorage;
+pub mod bayesian_query;
+pub use bayesian_query::{BayesianQuery, BayesianSimilarDecision};
