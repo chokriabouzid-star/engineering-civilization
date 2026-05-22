@@ -226,6 +226,8 @@ text
 | D6 | Constitutional Primacy | فشل دستوري = رفض نهائي |
 | D7 | Persistent Memory | SQLite roundtrip guarantee |
 | D8 | Confidence Separate | ConfidenceVector/BayesianEvidence ≠ FitnessVector |
+| D9 | Bayesian Primacy | إذا N≥10 outcomes → credible_confidence() بدلاً من raw confidence |
+| D10 | Outcome Transparency | كل outcome يُخزَّن بالـ raw score قبل أي تحويل Bayesian |
 
 ---
 

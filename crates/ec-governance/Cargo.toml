@@ -1,0 +1,20 @@
+[package]
+name = "ec-governance"
+version = "0.1.0"
+edition = "2021"
+description = "Constitutional governance — proposals, audit, amendments"
+
+[dependencies]
+ec-fitness        = { path = "../ec-fitness" }
+ec-constitutional = { path = "../ec-constitutional" }
+ec-memory         = { path = "../ec-memory" }
+ec-epistemic      = { path = "../ec-epistemic" }
+uuid              = { version = "1.6", features = ["v4", "serde"] }
+chrono            = { version = "0.4", features = ["serde"] }
+serde             = { version = "1.0", features = ["derive"] }
+serde_json        = "1.0"
+thiserror         = "2.0"
+rusqlite          = { version = "0.31", features = ["bundled"] }
+
+[dev-dependencies]
+tempfile = "3.10"

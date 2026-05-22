@@ -8,6 +8,9 @@ members = [
     "crates/ec-analysis",
     "crates/ec-memory",
     "crates/ec-codegen",
+    "crates/ec-governance",
+    "crates/ec-api",
+    "crates/ec-cli",
 ]
 resolver = "2"
 
@@ -36,3 +39,6 @@ ec-app             = { path = "crates/ec-app" }
 ec-analysis        = { path = "crates/ec-analysis" }
 ec-memory          = { path = "crates/ec-memory" }
 ec-codegen         = { path = "crates/ec-codegen" }
+ec-governance       = { path = "crates/ec-governance" }
+ec-api              = { path = "crates/ec-api" }
+ec-cli              = { path = "crates/ec-cli" }
