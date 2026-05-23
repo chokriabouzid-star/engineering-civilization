@@ -4,8 +4,10 @@
 
 use clap::{Parser, Subcommand};
 use ec_analysis::analyze_code_full;
-use ec_memory::MemoryStorage;
 use std::path::PathBuf;
+use ec_memory::MemoryStorage;
+
+mod check;
 
 #[derive(Parser)]
 #[command(name = "ec", version, about = "Engineering Civilization CLI")]
@@ -19,8 +21,14 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// تحليل ملف كود Rust
+    /// تحليل ملف واحد
     Analyze {
+        path: PathBuf,
+        #[arg(long)] json: bool,
+        #[arg(long)] verbose: bool,
+    },
+    /// فحص مشروع كامل (مجلد)
+    Check {
         path: PathBuf,
         #[arg(long)] json: bool,
         #[arg(long)] verbose: bool,
@@ -68,10 +76,76 @@ fn main() {
 
     match cli.command {
         Commands::Analyze { path, json, verbose } => cmd_analyze(path, json, verbose),
+        Commands::Check { path, json, verbose } => cmd_check(path, json, verbose),
         Commands::Drift { baseline, window } => cmd_drift(&cli.db, baseline, window),
         Commands::Audit { limit } => cmd_audit(&cli.db, limit),
         Commands::Health => cmd_health(),
         Commands::Propose { action } => cmd_propose(&cli.db, action),
+    }
+}
+
+fn cmd_check(path: PathBuf, json: bool, verbose: bool) {
+    if !path.exists() {
+        eprintln!("❌ Path not found: {}", path.display());
+        std::process::exit(1);
+    }
+
+    let report = check::check_workspace(&path);
+
+    if json {
+        let violations: Vec<_> = report.violations.iter().map(|v| {
+            serde_json::json!({
+                "path": v.path,
+                "dimension": v.dimension,
+                "value": v.value,
+                "threshold": v.threshold,
+            })
+        }).collect();
+
+        println!("{}", serde_json::to_string_pretty(&serde_json::json!({
+            "files_scanned": report.files_scanned,
+            "files_passed": report.files_passed,
+            "files_failed": report.files_failed,
+            "project_score": format!("{:.3}", report.project_score),
+            "violations": violations,
+        })).unwrap());
+        return;
+    }
+
+    println!();
+    println!("╔══════════════════════════════════════════════════════════════╗");
+    println!("║  EC Workspace Check — {:39}║", path.display());
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    println!("║  Files scanned:  {:5}                                       ║", report.files_scanned);
+    println!("║  Files passed:   {:5}  ✅                                    ║", report.files_passed);
+    println!("║  Files failed:   {:5}  ❌                                    ║", report.files_failed);
+    println!("║  Project score:  {:.3} / 1.0                                  ║", report.project_score);
+    println!("╠══════════════════════════════════════════════════════════════╣");
+
+    if report.violations.is_empty() {
+        println!("║  🎉 All files pass constitutional thresholds!              ║");
+    } else {
+        println!("║  Constitutional Violations:                                ║");
+        for v in &report.violations {
+            let path_display = if v.path.len() > 42 {
+                format!("...{}", &v.path[v.path.len().saturating_sub(39)..])
+            } else {
+                v.path.clone()
+            };
+            println!("║    {:42} ║", path_display);
+            println!("║      {}={:.2} (threshold: {:.2})                             ║",
+                v.dimension, v.value, v.threshold);
+        }
+    }
+
+    println!("╚══════════════════════════════════════════════════════════════╝");
+    println!();
+
+    if verbose {
+        for v in &report.violations {
+            println!("  ❌ {} — {}={:.2} < {:.2}",
+                v.path, v.dimension, v.value, v.threshold);
+        }
     }
 }
 
@@ -210,8 +284,7 @@ fn cmd_propose(_db: &str, action: ProposeAction) {
             by,
         } => {
             println!("ℹ️  Submit via REST API:");
-            println!(
-                "   POST /api/v1/governance/proposals");
+            println!("   POST /api/v1/governance/proposals");
             println!(
                 "   {{ \"dimension\": \"{}\", \"current_value\": {}, \"proposed_value\": {}, \"justification\": \"{}\", \"proposed_by\": \"{}\" }}",
                 dimension, current, proposed, justification, by
