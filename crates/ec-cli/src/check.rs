@@ -19,6 +19,37 @@ pub struct FileViolation {
     pub threshold: f64,
 }
 
+/// حالة تجميع الأبعاد أثناء المسح
+struct DimensionTotals {
+    security: f64,
+    coverage: f64,
+    maintain: f64,
+    perf: f64,
+    stability: f64,
+    revers: f64,
+}
+
+impl DimensionTotals {
+    fn new() -> Self {
+        Self { security: 0.0, coverage: 0.0, maintain: 0.0, perf: 0.0, stability: 0.0, revers: 0.0 }
+    }
+
+    fn add(&mut self, security: f64, coverage: f64, maintain: f64, perf: f64, stability: f64, revers: f64) {
+        self.security += security;
+        self.coverage += coverage;
+        self.maintain += maintain;
+        self.perf += perf;
+        self.stability += stability;
+        self.revers += revers;
+    }
+
+    fn project_score(&self, n: usize) -> f64 {
+        if n == 0 { return 0.0; }
+        let nf = n as f64;
+        (self.security + self.coverage + self.maintain + self.perf + self.stability + self.revers) / (6.0 * nf)
+    }
+}
+
 /// فحص مجلد كامل (بشكل متكرر)
 pub fn check_workspace(root: &Path) -> WorkspaceReport {
     let mut report = WorkspaceReport {
@@ -28,66 +59,33 @@ pub fn check_workspace(root: &Path) -> WorkspaceReport {
         violations: vec![],
         project_score: 0.0,
     };
+    let mut totals = DimensionTotals::new();
 
-    let mut total_security = 0.0;
-    let mut total_coverage = 0.0;
-    let mut total_maintain = 0.0;
-    let mut total_perf = 0.0;
-    let mut total_stability = 0.0;
-    let mut total_revers = 0.0;
+    scan_dir(root, &mut report, &mut totals);
 
-    scan_dir(root, &mut report, &mut total_security, &mut total_coverage,
-             &mut total_maintain, &mut total_perf, &mut total_stability, &mut total_revers);
-
-    if report.files_scanned > 0 {
-        let n = report.files_scanned as f64;
-        report.project_score = (total_security + total_coverage + total_maintain
-            + total_perf + total_stability + total_revers) / (6.0 * n);
-    }
-
+    report.project_score = totals.project_score(report.files_scanned);
     report.files_passed = report.files_scanned - report.files_failed;
     report
 }
 
-fn scan_dir(
-    dir: &Path,
-    report: &mut WorkspaceReport,
-    total_security: &mut f64,
-    total_coverage: &mut f64,
-    total_maintain: &mut f64,
-    total_perf: &mut f64,
-    total_stability: &mut f64,
-    total_revers: &mut f64,
-) {
+fn scan_dir(dir: &Path, report: &mut WorkspaceReport, totals: &mut DimensionTotals) {
     if let Ok(entries) = std::fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                // تجاهل target/ و .git/
                 let name = path.file_name().unwrap_or_default().to_string_lossy();
                 if name == "target" || name == ".git" || name == "node_modules" {
                     continue;
                 }
-                scan_dir(&path, report, total_security, total_coverage,
-                         total_maintain, total_perf, total_stability, total_revers);
-            } else if path.extension().map_or(false, |e| e == "rs") {
-                analyze_file(&path, report, total_security, total_coverage,
-                             total_maintain, total_perf, total_stability, total_revers);
+                scan_dir(&path, report, totals);
+            } else if path.extension().is_some_and(|e| e == "rs") {
+                analyze_file(&path, report, totals);
             }
         }
     }
 }
 
-fn analyze_file(
-    path: &Path,
-    report: &mut WorkspaceReport,
-    total_security: &mut f64,
-    total_coverage: &mut f64,
-    total_maintain: &mut f64,
-    total_perf: &mut f64,
-    total_stability: &mut f64,
-    total_revers: &mut f64,
-) {
+fn analyze_file(path: &Path, report: &mut WorkspaceReport, totals: &mut DimensionTotals) {
     let code = match std::fs::read_to_string(path) {
         Ok(c) => c,
         Err(_) => return,
@@ -97,16 +95,10 @@ fn analyze_file(
     report.files_scanned += 1;
 
     let f = &result.fitness;
-    *total_security += f.security;
-    *total_coverage += f.test_coverage;
-    *total_maintain += f.maintainability;
-    *total_perf += f.performance;
-    *total_stability += f.architectural_stability;
-    *total_revers += f.reversibility;
+    totals.add(f.security, f.test_coverage, f.maintainability, f.performance, f.architectural_stability, f.reversibility);
 
     let path_str = path.to_string_lossy().to_string();
 
-    // فحص العتبات الدستورية
     let thresholds = [
         ("security", f.security, 0.70),
         ("test_coverage", f.test_coverage, 0.60),
@@ -125,7 +117,7 @@ fn analyze_file(
                 value,
                 threshold,
             });
-            break; // نسجل الملف مرة واحدة فقط
+            break;
         }
     }
 }
