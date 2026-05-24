@@ -1,22 +1,17 @@
 #![forbid(unsafe_code)]
-
 use syn::visit::Visit;
 
 pub struct CouplingVisitor {
     pub external_uses: usize,
     pub std_uses: usize,
-}
-
-impl Default for CouplingVisitor {
-    fn default() -> Self { Self::new() }
+    depth: usize,  // نعدّ فقط على مستوى الجذر
 }
 
 impl CouplingVisitor {
     pub fn new() -> Self {
-        Self { external_uses: 0, std_uses: 0 }
+        Self { external_uses: 0, std_uses: 0, depth: 0 }
     }
 
-    /// (architectural_stability_score, confidence)
     pub fn score(&self) -> (f64, f64) {
         let weighted = (self.external_uses as f64 * 0.12
             + self.std_uses as f64 * 0.03)
@@ -27,11 +22,17 @@ impl CouplingVisitor {
 
 impl<'ast> Visit<'ast> for CouplingVisitor {
     fn visit_use_path(&mut self, node: &'ast syn::UsePath) {
-        let root = node.ident.to_string();
-        match root.as_str() {
-            "std" | "core" | "alloc" => self.std_uses += 1,
-            _ => self.external_uses += 1,
+        // نُصنّف فقط على مستوى الجذر (depth == 0)
+        if self.depth == 0 {
+            let root = node.ident.to_string();
+            match root.as_str() {
+                "std" | "core" | "alloc" => self.std_uses += 1,
+                s if s.starts_with("ec_") => {}  // workspace — لا عقوبة
+                _ => self.external_uses += 1,
+            }
         }
+        self.depth += 1;
         syn::visit::visit_use_path(self, node);
+        self.depth -= 1;
     }
 }

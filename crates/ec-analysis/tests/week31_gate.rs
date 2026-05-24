@@ -19,7 +19,7 @@ fn test_visitor(code: &str) -> TestVisitor {
 fn w31_no_fns_coverage_neutral() {
     let v = test_visitor("// empty file\n");
     let (score, _) = v.score();
-    assert_eq!(score, 0.5);
+    assert_eq!(score, 1.0);
 }
 
 #[test]

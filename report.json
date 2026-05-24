@@ -1,0 +1,266 @@
+{
+  "files_failed": 43,
+  "files_passed": 4,
+  "files_scanned": 47,
+  "project_score": "0.668",
+  "violations": [
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/state_handlers.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/bench_suite.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/context/mod.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/context/scanner.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/context/builder.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/manifest.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/cost.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "reversibility",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/constraint_engine.rs",
+      "threshold": 0.3,
+      "value": 0.16000000000000003
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/cache.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/repair_strategy.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/decision.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/workspace_oracle.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/agent.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/provider_state.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/trajectory_index.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/failure.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/bench_cases.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/bench_compile.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/snapshot.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/lib.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/types.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/protocol.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "architectural_stability",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/provider.rs",
+      "threshold": 0.5,
+      "value": 0.19000000000000006
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/scaffold_engine.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/constitution.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/diagnostic.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/memory.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "architectural_stability",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/goal_parser.rs",
+      "threshold": 0.5,
+      "value": 0.49
+    },
+    {
+      "dimension": "architectural_stability",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/chunker.rs",
+      "threshold": 0.5,
+      "value": 0.10000000000000009
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/bench_realworld.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/main.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/environment.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/evaluator.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/executor.rs",
+      "threshold": 0.6,
+      "value": 0.5185185185185185
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/llm/live.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/llm/record.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/llm/key_pool.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/llm/mod.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/llm/replay.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/src/llm/limit_tracker.rs",
+      "threshold": 0.6,
+      "value": 0.5
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/bench_swe.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/fixtures/multi_file_bench/02_interface_change/initial/src/lib.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    },
+    {
+      "dimension": "test_coverage",
+      "path": "/home/chokribouzid/projects/active/sel-agent-v4/scratch/test_doc.rs",
+      "threshold": 0.6,
+      "value": 0.0
+    }
+  ]
+}

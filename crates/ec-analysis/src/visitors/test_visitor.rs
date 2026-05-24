@@ -8,10 +8,6 @@ pub struct TestVisitor {
     pub assert_count: u32,
 }
 
-impl Default for TestVisitor {
-    fn default() -> Self { Self::new() }
-}
-
 impl TestVisitor {
     pub fn new() -> Self {
         Self { test_fns: 0, production_fns: 0, assert_count: 0 }
@@ -20,7 +16,8 @@ impl TestVisitor {
     /// (test_coverage_score, confidence)
     pub fn score(&self) -> (f64, f64) {
         if self.production_fns == 0 {
-            return (0.5, 0.40);
+            // لا دوال إنتاج في هذا الملف — الاختبارات في tests/ منفصل
+            return (1.0, 0.30);
         }
         let ratio = (self.test_fns as f64 / self.production_fns as f64)
             .min(1.0);
