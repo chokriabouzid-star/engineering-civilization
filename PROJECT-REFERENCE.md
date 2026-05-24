@@ -1,5 +1,5 @@
-# Engineering Civilization — الوثيقة المرجعية النهائية
-## Week 56 · 11 crates · 662 tests · Phase 6 Complete
+# Engineering Civilization — الوثيقة المرجعية
+## v1.6 · Week 56+ · 662 tests · Production Ready
 
 ---
 
@@ -9,69 +9,43 @@
 0 clippy warnings (مع --tests)
 0 unwrap() في كود الإنتاج
 10 design invariants · 12 ADRs
-جميع المراحل مكتملة: Phase 1 → Phase 6
-
-text
-
-**المبادئ الثابتة:**
-
-| # | المبدأ | المعنى |
-|---|--------|--------|
-| 1 | الدستور أولاً | كل كود يُقيَّم دستورياً قبل القبول |
-| 2 | الحقيقة ≠ اللياقة | Fitness تنبؤ، Reality حقيقة |
-| 3 | الماضي لا يتغيّر | الذاكرة append-only |
-| 4 | التعلم من الخطأ | Prediction error → calibration |
-| 5 | باريتو للأفضليات | لا بُعد واحد يسيطر |
-| 6 | الثبات الدائم | القرارات تبقى بعد إغلاق البرنامج |
+ec check: 71/129 files passing · score 0.874
+pre-commit hook: نشط على sel-agent-v4
 
 ---
 
-## 2. هيكل المشروع
+## 2. ما الجديد في v1.6
 
-### الـ Workspace
-[workspace]
-members = [
-"crates/ec-fitness", # الأساس — اللياقة
-"crates/ec-epistemic", # الأساس — المعرفة
-"crates/ec-constitutional", # المحرك الدستوري
-"crates/ec-sandbox", # التنفيذ المعزول
-"crates/ec-analysis", # التحليل الثابت
-"crates/ec-memory", # الذاكرة السببية
-"crates/ec-codegen", # توليد الكود
-"crates/ec-app", # التطبيق الرئيسي
-"crates/ec-governance", # الحوكمة (Phase 6)
-"crates/ec-api", # REST API (Phase 6)
-"crates/ec-cli", # CLI (Phase 6)
-]
+### الإصلاحات الثلاثة (بعد الاستخدام الفعلي)
 
-text
+| # | الإصلاح | المشكلة | الأثر |
+|---|---------|---------|-------|
+| 1 | `CouplingVisitor` depth tracking | يعدّ sub-paths كـ external → Stability=0.000 زائف | 4 → 71 ملفاً ✅ |
+| 2 | `TestVisitor` no-fn case | ملفات بدون دوال → Coverage=0.500 زائف | false positives اختفت |
+| 3 | `w31_no_fns_coverage_neutral` | توقع قيمة قديمة 0.5 | 0 failed |
 
-### Dependency Graph
-ec-fitness ← (لا شيء)
-ec-epistemic ← (لا شيء)
-ec-constitutional ← ec-fitness, ec-epistemic
-ec-sandbox ← ec-fitness, ec-constitutional, ec-epistemic
-ec-analysis ← ec-fitness, syn
-ec-memory ← ec-fitness, ec-epistemic, rusqlite
-ec-codegen ← ec-fitness, ec-memory
-ec-governance ← ec-fitness, ec-constitutional, ec-memory, ec-epistemic
-ec-app ← الجميع
-ec-api ← ec-app, ec-governance, ec-analysis, ec-memory
-ec-cli ← ec-analysis, ec-governance, ec-memory
+### التحقق من الإصلاحات
 
-text
+```bash
+# قبل: Stability=0.000 على كل ملفات الـ kernel
+# بعد: Stability منطقي
+ec analyze crates/ec-constitutional/src/constitution.rs
+# Stability: 0.610 ✅
 
-### مبدأ الحدود الدلالية (ADR-020)
-Kernel (لا يتغير — لا async، لا HTTP، لا serde DTOs):
-ec-fitness, ec-epistemic, ec-constitutional
-ec-sandbox, ec-analysis, ec-memory, ec-codegen
+ec analyze crates/ec-memory/src/graph.rs
+# Stability: 0.400 (منطقي — يعتمد على uuid+chrono+rusqlite)
+```
 
-Interface layer (محوّلات فقط):
-ec-governance ← منطق حوكمة (sync)
-ec-api ← HTTP adapter (axum, async)
-ec-cli ← CLI adapter (clap)
+### النشر الفعلي
 
-text
+```bash
+# ec متاح من أي مكان
+export PATH="$PATH:/home/chokribouzid/projects/engineering-civilization/target/release"
+# في ~/.bashrc
+
+# pre-commit hook نشط على sel-agent-v4
+# يرفض: reversibility < 0.30 أو security < 0.70
+```
 
 ---
 
@@ -83,15 +57,15 @@ text
 
 **الأنواع:**
 - `FitnessVector` — 6 أبعاد [0,1]: security, reversibility, test_coverage, maintainability, performance, architectural_stability
-- `CatastropheThresholds` — عتبات لكل بُعد (defaults: security=0.70, reversibility=0.30, etc.)
+- `CatastropheThresholds` — عتبات لكل بُعد
 - `CatastrophicDimension` — enum للبُعد المتسبب بالكارثة
 - `ParetoOrdering` — Dominates | Dominated | Equal | NonDominated
 
 **الـ methods:**
 - `validate()` — كل بُعد finite وفي [0,1]
-- `cosine_similarity(&other) -> f64` — التشابه (1.0=متطابق)
-- `cosine_angle_degrees(&other) -> f64` — الزاوية بالدرجات
-- `pareto_compare(&other) -> ParetoOrdering` — مقارنة باريتو
+- `cosine_similarity(&other) -> f64`
+- `cosine_angle_degrees(&other) -> f64`
+- `pareto_compare(&other) -> ParetoOrdering`
 
 ---
 
@@ -103,20 +77,14 @@ text
 - `EpistemicState` — confidence + evidence + uncertainty + calibration
 - `Evidence` — sample_size + age_seconds + reproducibility + source_reliability
 - `UncertaintyDecomposition` — aleatoric + epistemic + model
-- `CalibrationState` — 10 bins + ECE + is_calibrated()
-- `CalibrationBin` — lower/upper/count/sum_predicted/sum_actual
+- `CalibrationState` — 10 bins + ECE
 
-**الأنواع Bayesian (Phase 5):**
+**الأنواع Bayesian:**
 - `BayesianEvidence` — successes + failures + mean_score + variance_estimate
-  - `initial_prior() -> EpistemicResult<Self>` — prior غير متحيز (0,0,0.5,0.8)
-  - `from_history(s, f, mean) -> EpistemicResult<Self>` — من تاريخ فعلي
-  - `update_with_outcome(correct, score) -> EpistemicResult<Self>` — Bayesian update
-  - `credible_confidence() -> f64` — Wilson score interval
-  - `total_observations() -> u32` — successes + failures
-- `BayesianCalibration` — تشخيص + تعديل الثقة
-  - `diagnose(&CalibrationState) -> CalibrationDiagnosis`
-  - `adjust_confidence(conf, diagnosis) -> f64`
-- `CalibrationDiagnosis` — WellCalibrated | Overconfident | Underconfident | InsufficientData
+  - `initial_prior()` — prior غير متحيز (0,0,0.5,0.8)
+  - `update_with_outcome(correct, score)` — Bayesian update
+  - `credible_confidence()` — Wilson score interval
+- `BayesianCalibration` — WellCalibrated | Overconfident | Underconfident | InsufficientData
 
 ---
 
@@ -124,408 +92,367 @@ text
 
 **الدور:** تقييم الكود ضد 8 ثوابت دستورية
 
-**الأنواع:**
-- `ConstitutionalEngine` — يحمل Constitution ويُقيّم
-- `Constitution` — مجموعة من `Arc<dyn Invariant>`
-- `Invariant` trait — `check(&FitnessVector, &EpistemicState) -> Result<(), ViolationReport>`
-- `ConstitutionalEvaluation` — {is_valid, results, fitness, verdict, catastrophic, epistemic, artifact_id, explanation}
-- `ConstitutionalVerdict` — Compliant | Violated {violations}
-- `ObservedOutcome` — correctness + reproducibility
-
-**الثوابت المُدمجة (8):**
-1. `SecurityInvariant` — security ≥ 0.70
-2. `ReversibilityInvariant` — reversibility ≥ 0.30
-3. `TestCoverageInvariant` — test_coverage ≥ 0.60
-4. `MaintainabilityInvariant` — maintainability ≥ 0.40
-5. `PerformanceInvariant` — performance ≥ 0.20
-6. `ArchitecturalStabilityInvariant` — architectural_stability ≥ 0.50
-7. `CatastrophePreventionInvariant` — لا بُعد تحت العتبة الكارثية
-8. `EpistemicConfidenceInvariant` — confidence ≥ 0.30
+**الثوابت المُدمجة:**
+1. SecurityInvariant — security ≥ 0.70
+2. ReversibilityInvariant — reversibility ≥ 0.30
+3. TestCoverageInvariant — test_coverage ≥ 0.60
+4. MaintainabilityInvariant — maintainability ≥ 0.40
+5. PerformanceInvariant — performance ≥ 0.20
+6. ArchitecturalStabilityInvariant — architectural_stability ≥ 0.50
+7. CatastrophePreventionInvariant
+8. EpistemicConfidenceInvariant — confidence ≥ 0.30
 
 ---
 
-### 3.4 `ec-sandbox` — بيئة التنفيذ المعزولة
+### 3.4 `ec-sandbox` — بيئة التنفيذ
 
 **الدور:** تنفيذ الكود في Docker + قياس RealityVector + Bayesian tracking
 
-**الأنواع الأساسية:**
-- `SandboxExecutor` — ينشئ/يُشغّل Docker containers
-- `SandboxConfig` — timeout, memory_limit, network_disabled, etc.
-- `SandboxMode` — Simulated | Docker | Hardened | Local
-- `ExecutionResult` — status, stdout, stderr, metrics, duration
+**الأنواع:**
+- `SandboxExecutor`, `SandboxConfig`, `SandboxMode`
 - `RealityVector` — correctness, reproducibility, empirical_confidence
-- `PredictionRecord` — predicted_validity + predicted_confidence
-- `PredictionError` — validity_error + confidence_error
-- `RealityFeedback` — يتعلم من التنبؤات ويقيس التحسن
-
-**الأنواع Bayesian (Phase 5):**
-- `BayesianTracker` — يتتبع outcomes بـ BayesianEvidence
-  - `new()` → prior غير متحيز
-  - `record(correct, score)` → تسجيل نتيجة
-  - `evidence() -> &BayesianEvidence`
-  - `credible_confidence() -> f64` — Wilson
-  - `has_sufficient_data() -> bool` — ≥5 مشاهدات
+- `RealityFeedback`, `PredictionError`, `PredictionRecord`
+- `BayesianTracker` — outcomes per artifact
 
 ---
 
-### 3.5 `ec-analysis` — التحليل الثابت
+### 3.5 `ec-analysis` — التحليل الثابت ⭐ (محدّث في v1.6)
 
 **الدور:** تحليل كود Rust → FitnessVector + ConfidenceVector
 
 **الواجهات:**
-- `analyze_code(code: &str) -> FitnessVector` — keyword heuristic (قديم، لا يتغير)
-- `analyze_code_full(code: &str) -> AnalysisReport` — syn AST (جديد)
+- `analyze_code(code: &str) -> FitnessVector` — قديمة، لا تتغير
+- `analyze_code_full(code: &str) -> AnalysisReport` — syn AST
 
 **الأنواع:**
 - `AnalysisReport` — {fitness, confidence, warnings, parse_successful}
 - `ConfidenceVector` — 6 أبعاد + `overall()` (min)
 - `AnalysisWarning` — ParseFailed | LowConfidence | UnsafeWithoutComment | HighComplexity
 
-**6 AST Visitors (Phase 4):**
-1. `UnsafeVisitor` — unsafe blocks/fns/impls/traits + doc comment discount (40%)
-2. `ComplexityVisitor` — cyclomatic complexity حقيقي (if, while, for, match, &&, ||, ?)
-3. `TestVisitor` — #[test] fns vs production fns + assert macros
-4. `CouplingVisitor` — use statements (std: 0.03 penalty, external: 0.12)
-5. `SideEffectVisitor` — println/eprintln, static mut
-6. `PerformanceVisitor` — allocations + clones
+**6 AST Visitors:**
+
+| Visitor | يقيس | Confidence |
+|---------|------|-----------|
+| `UnsafeVisitor` | unsafe blocks/fns + SAFETY comment discount | 0.95 (نظيف) / 0.90 (unsafe) |
+| `ComplexityVisitor` | cyclomatic complexity | 0.80 (لا دوال) / 0.88 |
+| `TestVisitor` ⭐ | test fns vs production fns | 0.30 (لا دوال إنتاج) / 0.25 (لا tests) / 0.50 |
+| `CouplingVisitor` ⭐ | use statements — root level فقط | 0.75 |
+| `SideEffectVisitor` | println, static mut | 0.70 |
+| `PerformanceVisitor` | allocations + clones | 0.75 |
+
+**تفاصيل الإصلاحات (v1.6):**
+
+```rust
+// CouplingVisitor — depth tracking (الإصلاح الرئيسي)
+impl<'ast> Visit<'ast> for CouplingVisitor {
+    fn visit_use_path(&mut self, node: &'ast syn::UsePath) {
+        if self.depth == 0 {  // ← root level فقط
+            match node.ident.to_string().as_str() {
+                "std" | "core" | "alloc" => self.std_uses += 1,
+                s if s.starts_with("ec_") => {}  // workspace — معفى
+                _ => self.external_uses += 1,
+            }
+        }
+        self.depth += 1;
+        syn::visit::visit_use_path(self, node);
+        self.depth -= 1;
+    }
+}
+
+// TestVisitor — لا دوال إنتاج = ليست مشكلة
+pub fn score(&self) -> (f64, f64) {
+    if self.production_fns == 0 {
+        return (1.0, 0.30);  // ← tests في files منفصلة
+    }
+    // ...
+}
+```
+
+**Calibration Dataset:**
+tests/fixtures/tier1_excellent/pure_math.rs  → score ≥ 0.75
+tests/fixtures/tier4_bad/unsafe_mess.rs      → score ≤ 0.50
 
 ---
 
 ### 3.6 `ec-memory` — الذاكرة السببية
 
-**الدور:** تخزين قرارات التصميم في DAG + استعلامات + انجراف + Bayesian queries
+**الدور:** DAG + استعلامات + انجراف + Bayesian queries + SQLite
 
 **الأنواع الأساسية:**
-- `CausalMemoryGraph` — DAG من DecisionNode (append-only)
-- `DecisionNode` — id, artifact_id, artifact, fitness, constitutional_valid, sandbox_outcome, causal_parents, created_at, retrospective_assessments
-- `NodeId` — Uuid wrapper
-- `ArtifactSnapshot` — code_hash + code (Arc<str>)
-- `DecisionNodeBuilder` — Builder pattern (D4)
-- `SandboxOutcome` — correctness + reproducibility + empirical_confidence
-- `RetrospectiveAssessment` — actual_validity + assessment_reason + assessed_at
-- `MemoryQuery` — استعلامات على الذاكرة
-- `SimilarDecision` — node_id + similarity + fitness + was_accepted
-- `HistoricalDriftAnalyzer` — تحليل الانجراف القيمي
-- `DriftReport` — classification + angle + details
+- `CausalMemoryGraph` — append-only DAG
+- `DecisionNode`, `DecisionNodeBuilder` (D4)
+- `NodeId`, `ArtifactSnapshot` (Arc<str>)
+- `SandboxOutcome`, `RetrospectiveAssessment`
+- `MemoryQuery`, `SimilarDecision`
+- `HistoricalDriftAnalyzer`, `DriftReport`
 - `DriftClassification` — Stable | LearningProgress | ValueShift | Corruption | InsufficientData
-- `DriftAction` — None | Monitor | ReviewConstitution | HumanIntervention
-- `SqliteStorage` — تنفيذ SQLite (D7)
-- `MemoryStorage` trait — save/load
+- `SqliteStorage`, `MemoryStorage` trait (D7)
 
-**الأنواع Bayesian (Phase 5):**
-- `OutcomeStorage` trait — record_outcome + load_evidence + load_all_evidence + outcome_count
-- `BayesianQuery<'a, S: OutcomeStorage>` — استعلامات مع Bayesian confidence
-  - `find_similar_with_confidence(target, k)` → Vec<BayesianSimilarDecision>
-  - `best_by_confidence(k)` → Vec<BayesianSimilarDecision>
-- `BayesianSimilarDecision` — node_id + artifact_id + similarity + bayesian_confidence + combined + fitness + was_accepted + total_observations
+**الأنواع Bayesian:**
+- `OutcomeStorage` trait — record_outcome + load_evidence
+- `BayesianQuery<S>` — find_similar_with_confidence + best_by_confidence
+- `BayesianSimilarDecision` — similarity + bayesian_confidence + combined
 
 **SQLite Schema:**
-- `decisions` table + `retrospective_assessments` table (Week 27)
-- `bayesian_outcomes` table (Phase 5)
+```sql
+decisions, retrospective_assessments, bayesian_outcomes
+```
 
 ---
 
 ### 3.7 `ec-codegen` — توليد الكود
 
-**الدور:** توليد كود Rust من مواصفات
-
 **الأنواع:**
-- `CodeGenerator` — يُنشئ كود من GenerationSpec
-- `GenerationSpec` — artifact_id + requirements + constraints + templates
-- `GenerationResult` — Success(code) | Failure(reason)
-- `CodeTemplate` trait — name + priority + generate(spec)
-- `GenerationSuccess` — code + template_used + generation_time
-- `FailureContext` — previous_attempts + failure_reasons
+- `CodeGenerator`, `GenerationSpec`, `GenerationResult`
+- `CodeTemplate` trait, `GenerationSuccess`, `FailureContext`
 
 ---
 
-### 3.8 `ec-governance` — الحوكمة الدستورية (Phase 6)
-
-**الدور:** إدارة الاقتراحات الدستورية + سجل تدقيق + ربط DriftReport
+### 3.8 `ec-governance` — الحوكمة الدستورية
 
 **الأنواع:**
-- `ConstitutionalProposal` — اقتراح تعديل دستوري (immutable بعد الإنشاء)
-- `ProposalOrigin` — Human {name} | System {trigger}
-- `SystemTrigger` — DriftDetected | OssificationDetected | BayesianCalibrationDrift
+- `ConstitutionalProposal` — Pending→Approved→Applied
+- `ProposalOrigin` — Human | System {trigger}
 - `ProposedChange` — AdjustThreshold | AddInvariant | RemoveInvariant | UpdatePolicy
-- `ThresholdDirection` — Tighten | Loosen
-- `ProposalStatus` — Pending | UnderReview | Approved | Rejected | Applied | Superseded
-- `ProposalStore` — append-only store للاقتراحات
-  - `submit()`, `approve()`, `reject()`, `mark_applied()`
-  - `pending()`, `approved_pending_application()`, `all()`, `find()`
-- `AuditLog` — سجل أحداث append-only
-  - `record(event, actor, context)`
-  - `all()`, `last_n()`, `for_proposal(id)`
-- `GovernanceEvent` — ProposalCreated | ProposalApproved | ProposalRejected | ProposalApplied | SystemAlertFired | ConstitutionAmended | HumanOverride
-- `GovernanceStorage` — SQLite persistence (proposals + audit_log tables)
-- `drift_trigger::propose_from_drift()` — DriftReport → Proposal تلقائي
+- `ProposalStore` — append-only
+- `AuditLog` — append-only, لا delete()
+- `GovernanceEvent` — كل أحداث الحوكمة
+- `GovernanceStorage` — SQLite
+- `drift_trigger::propose_from_drift()` — ربط تلقائي
 
 ---
 
-### 3.9 `ec-api` — REST API (Phase 6)
+### 3.9 `ec-api` — REST API
 
-**الدور:** طبقة نقل HTTP رفيعة — لا منطق عمل
+**11 endpoint:**
+POST   /api/v1/analyze
+POST   /api/v1/governance/proposals
+GET    /api/v1/governance/proposals
+PATCH  /api/v1/governance/proposals/:id/approve
+PATCH  /api/v1/governance/proposals/:id/reject
+GET    /api/v1/governance/audit
+GET    /api/v1/memory/nodes
+GET    /api/v1/memory/drift
+GET    /api/v1/memory/similar
+GET    /api/v1/health
 
-**الـ endpoints (11):**
-POST /api/v1/analyze ← AnalysisReport
-POST /api/v1/governance/proposals ← submit proposal
-GET /api/v1/governance/proposals ← list proposals
-PATCH /api/v1/governance/proposals/:id/approve ← approve
-PATCH /api/v1/governance/proposals/:id/reject ← reject
-GET /api/v1/governance/audit ← audit log
-GET /api/v1/memory/nodes ← memory nodes
-GET /api/v1/memory/drift ← drift report
-GET /api/v1/memory/similar ← similar decisions
-GET /api/v1/health ← health check
-
-text
-
-**الأنواع:**
-- `AppState` — shared state (proposals + audit + memory + gov_storage)
-- `handlers` — دوال رفيعة: استقبال HTTP → استدعاء kernels → إرجاع JSON
-- `routes` — Router builder
+**JSON Schema للـ analyze:**
+```json
+{
+  "fitness": {
+    "security": 1.0,
+    "test_coverage": 0.5,
+    "maintainability": 0.95,
+    "performance": 1.0,
+    "architectural_stability": 0.73,
+    "reversibility": 1.0
+  },
+  "confidence": { "overall": 0.50 },
+  "parse_successful": true,
+  "warnings": 0
+}
+```
 
 ---
 
-### 3.10 `ec-cli` — Command Line Interface (Phase 6)
-
-**الدور:** طبقة أوامر طرفية — read args → call → print
+### 3.10 `ec-cli` — Command Line Interface
 
 **الأوامر:**
-ec analyze <path> ← تحليل ملف (جدول منسق أو JSON)
-ec drift ← تقرير الانجراف
-ec propose submit/list/approve ← إدارة الاقتراحات
-ec audit ← سجل التدقيق
-ec health ← فحص صحة النظام
+```bash
+ec analyze <path> [--json] [--verbose]
+ec drift [--baseline N] [--window M]
+ec propose submit|list|approve
+ec audit [--limit N]
+ec health
+ec check <dir> [--json]        ← workspace-level analysis
+```
 
-text
-
-**الأنواع:**
-- `Cli` — هيكل الأوامر (clap derive)
-- دوال `cmd_*` — قراءة المُدخلات، استدعاء الدوال، طباعة النتائج
+**الـ PATH:**
+```bash
+# ~/.bashrc
+export PATH="$PATH:/home/chokribouzid/projects/engineering-civilization/target/release"
+```
 
 ---
 
 ### 3.11 `ec-app` — التطبيق الرئيسي
 
-**الدور:** ربط كل الـ pipelines معاً
-
 **الأنواع:**
-- `IntegrationPipeline` — pipeline كامل (analyze → evaluate → sandbox → verdict)
-- `IterativePipeline` — تكرار حتى النجاح
-- `BayesianPipeline` — pipeline مع Bayesian tracking + calibration
-- `PipelineVerdict`, `PipelineResult`, `IterativePipelineResult`, `AttemptRecord`
-- `BayesianPipelineResult` — bayesian_confidence + raw_confidence + calibration_diagnosis
-- `build_epistemic_from_fitness()` — الدالة القديمة
-- `build_epistemic_from_bayesian()` — الدالة Bayesian
-- `determine_verdict()` — قرار القبول/الرفض
+- `IntegrationPipeline`, `IterativePipeline`, `BayesianPipeline`
+- `PipelineVerdict`, `PipelineResult`, `BayesianPipelineResult`
+- `build_epistemic_from_fitness()`, `build_epistemic_from_bayesian()`
 
 ---
 
-## 4. ثوابت التصميم (Design Invariants)
+## 4. Dependency Graph
+ec-fitness          ← (لا شيء)
+ec-epistemic        ← (لا شيء)
+ec-constitutional   ← ec-fitness, ec-epistemic
+ec-sandbox          ← ec-fitness, ec-constitutional, ec-epistemic
+ec-analysis         ← ec-fitness, syn
+ec-memory           ← ec-fitness, ec-epistemic, rusqlite
+ec-codegen          ← ec-fitness, ec-memory
+ec-governance       ← ec-fitness, ec-constitutional, ec-memory, ec-epistemic
+ec-app              ← الجميع
+ec-api              ← ec-app, ec-governance, ec-analysis, ec-memory
+ec-cli              ← ec-analysis, ec-governance, ec-memory
+
+---
+
+## 5. ثوابت التصميم (D1-D10)
 
 | # | الاسم | الوصف | المكان |
 |---|-------|-------|--------|
 | D1 | Append-Only Memory | لا delete/update_fitness/clear | ec-memory |
 | D2 | Truth ≠ Fitness | FitnessVector ≠ RealityVector | ec-sandbox + ec-analysis |
-| D3 | DAG Enforcement | validate_acyclic() قبل كل record() | ec-memory |
+| D3 | DAG Enforcement | validate_acyclic() قبل record() | ec-memory |
 | D4 | Builder Pattern | DecisionNode::new() = pub(crate) | ec-memory |
 | D5 | Single Similarity Source | cosine_similarity() وحيد | ec-fitness |
 | D6 | Constitutional Primacy | فشل دستوري = رفض نهائي | ec-constitutional |
 | D7 | Persistent Memory | SQLite roundtrip guarantee | ec-memory |
-| D8 | Confidence Separate | ConfidenceVector/BayesianEvidence ≠ FitnessVector | ec-analysis + ec-epistemic |
-| D9 | Bayesian Primacy | إذا N≥10 outcomes → credible_confidence() بدلاً من raw | ec-epistemic + ec-constitutional |
-| D10 | Outcome Transparency | كل outcome يُخزَّن بالـ raw score قبل أي تحويل | ec-memory (OutcomeStorage) |
+| D8 | Confidence Separate | ConfidenceVector ≠ FitnessVector | ec-analysis + ec-epistemic |
+| D9 | Bayesian Primacy | N≥10 → credible_confidence() | ec-epistemic |
+| D10 | Outcome Transparency | raw score يُخزَّن قبل أي تحويل | ec-memory |
 
 ---
 
-## 5. قرارات التصميم (ADRs)
+## 6. مبدأ الحدود الدلالية (ADR-020)
+Kernel (لا async، لا HTTP، لا serde DTOs):
+ec-fitness, ec-epistemic, ec-constitutional
+ec-sandbox, ec-analysis, ec-memory, ec-codegen
+Interface layer:
+ec-governance  ← منطق حوكمة sync
+ec-api         ← HTTP adapter (axum)
+ec-cli         ← CLI adapter (clap)
+ممنوعات:
+❌ لا async في kernels
+❌ لا serde DTOs داخل kernels
+❌ لا business logic في API handlers
+❌ لا database types داخل fitness/epistemic
+
+---
+
+## 7. pre-commit Hook
+
+```bash
+# sel-agent-v4/.git/hooks/pre-commit
+#!/usr/bin/env bash
+EC=/home/chokribouzid/projects/engineering-civilization/target/release/ec
+FAILED=0
+
+for file in $(git diff --cached --name-only -- '*.rs'); do
+    [ -f "$file" ] || continue
+    result=$($EC analyze "$file" --json 2>/dev/null)
+    [ -z "$result" ] && continue
+
+    rev=$(echo "$result" | jq -r '.fitness.reversibility // 1')
+    sec=$(echo "$result" | jq -r '.fitness.security // 1')
+
+    if [ "$(echo "$rev < 0.30" | bc -l)" = "1" ]; then
+        echo "❌ EC: $file — reversibility=$rev (min: 0.30)"
+        FAILED=1
+    fi
+    if [ "$(echo "$sec < 0.70" | bc -l)" = "1" ]; then
+        echo "❌ EC: $file — security=$sec (min: 0.70)"
+        FAILED=1
+    fi
+done
+
+[ "$FAILED" = "1" ] && echo "💡 Run: ec analyze <file> --verbose" && exit 1
+exit 0
+```
+
+**مثال عملي:**
+sel-agent-v4/src/llm/mod.rs
+reversibility = 0.16  ← 7 println! (user-facing output — مقبول)
+test_coverage  = 0.00 ← لا #[test] في الملف
+الـ hook لا يمنع mod.rs (0.16 > 0.30 لا — wait, 0.16 < 0.30!)
+لكن العتبة في الـ hook هي 0.30 → هذا الملف سيُرفض إذا staged
+القرار: استثناء llm/mod.rs أو تحسين الكود
+
+---
+
+## 8. نتائج ec check (v1.6)
+ec check /path/to/project
+Files scanned:  129
+Files passed:    71  ✅  (كانت 4 في v1.5)
+Files failed:    58  ❌
+Project score: 0.874  (كانت 0.774 في v1.5)
+
+**الملفات الفاشلة المتبقية (طبيعية):**
+- ملفات الاختبارات `tests/*.rs` — تستخدم println! + imports كثيرة (طبيعي)
+- ملفات تعتمد على external crates كثيرة (graph.rs, pipeline.rs) — stability أقل من 0.50 لكن صحيح
+
+---
+
+## 9. قرارات التصميم (ADRs)
 
 | ADR | العنوان | المرحلة |
 |-----|---------|---------|
-| 004 | Integration Architecture | Phase 2 |
-| 009 | Sandbox Foundation | Phase 2 |
-| 010 | Docker Execution Strategy | Phase 2 |
-| 012 | Security Hardening | Phase 2 |
-| 013 | Integration Pipeline | Phase 3 |
-| 014 | Static Code Analysis | Phase 3 |
-| 015 | Causal Memory | Phase 3 |
-| 016 | Code Generation | Phase 3 |
-| 017 | Iterative Pipeline | Phase 3 |
-| 018 | Counterfactual Query | Phase 3 |
-| 019 | Value Drift Enhanced | Phase 3 |
+| 004-019 | Architecture, Sandbox, Memory, etc. | Phase 1-5 |
 | 020 | Semantic Boundary Protection | Phase 6 |
 
 ---
 
-## 6. تدفقات البيانات الرئيسية
+## 10. الاختبارات — الإحصائيات النهائية
 
-### تحليل الكود (Phase 4)
-code: &str
-├── analyze_code() → FitnessVector (keyword heuristic — قديم)
-└── analyze_code_full() → AnalysisReport (syn AST — جديد)
-├── syn::parse_file()
-├── AstAnalyzer::analyze_file()
-│ ├── UnsafeVisitor → (security, 0.95)
-│ ├── ComplexityVisitor → (maintainability, 0.88)
-│ ├── TestVisitor → (coverage, 0.50)
-│ ├── CouplingVisitor → (stability, 0.75)
-│ ├── SideEffectVisitor → (reversibility, 0.70)
-│ └── PerformanceVisitor → (performance, 0.75)
-└── AnalysisReport {fitness, confidence, warnings, parse_successful}
-
-text
-
-### Bayesian Pipeline (Phase 5)
-code: &str → analyze_code() → FitnessVector
-→ BayesianTracker.evidence.credible_confidence()
-→ BayesianCalibration.adjusted_credible_confidence()
-→ EpistemicState {confidence: adjusted}
-→ ConstitutionalEngine.evaluate()
-→ SandboxExecutor.execute() → RealityVector
-→ tracker.record(was_correct, score)
-→ calibration.record(predicted, actual)
-→ BayesianPipelineResult {bayesian_confidence, raw_confidence, diagnosis, verdict}
-
-text
-
-### Governance Flow (Phase 6)
-DriftReport (من ec-memory)
-→ drift_trigger::propose_from_drift()
-→ ConstitutionalProposal (تلقائي)
-→ ProposalStore.submit()
-→ AuditLog.record(ProposalCreated)
-→ Human reviews
-→ ProposalStore.approve()
-→ AuditLog.record(ProposalApproved)
-→ ProposalStore.mark_applied()
-→ AuditLog.record(ProposalApplied)
-→ كل شيء يُخزَّن في GovernanceStorage (SQLite)
-
-text
-
----
-
-## 7. الاختبارات — الإحصائيات النهائية
-
-### حسب الـ Crate
-
-| Crate | عدد الاختبارات التقريبي |
-|-------|------------------------|
-| ec-fitness | ~10 |
-| ec-epistemic | ~30 |
-| ec-constitutional | ~90 |
-| ec-sandbox | ~83 |
-| ec-analysis | ~130 |
-| ec-memory | ~86 |
-| ec-codegen | ~14 |
-| ec-governance | ~26 |
-| ec-api | ~14 |
-| ec-cli | ~16 |
-| ec-app | ~50 |
-| **المجموع** | **~662** |
-
-### حسب الـ Phase
-
-| Phase | Weeks | المحتوى الرئيسي | Tests |
-|-------|-------|----------------|-------|
+| Phase | Weeks | المحتوى | Tests |
+|-------|-------|---------|-------|
 | 1 | 1-6 | Fitness + Epistemic + Constitutional | ~90 |
-| 2 | 7-18 | Sandbox + Integration + Feedback | ~150 |
-| 3 | 19-27 | Analysis + Memory + Codegen + Drift + SQLite | ~163 |
-| 4 | 28-34 | syn AST + ConfidenceVector + 6 Visitors | +114 |
-| 5 | 35-42 | Bayesian Intelligence (Evidence, Tracker, Calibration, Pipeline) | +89 |
-| 6 | 43-56 | Governance + API + CLI + Final Gate | +56 |
-| **المجموع** | **56** | | **662** |
+| 2 | 7-18 | Sandbox + Integration | ~150 |
+| 3 | 19-27 | Analysis + Memory + Codegen + SQLite | ~163 |
+| 4 | 28-34 | syn AST + ConfidenceVector | +114 |
+| 5 | 35-42 | Bayesian Intelligence | +89 |
+| 6 | 43-56 | Governance + API + CLI | +56 |
+| **v1.6** | **Post-56** | **Bug fixes من الاستخدام الفعلي** | **662 (unchanged)** |
 
 ---
 
-## 8. سجل الإصلاحات الكامل
-
-### Weeks 25-27: Hardening + SQLite (18 إصلاحاً)
-- إزالة cosine_angle_degrees المكرر من drift.rs
-- unwrap() → expect() في pipeline
-- Docker tests feature flag
-- validate_acyclic() إصلاح كشف الدورات
-- Builder Pattern: DecisionNode::new() → pub(crate)
-- cosine_similarity → FitnessVector (D5)
-- فصل ec-constitutional عن ec-memory
-- SQLite persistence: SqliteStorage + MemoryStorage trait
-- Mutex<Connection> إصلاح :memory:
-- ArtifactSnapshot: Serde يدوي لـ Arc<str>
-
-### Phase 4 (Weeks 28-34): التحليل الحقيقي (7 خطوات)
-- إضافة syn dependency لـ ec-analysis
-- AnalysisReport + ConfidenceVector (D8)
-- 6 AST Visitors: Unsafe, Complexity, Test, Coupling, SideEffect, Performance
-- AstAnalyzer يجمع الـ 6 visitors
-- analyze_code_full() — إضافة فقط، لا كسر
-- Calibration dataset: tier1 vs tier4 fixtures
-- Phase 4 Gate: 15 اختباراً
-
-### Phase 5 (Weeks 35-42): Bayesian Intelligence (6 خطوات)
-- BayesianEvidence: initial_prior + update_with_outcome + Wilson interval
-- BayesianTracker: sandbox-level Bayesian tracking
-- OutcomeStorage: SQLite persistence per artifact
-- BayesianQuery: find_similar_with_confidence + best_by_confidence
-- BayesianCalibration: overconfident/underconfident detection + adjustment
-- BayesianPipeline: full integration with calibration feedback
-
-### Phase 6 (Weeks 43-56): Governance + API + CLI (6 خطوات)
-- D9 (Bayesian Primacy) + D10 (Outcome Transparency) + ADR-020
-- ec-governance: ProposalStore + AuditLog + GovernanceStorage
-- drift_trigger: DriftReport → Proposal تلقائي
-- ec-api: 11 endpoint مع axum (handlers بدون business logic)
-- ec-cli: 5 أوامر مع clap (ec analyze/drift/propose/audit/health)
-- Final Gate: D1-D10 verification + backward compatibility
-
----
-
-## 9. خريطة الطريق — المُنجز
-Week 27: ✅ SQLite persistence (387 test)
-
-Phase 4: التحليل الحقيقي (Weeks 28-34) +114 test → 517
-Phase 5: Bayesian Intelligence (Weeks 35-42) +89 test → 606
-Phase 6: Governance + API + CLI (Weeks 43-56) +56 test → 662
-
-النهاية: Week 56 · 11 crate · 662 test · 0 heuristic زائفة
-
-text
-
----
-
-## 10. أوامر الصيانة
+## 11. أوامر الصيانة
 
 ```bash
 # فحص البنية
 cargo check --workspace
 
-# فحص clippy (يشمل الاختبارات)
+# clippy
 cargo clippy --workspace --tests -- -D warnings
 
-# تشغيل كل الاختبارات
+# اختبارات
 cargo test --workspace
 
-# تشغيل مع اختبارات Docker
+# مع Docker
 cargo test --workspace --features ec-sandbox/slow_tests
 
-# تشغيل الخادم
-cargo run -p ec-api
-
 # تحليل ملف
-cargo run -p ec-cli -- analyze path/to/file.rs
-11. ملخص سريع
-text
-11 crates · ~110 ملف .rs · ~22,000 سطر
-662 tests · 0 failed · 16 ignored
-0 clippy warnings (مع --tests)
-0 unwrap() في كود الإنتاج
-10 design invariants (D1-D10)
-12 ADRs (004-020)
-6 Phases — 56 Weeks — مكتملة
+ec analyze src/main.rs
+ec analyze src/main.rs --json
+ec analyze src/main.rs --verbose
 
-Kernel purity: محفوظ (لا async، لا HTTP، لا serde DTOs)
-Semantic boundaries: صارمة (ADR-020)
-Constitutional primacy: مضمون (D6)
-Append-only memory: مضمون (D1)
-Bayesian intelligence: مدمج (D9-D10)
-نهاية الوثيقة المرجعية — Engineering Civilization v1.5 Complete
+# فحص مشروع كامل
+ec check /path/to/project
+ec check /path/to/project --json | jq '{passed, failed, score}'
+
+# تشغيل الخادم
+EC_DB=/data/ec.db ec-server
+
+# فحص grep بدون bash history issues
+grep -cF 'println!' src/file.rs
+```
+
+---
+
+## 12. ملخص سريع
+v1.5 → v1.6: 3 إصلاحات من الاستخدام الفعلي
+✅ CouplingVisitor: depth tracking (workspace crates معفاة)
+✅ TestVisitor: no-fn → (1.0, 0.30)
+✅ ec check: 4/129 → 71/129 · score 0.774 → 0.874
+النظام:
+11 crates · ~22,000 سطر · 662 tests · 0 failed
+10 design invariants · 12 ADRs
+pre-commit hook نشط على sel-agent-v4
+ec في PATH — يعمل من أي مكان
+الدرس: الاستخدام الفعلي كشف bugs لم تكتشفها 662 اختباراً
+
+---
+
+*نهاية الوثيقة المرجعية — Engineering Civilization v1.6*
