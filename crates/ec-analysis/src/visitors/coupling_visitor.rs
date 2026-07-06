@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 use syn::visit::Visit;
 
+#[derive(Default)]
 pub struct CouplingVisitor {
     pub external_uses: usize,
     pub std_uses: usize,

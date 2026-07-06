@@ -75,7 +75,7 @@ fn ossification_all_rejected() {
     assert_eq!(detector.rejection_rate(), 1.0);
     assert!(matches!(
         detector.needs_review(),
-        Some(ReviewReason::HighRejectionRate(1.0))
+        Some(ReviewReason::HighRejectionRate(v)) if v == 1.0
     ));
 }
 

@@ -2,6 +2,7 @@
 
 use syn::visit::Visit;
 
+#[derive(Default)]
 pub struct TestVisitor {
     pub test_fns: usize,
     pub production_fns: usize,
