@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: Format & Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.96.0
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+      - name: cargo clippy -D warnings
+        run: cargo clippy --workspace --tests --locked -- -D warnings
+
+  build:
+    name: Build (workspace)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.96.0
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --workspace --locked --verbose
+
+  test-fast:
+    name: Tests (no Docker)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.96.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Run workspace tests excluding Docker-dependent crates
+        run: >
+          cargo test --workspace --locked --no-fail-fast
+          --exclude ec-sandbox --exclude ec-app
+
+  test-docker:
+    name: Tests (Docker, serial within binary)
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.96.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify Docker daemon is available
+        run: docker info
+      - name: Run ec-sandbox tests (serial)
+        run: cargo test -p ec-sandbox --locked --no-fail-fast -- --test-threads=1
+      - name: Run ec-app tests (serial)
+        run: cargo test -p ec-app --locked --no-fail-fast -- --test-threads=1
