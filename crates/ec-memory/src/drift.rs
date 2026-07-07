@@ -19,24 +19,24 @@ pub enum DriftClassification {
     /// Pareto front تحسّن + زاوية صغيرة — النظام يتعلم.
     LearningProgress {
         /// الزاوية بالدرجات.
-        angle: f64
+        angle: f64,
     },
     /// زاوية كبيرة بدون تحسن — تحول في القيم.
     ValueShift {
         /// الزاوية بالدرجات.
-        angle: f64
+        angle: f64,
     },
     /// زادت الانتهاكات — الدستور يتدهور.
     Corruption {
         /// الزيادة في معدل الرفض.
-        rejection_increase: f64
+        rejection_increase: f64,
     },
     /// بيانات غير كافية.
     InsufficientData {
         /// عدد القرارات المتوفرة.
         available: usize,
         /// عدد القرارات المطلوبة.
-        required: usize
+        required: usize,
     },
 }
 
@@ -50,12 +50,12 @@ pub enum DriftAction {
     /// مراجعة دستورية.
     ReviewConstitution {
         /// السبب.
-        reason: String
+        reason: String,
     },
     /// تدخل بشري.
     HumanIntervention {
         /// السبب.
-        reason: String
+        reason: String,
     },
 }
 
@@ -99,12 +99,12 @@ pub struct HistoricalDriftAnalyzer<'a> {
 
 impl<'a> HistoricalDriftAnalyzer<'a> {
     /// إنشاء محلل جديد.
-    pub fn new(
-        memory: &'a CausalMemoryGraph,
-        baseline_size: usize,
-        current_window: usize,
-    ) -> Self {
-        Self { memory, baseline_size, current_window }
+    pub fn new(memory: &'a CausalMemoryGraph, baseline_size: usize, current_window: usize) -> Self {
+        Self {
+            memory,
+            baseline_size,
+            current_window,
+        }
     }
 
     /// تحليل الانجراف.
@@ -128,15 +128,14 @@ impl<'a> HistoricalDriftAnalyzer<'a> {
         }
 
         let baseline_nodes = &all[..self.baseline_size];
-        let current_nodes  = &all[total - self.current_window..];
+        let current_nodes = &all[total - self.current_window..];
 
         let baseline_vecs: Vec<&FitnessVector> =
             baseline_nodes.iter().map(|n| &n.fitness).collect();
-        let current_vecs: Vec<&FitnessVector> =
-            current_nodes.iter().map(|n| &n.fitness).collect();
+        let current_vecs: Vec<&FitnessVector> = current_nodes.iter().map(|n| &n.fitness).collect();
 
         let baseline_avg = average_fitness(&baseline_vecs);
-        let current_avg  = average_fitness(&current_vecs);
+        let current_avg = average_fitness(&current_vecs);
         let angle = baseline_avg.cosine_angle_degrees(&current_avg);
 
         // معدل الرفض
@@ -150,7 +149,7 @@ impl<'a> HistoricalDriftAnalyzer<'a> {
             .count();
 
         let baseline_rate = baseline_rejections as f64 / self.baseline_size as f64;
-        let current_rate  = current_rejections as f64 / self.current_window as f64;
+        let current_rate = current_rejections as f64 / self.current_window as f64;
         let rejection_increase = current_rate - baseline_rate;
 
         let pareto_improved = self.pareto_front_improved(&baseline_vecs, &current_vecs);
@@ -194,16 +193,15 @@ fn average_fitness(vectors: &[&FitnessVector]) -> FitnessVector {
         test_coverage: vectors.iter().map(|v| v.test_coverage).sum::<f64>() / n,
         maintainability: vectors.iter().map(|v| v.maintainability).sum::<f64>() / n,
         performance: vectors.iter().map(|v| v.performance).sum::<f64>() / n,
-        architectural_stability:
-            vectors.iter().map(|v| v.architectural_stability).sum::<f64>() / n,
+        architectural_stability: vectors
+            .iter()
+            .map(|v| v.architectural_stability)
+            .sum::<f64>()
+            / n,
     }
 }
 
-fn classify(
-    angle: f64,
-    rejection_increase: f64,
-    pareto_improved: bool,
-) -> DriftClassification {
+fn classify(angle: f64, rejection_increase: f64, pareto_improved: bool) -> DriftClassification {
     if rejection_increase > 0.2 {
         return DriftClassification::Corruption { rejection_increase };
     }
@@ -223,28 +221,18 @@ fn recommend(classification: &DriftClassification) -> DriftAction {
         DriftClassification::LearningProgress { .. } => DriftAction::Monitor,
         DriftClassification::ValueShift { angle } if *angle > 45.0 => {
             DriftAction::HumanIntervention {
-                reason: format!(
-                    "Value rotation {:.1}° exceeds 45° threshold",
-                    angle
-                ),
+                reason: format!("Value rotation {:.1}° exceeds 45° threshold", angle),
             }
         }
-        DriftClassification::ValueShift { angle } => {
-            DriftAction::ReviewConstitution {
-                reason: format!(
-                    "Value rotation {:.1}° exceeds 10° threshold",
-                    angle
-                ),
-            }
-        }
-        DriftClassification::Corruption { rejection_increase } => {
-            DriftAction::HumanIntervention {
-                reason: format!(
-                    "Rejection rate increased by {:.1}% — possible corruption",
-                    rejection_increase * 100.0
-                ),
-            }
-        }
+        DriftClassification::ValueShift { angle } => DriftAction::ReviewConstitution {
+            reason: format!("Value rotation {:.1}° exceeds 10° threshold", angle),
+        },
+        DriftClassification::Corruption { rejection_increase } => DriftAction::HumanIntervention {
+            reason: format!(
+                "Rejection rate increased by {:.1}% — possible corruption",
+                rejection_increase * 100.0
+            ),
+        },
         DriftClassification::InsufficientData { .. } => DriftAction::None,
     }
 }

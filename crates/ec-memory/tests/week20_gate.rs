@@ -10,8 +10,8 @@
 //! ✓ DAG validation (no cycles)
 //! ✓ Builder pattern for external construction
 
-use ec_memory::*;
 use ec_fitness::fitness::FitnessVector;
+use ec_memory::*;
 
 fn dummy_artifact(code: &str) -> ArtifactSnapshot {
     ArtifactSnapshot::new(code)
@@ -22,13 +22,9 @@ fn dummy_fitness() -> FitnessVector {
 }
 
 fn dummy_builder(id_str: &str, parents: Vec<NodeId>) -> DecisionNodeBuilder {
-    DecisionNodeBuilder::new(
-        id_str,
-        dummy_artifact("fn main() {}"),
-        dummy_fitness(),
-    )
-    .constitutional_valid(true)
-    .causal_parents(parents)
+    DecisionNodeBuilder::new(id_str, dummy_artifact("fn main() {}"), dummy_fitness())
+        .constitutional_valid(true)
+        .causal_parents(parents)
 }
 
 // ─── Gate 1: Memory Creates ──────────────────────────────────────────
@@ -45,7 +41,9 @@ fn gate_memory_creates() {
 #[test]
 fn gate_append_only_no_delete() {
     let mut mem = CausalMemoryGraph::new();
-    let id = mem.record_from_builder(dummy_builder("test", vec![])).unwrap();
+    let id = mem
+        .record_from_builder(dummy_builder("test", vec![]))
+        .unwrap();
 
     // ❌ هذا لن يُترجم — لا توجد delete()
     // mem.delete(id);  // compile error
@@ -71,7 +69,9 @@ fn gate_record_increases_len() {
 #[test]
 fn gate_retrospective_is_mutable() {
     let mut mem = CausalMemoryGraph::new();
-    let id = mem.record_from_builder(dummy_builder("test", vec![])).unwrap();
+    let id = mem
+        .record_from_builder(dummy_builder("test", vec![]))
+        .unwrap();
 
     let assessment = RetrospectiveAssessment::new(true, 0.9, "better").unwrap();
     mem.update_retrospective(id, assessment).unwrap();
@@ -83,7 +83,9 @@ fn gate_retrospective_is_mutable() {
 #[test]
 fn gate_retrospective_is_append_only_log() {
     let mut mem = CausalMemoryGraph::new();
-    let id = mem.record_from_builder(dummy_builder("test", vec![])).unwrap();
+    let id = mem
+        .record_from_builder(dummy_builder("test", vec![]))
+        .unwrap();
 
     let a1 = RetrospectiveAssessment::new(true, 0.8, "first").unwrap();
     let a2 = RetrospectiveAssessment::new(false, 0.9, "second").unwrap();
@@ -101,8 +103,12 @@ fn gate_retrospective_is_append_only_log() {
 fn gate_causal_chain_works() {
     let mut mem = CausalMemoryGraph::new();
     let id1 = mem.record_from_builder(dummy_builder("a", vec![])).unwrap();
-    let id2 = mem.record_from_builder(dummy_builder("b", vec![id1])).unwrap();
-    let id3 = mem.record_from_builder(dummy_builder("c", vec![id2])).unwrap();
+    let id2 = mem
+        .record_from_builder(dummy_builder("b", vec![id1]))
+        .unwrap();
+    let id3 = mem
+        .record_from_builder(dummy_builder("c", vec![id2]))
+        .unwrap();
 
     let chain = mem.causal_chain(id3);
     assert_eq!(chain.len(), 3);
@@ -114,7 +120,9 @@ fn gate_causal_chain_works() {
 #[test]
 fn gate_causal_chain_single_node() {
     let mut mem = CausalMemoryGraph::new();
-    let id = mem.record_from_builder(dummy_builder("solo", vec![])).unwrap();
+    let id = mem
+        .record_from_builder(dummy_builder("solo", vec![]))
+        .unwrap();
 
     let chain = mem.causal_chain(id);
     assert_eq!(chain.len(), 1);
@@ -126,9 +134,12 @@ fn gate_causal_chain_single_node() {
 #[test]
 fn gate_decisions_for_artifact() {
     let mut mem = CausalMemoryGraph::new();
-    mem.record_from_builder(dummy_builder("test-v1", vec![])).unwrap();
-    mem.record_from_builder(dummy_builder("test-v2", vec![])).unwrap();
-    mem.record_from_builder(dummy_builder("other", vec![])).unwrap();
+    mem.record_from_builder(dummy_builder("test-v1", vec![]))
+        .unwrap();
+    mem.record_from_builder(dummy_builder("test-v2", vec![]))
+        .unwrap();
+    mem.record_from_builder(dummy_builder("other", vec![]))
+        .unwrap();
 
     let decisions = mem.decisions_for_artifact("test-v1");
     assert_eq!(decisions.len(), 1);
@@ -141,7 +152,8 @@ fn gate_decisions_for_artifact() {
 fn gate_latest_n() {
     let mut mem = CausalMemoryGraph::new();
     for i in 0..10 {
-        mem.record_from_builder(dummy_builder(&format!("node-{}", i), vec![])).unwrap();
+        mem.record_from_builder(dummy_builder(&format!("node-{}", i), vec![]))
+            .unwrap();
     }
 
     let latest = mem.latest_n(3);
@@ -247,7 +259,9 @@ fn week20_gate_complete() {
 
     // 2. Append-only
     let id1 = mem.record_from_builder(dummy_builder("a", vec![])).unwrap();
-    let id2 = mem.record_from_builder(dummy_builder("b", vec![id1])).unwrap();
+    let id2 = mem
+        .record_from_builder(dummy_builder("b", vec![id1]))
+        .unwrap();
     assert_eq!(mem.len(), 2);
     println!("✅ Gate 2: Append-only (no delete)");
 
@@ -258,7 +272,9 @@ fn week20_gate_complete() {
     println!("✅ Gate 3: Retrospective mutable");
 
     // 4. Causal chain
-    let id3 = mem.record_from_builder(dummy_builder("c", vec![id2])).unwrap();
+    let id3 = mem
+        .record_from_builder(dummy_builder("c", vec![id2]))
+        .unwrap();
     let chain = mem.causal_chain(id3);
     assert_eq!(chain.len(), 3);
     println!("✅ Gate 4: Causal chain works");
@@ -270,15 +286,18 @@ fn week20_gate_complete() {
     println!("✅ Gate 5: ArtifactSnapshot shares Arc");
 
     // 6. Decisions for artifact
-    mem.record_from_builder(dummy_builder("test-v1", vec![])).unwrap();
-    mem.record_from_builder(dummy_builder("test-v2", vec![])).unwrap();
+    mem.record_from_builder(dummy_builder("test-v1", vec![]))
+        .unwrap();
+    mem.record_from_builder(dummy_builder("test-v2", vec![]))
+        .unwrap();
     let decisions = mem.decisions_for_artifact("test-v1");
     assert_eq!(decisions.len(), 1);
     println!("✅ Gate 6: Decisions for artifact");
 
     // 7. Latest N
     for i in 0..10 {
-        mem.record_from_builder(dummy_builder(&format!("node-{}", i), vec![])).unwrap();
+        mem.record_from_builder(dummy_builder(&format!("node-{}", i), vec![]))
+            .unwrap();
     }
     let latest = mem.latest_n(5);
     assert_eq!(latest.len(), 5);

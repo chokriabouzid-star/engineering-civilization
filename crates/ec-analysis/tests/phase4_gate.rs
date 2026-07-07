@@ -44,8 +44,12 @@ fn phase4_ast_fixes_v1_comment_bug() {
     let v15 = analyze_code_full(code);
     // v1 يعاقب كلمة "unsafe" في التعليق
     // AST لا يعاقبها
-    assert!(v15.fitness.security > v1.security,
-        "AST={:.2} > v1={:.2}", v15.fitness.security, v1.security);
+    assert!(
+        v15.fitness.security > v1.security,
+        "AST={:.2} > v1={:.2}",
+        v15.fitness.security,
+        v1.security
+    );
 }
 
 #[test]
@@ -90,25 +94,28 @@ fn phase4_confidence_overall_is_min() {
 #[test]
 fn phase4_safe_code_no_unsafe_warning() {
     let r = analyze_code_full("fn f() -> i32 { 1 }");
-    assert!(!r.warnings.iter().any(|w| matches!(
-        w, AnalysisWarning::UnsafeWithoutComment { .. }
-    )));
+    assert!(!r
+        .warnings
+        .iter()
+        .any(|w| matches!(w, AnalysisWarning::UnsafeWithoutComment { .. })));
 }
 
 #[test]
 fn phase4_unsafe_code_has_warning() {
     let r = analyze_code_full("fn f(p: *const i32) { unsafe { let _ = *p; } }");
-    assert!(r.warnings.iter().any(|w| matches!(
-        w, AnalysisWarning::UnsafeWithoutComment { .. }
-    )));
+    assert!(r
+        .warnings
+        .iter()
+        .any(|w| matches!(w, AnalysisWarning::UnsafeWithoutComment { .. })));
 }
 
 #[test]
 fn phase4_invalid_code_has_parse_warning() {
     let r = analyze_code_full("not rust @#%");
-    assert!(r.warnings.iter().any(|w| matches!(
-        w, AnalysisWarning::ParseFailed(_)
-    )));
+    assert!(r
+        .warnings
+        .iter()
+        .any(|w| matches!(w, AnalysisWarning::ParseFailed(_))));
     assert!(!r.parse_successful);
 }
 
@@ -117,7 +124,7 @@ fn phase4_invalid_code_has_parse_warning() {
 #[test]
 fn phase4_all_six_dimensions_populated() {
     let r = analyze_code_full(
-        "#[test]\nfn test_add() { assert_eq!(1+1, 2); }\nfn add(a: i32, b: i32) -> i32 { a + b }"
+        "#[test]\nfn test_add() { assert_eq!(1+1, 2); }\nfn add(a: i32, b: i32) -> i32 { a + b }",
     );
     let f = &r.fitness;
     assert!(f.security > 0.0);

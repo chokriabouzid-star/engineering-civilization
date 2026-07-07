@@ -32,22 +32,15 @@ impl<'a> MemoryQuery<'a> {
     /// أفضل بديل مرفوض لقرار معين.
     ///
     /// يُرجع البديل ذا أعلى مجموع (security + test_coverage).
-    pub fn best_rejected_alternative(
-        &self,
-        node_id: NodeId,
-    ) -> Option<&RejectedAlternative> {
+    pub fn best_rejected_alternative(&self, node_id: NodeId) -> Option<&RejectedAlternative> {
         let node = self.graph.get(node_id)?;
-        node.alternatives
-            .iter()
-            .max_by(|a, b| {
-                let a_score =
-                    a.fitness.security + a.fitness.test_coverage;
-                let b_score =
-                    b.fitness.security + b.fitness.test_coverage;
-                a_score
-                    .partial_cmp(&b_score)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            })
+        node.alternatives.iter().max_by(|a, b| {
+            let a_score = a.fitness.security + a.fitness.test_coverage;
+            let b_score = b.fitness.security + b.fitness.test_coverage;
+            a_score
+                .partial_cmp(&b_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
     }
 
     /// هل البديل المرفوض كان سيكون أفضل؟
@@ -59,21 +52,12 @@ impl<'a> MemoryQuery<'a> {
         alternative: &FitnessVector,
     ) -> CounterfactualGain {
         match alternative.pareto_compare(chosen) {
-            ParetoOrdering::Dominates => {
-                CounterfactualGain::AlternativeWasBetter {
-                    dimensions_better: count_better_dimensions(
-                        alternative,
-                        chosen,
-                    ),
-                }
-            }
+            ParetoOrdering::Dominates => CounterfactualGain::AlternativeWasBetter {
+                dimensions_better: count_better_dimensions(alternative, chosen),
+            },
             ParetoOrdering::Dominated => CounterfactualGain::ChoiceWasCorrect,
-            ParetoOrdering::Equal => {
-                CounterfactualGain::NoMeaningfulDifference
-            }
-            ParetoOrdering::NonDominated => {
-                CounterfactualGain::TradeoffDependent
-            }
+            ParetoOrdering::Equal => CounterfactualGain::NoMeaningfulDifference,
+            ParetoOrdering::NonDominated => CounterfactualGain::TradeoffDependent,
         }
     }
 
@@ -81,10 +65,7 @@ impl<'a> MemoryQuery<'a> {
     ///
     /// يُرجع لقطة لكل قرار مُسجّل لهذا الـ artifact_id،
     /// مرتبة ترتيباً زمنياً (حسب الإدراج).
-    pub fn fitness_evolution(
-        &self,
-        artifact_id: &str,
-    ) -> Vec<FitnessSnapshot> {
+    pub fn fitness_evolution(&self, artifact_id: &str) -> Vec<FitnessSnapshot> {
         self.graph
             .decisions_for_artifact(artifact_id)
             .iter()
@@ -105,11 +86,7 @@ impl<'a> MemoryQuery<'a> {
     /// أشبه القرارات بـ fitness معين (بـ cosine similarity).
     ///
     /// لا يحتاج vector DB — حساب بسيط كافٍ للـ MVP.
-    pub fn find_similar(
-        &self,
-        target: &FitnessVector,
-        k: usize,
-    ) -> Vec<SimilarDecision> {
+    pub fn find_similar(&self, target: &FitnessVector, k: usize) -> Vec<SimilarDecision> {
         let mut scored: Vec<(f64, &crate::node::DecisionNode)> = self
             .graph
             .all()
@@ -117,10 +94,7 @@ impl<'a> MemoryQuery<'a> {
             .map(|n| (n.fitness.cosine_similarity(target), n))
             .collect();
 
-        scored.sort_by(|a, b| {
-            b.0.partial_cmp(&a.0)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         scored
             .into_iter()
@@ -141,10 +115,7 @@ impl<'a> MemoryQuery<'a> {
     /// Cosine similarity بين متجهي لياقة (delegate to FitnessVector).
     ///
     /// 1.0 = متطابقان، 0.0 = متعامدان، -1.0 = متعاكسان.
-    pub fn cosine_similarity(
-        a: &FitnessVector,
-        b: &FitnessVector,
-    ) -> f64 {
+    pub fn cosine_similarity(a: &FitnessVector, b: &FitnessVector) -> f64 {
         a.cosine_similarity(b)
     }
 }
@@ -195,10 +166,7 @@ pub struct SimilarDecision {
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-fn count_better_dimensions(
-    a: &FitnessVector,
-    b: &FitnessVector,
-) -> usize {
+fn count_better_dimensions(a: &FitnessVector, b: &FitnessVector) -> usize {
     let mut count = 0;
     if a.security > b.security {
         count += 1;

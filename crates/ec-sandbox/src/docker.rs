@@ -85,12 +85,7 @@ impl Default for DockerRunner {
 
 impl DockerRunner {
     /// إنشاء runner جديد.
-    pub fn new(
-        image: &str,
-        memory_mb: u64,
-        cpu_limit: f64,
-        timeout: Duration,
-    ) -> Self {
+    pub fn new(image: &str, memory_mb: u64, cpu_limit: f64, timeout: Duration) -> Self {
         Self {
             image: image.to_string(),
             memory_mb,
@@ -103,10 +98,7 @@ impl DockerRunner {
     ///
     /// الكود يُكتب في tmpfs داخل container فقط.
     /// لا host filesystem مُعرَّض.
-    pub fn compile_and_run_code(
-        &self,
-        source_code: &str,
-    ) -> Result<DockerOutput, DockerError> {
+    pub fn compile_and_run_code(&self, source_code: &str) -> Result<DockerOutput, DockerError> {
         self.check_docker_available()?;
 
         // escape single quotes في الكود
@@ -167,10 +159,7 @@ impl DockerRunner {
     }
 
     /// تشغيل command بسيط للاختبار.
-    pub fn run_simple(
-        &self,
-        command: &[&str],
-    ) -> Result<DockerOutput, DockerError> {
+    pub fn run_simple(&self, command: &[&str]) -> Result<DockerOutput, DockerError> {
         self.check_docker_available()?;
 
         let start = Instant::now();
@@ -204,10 +193,7 @@ impl DockerRunner {
     }
 
     /// تشغيل مع timeout.
-    fn run_with_timeout(
-        &self,
-        mut cmd: Command,
-    ) -> Result<DockerOutput, DockerError> {
+    fn run_with_timeout(&self, mut cmd: Command) -> Result<DockerOutput, DockerError> {
         use std::sync::mpsc;
         use std::thread;
 
@@ -313,6 +299,11 @@ mod tests {
         let out = runner()
             .compile_and_run_code(r#"fn main() { println!("hello from docker"); }"#)
             .unwrap();
-        assert!(out.stdout.contains("hello from docker"), "got: {}{}", out.stdout, out.stderr);
+        assert!(
+            out.stdout.contains("hello from docker"),
+            "got: {}{}",
+            out.stdout,
+            out.stderr
+        );
     }
 }

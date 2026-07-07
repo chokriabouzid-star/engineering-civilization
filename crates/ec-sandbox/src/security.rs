@@ -12,13 +12,13 @@ pub enum SecurityViolation {
         /// الطريقة المستخدمة.
         method: String,
     },
-    
+
     /// Syscall محظور.
     ForbiddenSyscall {
         /// اسم Syscall.
         syscall: String,
     },
-    
+
     /// تجاوز حد الموارد.
     ResourceLimitExceeded {
         /// نوع المورد.
@@ -28,13 +28,13 @@ pub enum SecurityViolation {
         /// الحد الأقصى.
         limit: u64,
     },
-    
+
     /// محاولة الوصول لملف محظور.
     UnauthorizedFileAccess {
         /// مسار الملف.
         path: String,
     },
-    
+
     /// محاولة اتصال شبكي غير مسموح.
     UnauthorizedNetworkAccess {
         /// العنوان المستهدف.
@@ -51,7 +51,7 @@ impl SecurityViolation {
                 | SecurityViolation::UnauthorizedFileAccess { .. }
         )
     }
-    
+
     /// وصف الانتهاك.
     pub fn description(&self) -> String {
         match self {
@@ -61,7 +61,11 @@ impl SecurityViolation {
             Self::ForbiddenSyscall { syscall } => {
                 format!("Forbidden syscall: {}", syscall)
             }
-            Self::ResourceLimitExceeded { resource, value, limit } => {
+            Self::ResourceLimitExceeded {
+                resource,
+                value,
+                limit,
+            } => {
                 format!("{} exceeded: {} > {}", resource, value, limit)
             }
             Self::UnauthorizedFileAccess { path } => {

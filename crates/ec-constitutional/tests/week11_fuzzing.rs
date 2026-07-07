@@ -6,7 +6,7 @@ use ec_constitutional::engine::{ConstitutionalEngine, EvaluationContext};
 use ec_constitutional::invariant::Invariant;
 use ec_constitutional::security::SecurityInvariant;
 use ec_epistemic::calibration::CalibrationState;
-use ec_epistemic::state::{Evidence, EpistemicState, UncertaintyDecomposition};
+use ec_epistemic::state::{EpistemicState, Evidence, UncertaintyDecomposition};
 use ec_fitness::fitness::{CatastropheThresholds, FitnessVector};
 use proptest::prelude::*;
 use std::sync::Arc;
@@ -34,7 +34,7 @@ proptest! {
     ) {
         let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
         let context = EvaluationContext::default();
-        
+
         let fitness = FitnessVector {
             security,
             reversibility,
@@ -63,7 +63,7 @@ proptest! {
     ) {
         let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
         let context = EvaluationContext::default();
-        
+
         let fitness = FitnessVector {
             security: 0.8,
             reversibility: 0.7,
@@ -90,9 +90,9 @@ proptest! {
     ) {
         let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
         let context = EvaluationContext::default();
-        
+
         let id: String = (0..id_len).map(|_| 'x').collect();
-        
+
         let fitness = FitnessVector {
             security: 0.8,
             reversibility: 0.7,

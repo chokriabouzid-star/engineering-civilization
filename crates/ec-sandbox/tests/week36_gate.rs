@@ -61,8 +61,12 @@ fn w36_confidence_grows_with_successes() {
     for _ in 0..15 {
         t.record(true, 0.9);
     }
-    assert!(t.credible_confidence() > init,
-        "after 15 successes: {} > {}", t.credible_confidence(), init);
+    assert!(
+        t.credible_confidence() > init,
+        "after 15 successes: {} > {}",
+        t.credible_confidence(),
+        init
+    );
 }
 
 #[test]
@@ -100,9 +104,12 @@ fn w36_failures_lower_than_successes() {
     for _ in 0..10 {
         t_ok.record(true, 0.9);
     }
-    assert!(t_fail.credible_confidence() < t_ok.credible_confidence(),
+    assert!(
+        t_fail.credible_confidence() < t_ok.credible_confidence(),
         "failures={:.3} < successes={:.3}",
-        t_fail.credible_confidence(), t_ok.credible_confidence());
+        t_fail.credible_confidence(),
+        t_ok.credible_confidence()
+    );
 }
 
 // ─── Gate 6: old RealityFeedback still works ────────────────────────

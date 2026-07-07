@@ -94,12 +94,16 @@ fn w37_load_all_aggregates() {
 fn w37_confidence_grows_with_successes() {
     let s = make_storage();
     for i in 0..15 {
-        s.record_outcome("a1", true, 0.9 + i as f64 * 0.005).unwrap();
+        s.record_outcome("a1", true, 0.9 + i as f64 * 0.005)
+            .unwrap();
     }
 
     let e = s.load_evidence("a1").unwrap();
-    assert!(e.credible_confidence() > 0.45,
-        "after 15 successes: {}", e.credible_confidence());
+    assert!(
+        e.credible_confidence() > 0.45,
+        "after 15 successes: {}",
+        e.credible_confidence()
+    );
 }
 
 // ─── Gate 6: old storage still works ────────────────────────────────
@@ -121,7 +125,8 @@ fn w37_gate_complete() {
 
     for i in 0..20 {
         let ok = i < 15;
-        s.record_outcome("main", ok, if ok { 0.9 } else { 0.1 }).unwrap();
+        s.record_outcome("main", ok, if ok { 0.9 } else { 0.1 })
+            .unwrap();
     }
 
     let e = s.load_evidence("main").unwrap();

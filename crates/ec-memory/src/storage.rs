@@ -221,13 +221,21 @@ impl MemoryStorage for SqliteStorage {
                 })?
                 .filter_map(|r| r.ok())
                 .filter_map(
-                    |(id_str, created_str, artifact_id, code, fitness_json,
-                      valid, sandbox_json, parents_json, alts_json)| {
+                    |(
+                        id_str,
+                        created_str,
+                        artifact_id,
+                        code,
+                        fitness_json,
+                        valid,
+                        sandbox_json,
+                        parents_json,
+                        alts_json,
+                    )| {
                         let id = NodeId::parse_uuid_str(&id_str)?;
-                        let created_at =
-                            chrono::DateTime::parse_from_rfc3339(&created_str)
-                                .ok()?
-                                .with_timezone(&chrono::Utc);
+                        let created_at = chrono::DateTime::parse_from_rfc3339(&created_str)
+                            .ok()?
+                            .with_timezone(&chrono::Utc);
                         let fitness: ec_fitness::FitnessVector =
                             serde_json::from_str(&fitness_json).ok()?;
                         let sandbox_outcome = sandbox_json
@@ -235,8 +243,7 @@ impl MemoryStorage for SqliteStorage {
                             .and_then(|j| serde_json::from_str(j).ok());
                         let causal_parents: Vec<NodeId> =
                             serde_json::from_str(&parents_json).ok()?;
-                        let alternatives =
-                            serde_json::from_str(&alts_json).ok()?;
+                        let alternatives = serde_json::from_str(&alts_json).ok()?;
 
                         Some(DecisionNode {
                             id,
@@ -273,22 +280,16 @@ impl MemoryStorage for SqliteStorage {
                     Ok((did_str, at_str, was_better, confidence, reasoning))
                 })?
                 .filter_map(|r| r.ok())
-                .filter_map(
-                    |(did_str, at_str, was_better, confidence, reasoning)| {
-                        let node_id = NodeId::parse_uuid_str(&did_str)?;
-                        let _assessed_at =
-                            chrono::DateTime::parse_from_rfc3339(&at_str)
-                                .ok()?
-                                .with_timezone(&chrono::Utc);
-                        let assessment = RetrospectiveAssessment::new(
-                            was_better != 0,
-                            confidence,
-                            reasoning,
-                        )
-                        .ok()?;
-                        Some((node_id, assessment))
-                    },
-                )
+                .filter_map(|(did_str, at_str, was_better, confidence, reasoning)| {
+                    let node_id = NodeId::parse_uuid_str(&did_str)?;
+                    let _assessed_at = chrono::DateTime::parse_from_rfc3339(&at_str)
+                        .ok()?
+                        .with_timezone(&chrono::Utc);
+                    let assessment =
+                        RetrospectiveAssessment::new(was_better != 0, confidence, reasoning)
+                            .ok()?;
+                    Some((node_id, assessment))
+                })
                 .collect();
 
             for (node_id, assessment) in assessments {

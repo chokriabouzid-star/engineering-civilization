@@ -55,9 +55,16 @@ pub enum ProposalOrigin {
 /// محفز النظام
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SystemTrigger {
-    DriftDetected { angle_degrees: f64, classification: String },
-    OssificationDetected { rejection_rate: f64 },
-    BayesianCalibrationDrift { diagnosis: String },
+    DriftDetected {
+        angle_degrees: f64,
+        classification: String,
+    },
+    OssificationDetected {
+        rejection_rate: f64,
+    },
+    BayesianCalibrationDrift {
+        diagnosis: String,
+    },
 }
 
 /// نوع التغيير المقترح
@@ -95,11 +102,26 @@ pub enum ThresholdDirection {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProposalStatus {
     Pending,
-    UnderReview { reviewer: String, since: DateTime<Utc> },
-    Approved { by: String, at: DateTime<Utc>, note: String },
-    Rejected { reason: String, at: DateTime<Utc> },
-    Applied { at: DateTime<Utc>, effect: String },
-    Superseded { by: Uuid },
+    UnderReview {
+        reviewer: String,
+        since: DateTime<Utc>,
+    },
+    Approved {
+        by: String,
+        at: DateTime<Utc>,
+        note: String,
+    },
+    Rejected {
+        reason: String,
+        at: DateTime<Utc>,
+    },
+    Applied {
+        at: DateTime<Utc>,
+        effect: String,
+    },
+    Superseded {
+        by: Uuid,
+    },
 }
 
 /// Append-only store للاقتراحات — D1 محفوظ
@@ -121,12 +143,7 @@ impl ProposalStore {
     }
 
     /// الموافقة على اقتراح
-    pub fn approve(
-        &mut self,
-        id: Uuid,
-        by: &str,
-        note: &str,
-    ) -> Result<(), GovernanceError> {
+    pub fn approve(&mut self, id: Uuid, by: &str, note: &str) -> Result<(), GovernanceError> {
         self.transition(id, |p| match &p.status {
             ProposalStatus::Pending | ProposalStatus::UnderReview { .. } => {
                 p.status = ProposalStatus::Approved {
@@ -161,11 +178,7 @@ impl ProposalStore {
     }
 
     /// تحديد اقتراح كـ مُطبَّق
-    pub fn mark_applied(
-        &mut self,
-        id: Uuid,
-        effect: &str,
-    ) -> Result<(), GovernanceError> {
+    pub fn mark_applied(&mut self, id: Uuid, effect: &str) -> Result<(), GovernanceError> {
         self.transition(id, |p| match &p.status {
             ProposalStatus::Approved { .. } => {
                 p.status = ProposalStatus::Applied {

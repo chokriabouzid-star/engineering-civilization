@@ -51,15 +51,14 @@ fn gate_hardened_compiles_and_runs() {
 #[test]
 fn gate_hardened_runs_as_non_root() {
     let r = runner();
-    let out = r
-        .compile_and_run_hardened(
-            r#"
+    let out = r.compile_and_run_hardened(
+        r#"
 fn main() {
     let uid = unsafe { libc::getuid() };
     println!("uid={}", uid);
 }
 "#,
-        );
+    );
 
     // إذا فشل التجميع (libc غير موجود)، نختبر بطريقة أخرى
     match out {
@@ -125,14 +124,16 @@ fn main() {
 fn gate_workspace_tmpfs_writable() {
     let r = runner();
     let out = r
-        .compile_and_run_hardened(r#"
+        .compile_and_run_hardened(
+            r#"
 use std::fs;
 fn main() {
     fs::write("/workspace/test.txt", "data").expect("tmpfs should be writable");
     let content = fs::read_to_string("/workspace/test.txt").unwrap();
     println!("wrote: {}", content);
 }
-"#)
+"#,
+        )
         .unwrap();
     assert!(
         out.stdout.contains("wrote: data"),

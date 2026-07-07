@@ -8,7 +8,7 @@ use ec_constitutional::invariant::Invariant;
 use ec_constitutional::reversibility::ReversibilityInvariant;
 use ec_constitutional::security::SecurityInvariant;
 use ec_epistemic::calibration::CalibrationState;
-use ec_epistemic::state::{Evidence, EpistemicState, UncertaintyDecomposition};
+use ec_epistemic::state::{EpistemicState, Evidence, UncertaintyDecomposition};
 use ec_fitness::fitness::{CatastropheThresholds, FitnessVector};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -96,7 +96,13 @@ fn engine_evaluate_valid_artifact() {
     let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
     let context = EvaluationContext::new("Test valid artifact");
 
-    let eval = engine.evaluate("artifact-valid", 1, &good_fitness(), &good_epistemic(), &context);
+    let eval = engine.evaluate(
+        "artifact-valid",
+        1,
+        &good_fitness(),
+        &good_epistemic(),
+        &context,
+    );
 
     assert!(eval.is_valid, "Expected valid evaluation");
     assert_eq!(eval.artifact_id, "artifact-valid");
@@ -109,10 +115,19 @@ fn engine_evaluate_catastrophic_security() {
     let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
     let context = EvaluationContext::new("Test catastrophic security");
 
-    let eval = engine.evaluate("artifact-bad", 2, &bad_fitness(), &good_epistemic(), &context);
+    let eval = engine.evaluate(
+        "artifact-bad",
+        2,
+        &bad_fitness(),
+        &good_epistemic(),
+        &context,
+    );
 
     assert!(!eval.is_valid, "Expected invalid evaluation");
-    assert!(eval.catastrophic.is_some(), "Expected catastrophic dimension");
+    assert!(
+        eval.catastrophic.is_some(),
+        "Expected catastrophic dimension"
+    );
 }
 
 #[test]
@@ -120,7 +135,13 @@ fn engine_evaluate_stores_artifact_id() {
     let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
     let context = EvaluationContext::default();
 
-    let eval = engine.evaluate("my-artifact-42", 99, &good_fitness(), &good_epistemic(), &context);
+    let eval = engine.evaluate(
+        "my-artifact-42",
+        99,
+        &good_fitness(),
+        &good_epistemic(),
+        &context,
+    );
 
     assert_eq!(eval.artifact_id, "my-artifact-42");
 }
@@ -135,11 +156,23 @@ fn cache_miss_then_hit() {
     assert_eq!(engine.cache_len(), 0);
 
     // First call: cache miss
-    let eval1 = engine.evaluate("artifact-cache", 10, &good_fitness(), &good_epistemic(), &context);
+    let eval1 = engine.evaluate(
+        "artifact-cache",
+        10,
+        &good_fitness(),
+        &good_epistemic(),
+        &context,
+    );
     assert_eq!(engine.cache_len(), 1);
 
     // Second call: cache hit — result must be identical
-    let eval2 = engine.evaluate("artifact-cache", 10, &good_fitness(), &good_epistemic(), &context);
+    let eval2 = engine.evaluate(
+        "artifact-cache",
+        10,
+        &good_fitness(),
+        &good_epistemic(),
+        &context,
+    );
     assert_eq!(engine.cache_len(), 1); // لم تُضف مدخلة جديدة
 
     assert_eq!(eval1.is_valid, eval2.is_valid);
@@ -201,7 +234,13 @@ fn cache_purge_removes_expired() {
     let context = EvaluationContext::default();
 
     for i in 0..5u64 {
-        engine.evaluate(&format!("art-{}", i), i, &good_fitness(), &good_epistemic(), &context);
+        engine.evaluate(
+            &format!("art-{}", i),
+            i,
+            &good_fitness(),
+            &good_epistemic(),
+            &context,
+        );
     }
     assert_eq!(engine.cache_len(), 5);
 
@@ -253,7 +292,11 @@ fn engine_frontier_excludes_invalid() {
     assert!(!invalid.is_valid);
 
     let frontier = engine.build_frontier(&[valid, invalid]);
-    assert_eq!(frontier.len(), 1, "Frontier should exclude invalid artifacts");
+    assert_eq!(
+        frontier.len(),
+        1,
+        "Frontier should exclude invalid artifacts"
+    );
     assert_eq!(frontier[0].artifact_id, "valid");
 }
 
@@ -288,7 +331,9 @@ fn concurrent_access_no_deadlocks() {
     use std::sync::Arc;
     use std::thread;
 
-    let engine = Arc::new(ConstitutionalEngine::with_default_cache(build_test_constitution()));
+    let engine = Arc::new(ConstitutionalEngine::with_default_cache(
+        build_test_constitution(),
+    ));
     let mut handles = vec![];
 
     for thread_id in 0u64..8 {
@@ -330,7 +375,11 @@ fn concurrent_access_no_deadlocks() {
                     &epistemic,
                     &context,
                 );
-                assert!(eval.is_valid, "Thread {} eval {} should be valid", thread_id, i);
+                assert!(
+                    eval.is_valid,
+                    "Thread {} eval {} should be valid",
+                    thread_id, i
+                );
             }
         });
         handles.push(handle);
@@ -351,7 +400,9 @@ async fn load_test_1000_evaluations_per_second() {
     use std::sync::Arc;
     use tokio::time::Instant;
 
-    let engine = Arc::new(ConstitutionalEngine::with_default_cache(build_test_constitution()));
+    let engine = Arc::new(ConstitutionalEngine::with_default_cache(
+        build_test_constitution(),
+    ));
     let fitness = good_fitness();
     let epistemic = good_epistemic();
     let context = EvaluationContext::default();
@@ -367,13 +418,7 @@ async fn load_test_1000_evaluations_per_second() {
         let context = context.clone();
         let handle = tokio::spawn(async move {
             engine
-                .evaluate_async(
-                    format!("load-{}", i),
-                    i as u64,
-                    fitness,
-                    epistemic,
-                    context,
-                )
+                .evaluate_async(format!("load-{}", i), i as u64, fitness, epistemic, context)
                 .await
         });
         handles.push(handle);
@@ -404,7 +449,9 @@ async fn test_100_simultaneous_evaluations() {
     use std::sync::Arc;
     use tokio::time::Instant;
 
-    let engine = Arc::new(ConstitutionalEngine::with_default_cache(build_test_constitution()));
+    let engine = Arc::new(ConstitutionalEngine::with_default_cache(
+        build_test_constitution(),
+    ));
     let fitness = good_fitness();
     let epistemic = good_epistemic();
     let context = EvaluationContext::default();
@@ -420,13 +467,7 @@ async fn test_100_simultaneous_evaluations() {
         let context = context.clone();
         let handle = tokio::spawn(async move {
             engine
-                .evaluate_async(
-                    format!("sim-{}", i),
-                    i as u64,
-                    fitness,
-                    epistemic,
-                    context,
-                )
+                .evaluate_async(format!("sim-{}", i), i as u64, fitness, epistemic, context)
                 .await
         });
         handles.push(handle);
@@ -439,5 +480,8 @@ async fn test_100_simultaneous_evaluations() {
 
     let elapsed = start.elapsed();
     println!("100 simultaneous evaluations in {:?}", elapsed);
-    assert!(elapsed < Duration::from_secs(1), "Should complete within 1 second");
+    assert!(
+        elapsed < Duration::from_secs(1),
+        "Should complete within 1 second"
+    );
 }

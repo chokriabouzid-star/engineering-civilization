@@ -72,7 +72,10 @@ impl GenerationSpec {
 
     /// تنسيق المعاملات: `a: i32, b: String`
     pub fn format_params(&self) -> String {
-        let letters: Vec<&str> = "abcdefghijklmnopqrstuvwxyz".split("").filter(|s| !s.is_empty()).collect();
+        let letters: Vec<&str> = "abcdefghijklmnopqrstuvwxyz"
+            .split("")
+            .filter(|s| !s.is_empty())
+            .collect();
         self.input_types
             .iter()
             .enumerate()
@@ -86,6 +89,8 @@ impl GenerationSpec {
 
     /// هل المواصفات تتطلب unsafe؟
     pub fn requires_unsafe(&self) -> bool {
-        self.constraints.iter().any(|c| c.contains("unsafe") || c.contains("raw_ptr"))
+        self.constraints
+            .iter()
+            .any(|c| c.contains("unsafe") || c.contains("raw_ptr"))
     }
 }

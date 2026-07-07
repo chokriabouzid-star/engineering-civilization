@@ -53,7 +53,10 @@ fn policy_set_loads_from_valid_toml() {
 
     assert_eq!(policy_set.get_float("max_p95_latency_ms"), Some(500.0));
     assert_eq!(policy_set.get_float("min_auth_score"), Some(0.8));
-    assert_eq!(policy_set.get_string("deployment_target"), Some("production"));
+    assert_eq!(
+        policy_set.get_string("deployment_target"),
+        Some("production")
+    );
     assert!(matches!(
         policy_set.values.get("enable_canary"),
         Some(ec_constitutional::policy::PolicyValue::Boolean(true))

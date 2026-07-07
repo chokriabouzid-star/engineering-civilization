@@ -10,7 +10,7 @@ use ec_constitutional::security::SecurityInvariant;
 use ec_epistemic::calibration::CalibrationState;
 use ec_epistemic::decay::{DecayConfig, ExponentialHalfLifeDecay, TemporalDecay};
 use ec_epistemic::propagation::{ConservativeCombiner, ConservativePropagation};
-use ec_epistemic::state::{Evidence, EpistemicState, UncertaintyDecomposition};
+use ec_epistemic::state::{EpistemicState, Evidence, UncertaintyDecomposition};
 use ec_fitness::fitness::{CatastropheThresholds, FitnessVector};
 use std::sync::Arc;
 use std::time::Duration;
@@ -55,7 +55,10 @@ fn scenario_1_epistemic_flows_through_evaluation() {
     let eval = engine.evaluate("s1-artifact", 1, &fitness, &epistemic, &context);
 
     assert_eq!(eval.epistemic.confidence, epistemic.confidence);
-    assert_eq!(eval.epistemic.evidence.sample_size, epistemic.evidence.sample_size);
+    assert_eq!(
+        eval.epistemic.evidence.sample_size,
+        epistemic.evidence.sample_size
+    );
 }
 
 // ─── Scenario 2: Constitution.learn() Updates Understanding ────────
@@ -123,7 +126,8 @@ fn scenario_4_conservative_propagation() {
     )
     .unwrap();
 
-    let combined = ConservativeCombiner::combine(&[epistemic1.clone(), epistemic2.clone()]).unwrap();
+    let combined =
+        ConservativeCombiner::combine(&[epistemic1.clone(), epistemic2.clone()]).unwrap();
 
     assert!(combined.confidence <= epistemic1.confidence.min(epistemic2.confidence));
 }
@@ -173,7 +177,11 @@ fn scenario_6_value_drift_detector() {
     }
 
     let degrees = detector.drift_degrees().unwrap();
-    assert!(degrees > 30.0, "Expected significant drift, got {} degrees", degrees);
+    assert!(
+        degrees > 30.0,
+        "Expected significant drift, got {} degrees",
+        degrees
+    );
     assert!(detector.needs_review().is_some());
 }
 

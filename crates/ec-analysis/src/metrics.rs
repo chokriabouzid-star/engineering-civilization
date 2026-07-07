@@ -19,8 +19,7 @@ pub fn count_functions(code: &str) -> usize {
 
 /// عد دوال الاختبار.
 pub fn count_test_functions(code: &str) -> usize {
-    code.matches("#[test]").count()
-        + code.matches("#[tokio::test]").count()
+    code.matches("#[test]").count() + code.matches("#[tokio::test]").count()
 }
 
 /// تأكد من أن القيمة في النطاق [0.0, 1.0].

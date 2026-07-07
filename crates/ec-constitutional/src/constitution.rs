@@ -100,7 +100,11 @@ impl Constitution {
         let predicted_valid = prediction.is_valid;
         let actual_valid = reality.correctness >= 1.0;
 
-        let validity_error = if predicted_valid == actual_valid { 0.0 } else { 1.0 };
+        let validity_error = if predicted_valid == actual_valid {
+            0.0
+        } else {
+            1.0
+        };
 
         let confidence_gap = (prediction.epistemic.confidence - reality.reproducibility).abs();
 

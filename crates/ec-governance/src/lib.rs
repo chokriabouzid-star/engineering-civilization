@@ -16,7 +16,7 @@ pub mod storage;
 pub use audit::{AuditEntry, AuditLog, GovernanceEvent};
 pub use drift_trigger::propose_from_drift;
 pub use proposal::{
-    ConstitutionalProposal, GovernanceError, ProposedChange, ProposalOrigin,
-    ProposalStatus, ProposalStore, SystemTrigger, ThresholdDirection,
+    ConstitutionalProposal, GovernanceError, ProposalOrigin, ProposalStatus, ProposalStore,
+    ProposedChange, SystemTrigger, ThresholdDirection,
 };
 pub use storage::GovernanceStorage;

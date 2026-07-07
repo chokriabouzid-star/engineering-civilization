@@ -6,17 +6,18 @@
 //!              Counterfactuals · Value Drift · Hardening
 
 use ec_analysis::analyze_code;
+use ec_fitness::fitness::FitnessVector;
 use ec_memory::{
-    ArtifactSnapshot, CausalMemoryGraph, DecisionNodeBuilder,
-    HistoricalDriftAnalyzer, MemoryQuery,
+    ArtifactSnapshot, CausalMemoryGraph, DecisionNodeBuilder, HistoricalDriftAnalyzer, MemoryQuery,
     RetrospectiveAssessment, SandboxOutcome,
 };
-use ec_fitness::fitness::FitnessVector;
 
 fn project_root() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent().unwrap()
-        .parent().unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
         .to_path_buf()
 }
 
@@ -60,8 +61,14 @@ fn gate_static_analysis_produces_valid_fitness() {
     let fitness = analyze_code(code);
     assert!(fitness.validate().is_ok());
     assert!(fitness.security > 0.5, "pure function must be secure");
-    assert!(fitness.reversibility > 0.5, "pure function must be reversible");
-    assert!(fitness.performance > 0.5, "no allocations = high performance");
+    assert!(
+        fitness.reversibility > 0.5,
+        "pure function must be reversible"
+    );
+    assert!(
+        fitness.performance > 0.5,
+        "no allocations = high performance"
+    );
 }
 
 #[test]
@@ -139,7 +146,11 @@ fn gate_code_generation_works() {
     let result = gen.generate(&spec);
     assert!(result.succeeded(), "generation must succeed");
     let code = result.code().unwrap();
-    assert!(code.contains("pub fn add"), "must contain function: {}", code);
+    assert!(
+        code.contains("pub fn add"),
+        "must contain function: {}",
+        code
+    );
     assert!(!code.contains("unsafe"), "must not contain unsafe");
 }
 
@@ -168,10 +179,16 @@ fn gate_counterfactual_gain() {
     let worse = make_fitness(0.1, 0.1);
 
     let gain_better = query.counterfactual_gain(&chosen, &better);
-    assert!(matches!(gain_better, ec_memory::CounterfactualGain::AlternativeWasBetter { .. }));
+    assert!(matches!(
+        gain_better,
+        ec_memory::CounterfactualGain::AlternativeWasBetter { .. }
+    ));
 
     let gain_worse = query.counterfactual_gain(&chosen, &worse);
-    assert!(matches!(gain_worse, ec_memory::CounterfactualGain::ChoiceWasCorrect));
+    assert!(matches!(
+        gain_worse,
+        ec_memory::CounterfactualGain::ChoiceWasCorrect
+    ));
 }
 
 #[test]
@@ -189,8 +206,15 @@ fn gate_find_similar() {
     let query = MemoryQuery::new(&graph);
     let similar = query.find_similar(&target, 2);
     assert_eq!(similar.len(), 2);
-    assert!(similar[0].similarity > similar[1].similarity, "must be sorted by similarity");
-    assert_eq!(similar[0].node_id, graph.all()[0].id, "closest must be first");
+    assert!(
+        similar[0].similarity > similar[1].similarity,
+        "must be sorted by similarity"
+    );
+    assert_eq!(
+        similar[0].node_id,
+        graph.all()[0].id,
+        "closest must be first"
+    );
 }
 
 #[test]
@@ -215,17 +239,35 @@ fn gate_drift_stable() {
     let mut graph = CausalMemoryGraph::new();
     // baseline: security=0.8
     for i in 0..10 {
-        record_node(&mut graph, &format!("s-{}", i), make_fitness(0.8, 0.5), true, vec![]);
+        record_node(
+            &mut graph,
+            &format!("s-{}", i),
+            make_fitness(0.8, 0.5),
+            true,
+            vec![],
+        );
     }
     // current: same direction
     for i in 0..10 {
-        record_node(&mut graph, &format!("s2-{}", i), make_fitness(0.82, 0.5), true, vec![]);
+        record_node(
+            &mut graph,
+            &format!("s2-{}", i),
+            make_fitness(0.82, 0.5),
+            true,
+            vec![],
+        );
     }
 
     let analyzer = HistoricalDriftAnalyzer::new(&graph, 10, 10);
     let report = analyzer.analyze();
-    assert!(matches!(report.classification, ec_memory::DriftClassification::Stable),
-        "similar vectors should be stable, got {:?}", report.classification);
+    assert!(
+        matches!(
+            report.classification,
+            ec_memory::DriftClassification::Stable
+        ),
+        "similar vectors should be stable, got {:?}",
+        report.classification
+    );
     assert!(report.drift_angle_degrees < 10.0);
 }
 
@@ -234,19 +276,40 @@ fn gate_drift_value_shift() {
     let mut graph = CausalMemoryGraph::new();
     // baseline: security high, performance low
     for i in 0..10 {
-        record_node(&mut graph, &format!("b-{}", i), make_fitness(0.9, 0.2), true, vec![]);
+        record_node(
+            &mut graph,
+            &format!("b-{}", i),
+            make_fitness(0.9, 0.2),
+            true,
+            vec![],
+        );
     }
     // current: security low, performance high → DRIFT
     for i in 0..10 {
-        record_node(&mut graph, &format!("c-{}", i), make_fitness(0.2, 0.9), true, vec![]);
+        record_node(
+            &mut graph,
+            &format!("c-{}", i),
+            make_fitness(0.2, 0.9),
+            true,
+            vec![],
+        );
     }
 
     let analyzer = HistoricalDriftAnalyzer::new(&graph, 10, 10);
     let report = analyzer.analyze();
-    assert!(!matches!(report.classification, ec_memory::DriftClassification::Stable),
-        "opposing vectors must not be stable, got {:?}", report.classification);
-    assert!(report.drift_angle_degrees > 10.0,
-        "drift angle must be > 10°, got {:.1}°", report.drift_angle_degrees);
+    assert!(
+        !matches!(
+            report.classification,
+            ec_memory::DriftClassification::Stable
+        ),
+        "opposing vectors must not be stable, got {:?}",
+        report.classification
+    );
+    assert!(
+        report.drift_angle_degrees > 10.0,
+        "drift angle must be > 10°, got {:.1}°",
+        report.drift_angle_degrees
+    );
 }
 
 #[test]
@@ -256,8 +319,10 @@ fn gate_drift_insufficient_data() {
 
     let analyzer = HistoricalDriftAnalyzer::new(&graph, 10, 10);
     let report = analyzer.analyze();
-    assert!(matches!(report.classification,
-        ec_memory::DriftClassification::InsufficientData { .. }));
+    assert!(matches!(
+        report.classification,
+        ec_memory::DriftClassification::InsufficientData { .. }
+    ));
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -267,8 +332,8 @@ fn gate_drift_insufficient_data() {
 #[test]
 fn gate_iterative_pipeline_stores_in_memory() {
     use ec_constitutional::{
-        Constitution, SecurityInvariant, TestCoverageInvariant,
-        ReversibilityInvariant, TypeSafetyInvariant,
+        Constitution, ReversibilityInvariant, SecurityInvariant, TestCoverageInvariant,
+        TypeSafetyInvariant,
     };
     use ec_fitness::fitness::CatastropheThresholds;
     use std::sync::Arc;
@@ -287,8 +352,11 @@ fn gate_iterative_pipeline_stores_in_memory() {
 
     assert!(result.total_iterations > 0, "must run at least 1 iteration");
     assert!(!result.attempts.is_empty(), "must have attempt records");
-    assert_eq!(pipeline.memory().len(), result.attempts.len(),
-        "every attempt must be stored in memory");
+    assert_eq!(
+        pipeline.memory().len(),
+        result.attempts.len(),
+        "every attempt must be stored in memory"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -325,7 +393,11 @@ fn gate_analysis_performance() {
         let _ = analyze_code(code);
     }
     let avg = start.elapsed() / 100;
-    assert!(avg.as_millis() < 5, "analyze_code too slow: {}ms", avg.as_millis());
+    assert!(
+        avg.as_millis() < 5,
+        "analyze_code too slow: {}ms",
+        avg.as_millis()
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════

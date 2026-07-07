@@ -12,12 +12,12 @@ pub mod reversibility;
 pub mod security;
 
 // Week 28: جديد — إضافي فقط
-pub mod report;
 pub mod ast_analyzer;
+pub mod report;
 pub mod visitors;
 
-pub use report::{AnalysisReport, ConfidenceVector, AnalysisWarning};
 pub use ast_analyzer::AstAnalyzer;
+pub use report::{AnalysisReport, AnalysisWarning, ConfidenceVector};
 
 use ec_fitness::FitnessVector;
 
@@ -32,7 +32,7 @@ pub fn analyze_code(code: &str) -> FitnessVector {
 /// تستخدم syn AST بدلاً من keyword counting
 pub fn analyze_code_full(code: &str) -> AnalysisReport {
     match syn::parse_str::<syn::File>(code) {
-        Ok(ast)  => AstAnalyzer::new().analyze_file(&ast),
-        Err(e)   => AnalysisReport::unparseable(e.to_string()),
+        Ok(ast) => AstAnalyzer::new().analyze_file(&ast),
+        Err(e) => AnalysisReport::unparseable(e.to_string()),
     }
 }

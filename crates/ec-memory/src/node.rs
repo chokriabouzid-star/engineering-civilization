@@ -2,9 +2,7 @@
 
 //! عقدة القرار — قلب الذاكرة السببية.
 
-use crate::types::{
-    ArtifactSnapshot, NodeId, RejectionReason, RetrospectiveAssessment,
-};
+use crate::types::{ArtifactSnapshot, NodeId, RejectionReason, RetrospectiveAssessment};
 use chrono::{DateTime, Utc};
 use ec_fitness::fitness::FitnessVector;
 use serde::{Deserialize, Serialize};
@@ -261,7 +259,14 @@ mod tests {
 
     #[test]
     fn decision_node_add_retrospective() {
-        let mut node = DecisionNode::new("test", dummy_artifact(), dummy_fitness(), true, None, vec![]);
+        let mut node = DecisionNode::new(
+            "test",
+            dummy_artifact(),
+            dummy_fitness(),
+            true,
+            None,
+            vec![],
+        );
         let assessment = RetrospectiveAssessment::new(true, 0.9, "better").unwrap();
 
         node.add_retrospective(assessment.clone());
@@ -298,18 +303,14 @@ mod tests {
 
     #[test]
     fn builder_creates_node() {
-        let builder = DecisionNodeBuilder::new(
-            "test-builder",
-            dummy_artifact(),
-            dummy_fitness(),
-        )
-        .constitutional_valid(true)
-        .sandbox_outcome(Some(SandboxOutcome {
-            correctness: 1.0,
-            reproducibility: 0.95,
-            empirical_confidence: 0.85,
-        }))
-        .causal_parents(vec![]);
+        let builder = DecisionNodeBuilder::new("test-builder", dummy_artifact(), dummy_fitness())
+            .constitutional_valid(true)
+            .sandbox_outcome(Some(SandboxOutcome {
+                correctness: 1.0,
+                reproducibility: 0.95,
+                empirical_confidence: 0.85,
+            }))
+            .causal_parents(vec![]);
 
         let node = builder.build();
         assert_eq!(node.artifact_id, "test-builder");
@@ -326,12 +327,8 @@ mod tests {
             RejectionReason::SandboxFailure { correctness: 0.5 },
         );
 
-        let builder = DecisionNodeBuilder::new(
-            "with-alt",
-            dummy_artifact(),
-            dummy_fitness(),
-        )
-        .add_alternative(alt);
+        let builder = DecisionNodeBuilder::new("with-alt", dummy_artifact(), dummy_fitness())
+            .add_alternative(alt);
 
         let node = builder.build();
         assert_eq!(node.alternatives.len(), 1);

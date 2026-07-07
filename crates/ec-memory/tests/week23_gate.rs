@@ -11,8 +11,8 @@
 
 use ec_fitness::fitness::FitnessVector;
 use ec_memory::{
-    ArtifactSnapshot, CausalMemoryGraph, CounterfactualGain,
-    DecisionNodeBuilder, MemoryQuery, NodeId, SandboxOutcome,
+    ArtifactSnapshot, CausalMemoryGraph, CounterfactualGain, DecisionNodeBuilder, MemoryQuery,
+    NodeId, SandboxOutcome,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -48,13 +48,9 @@ fn make_builder(
     fitness: FitnessVector,
     parent: Option<NodeId>,
 ) -> DecisionNodeBuilder {
-    DecisionNodeBuilder::new(
-        artifact,
-        ArtifactSnapshot::new("fn main() {}"),
-        fitness,
-    )
-    .constitutional_valid(true)
-    .causal_parents(parent.into_iter().collect())
+    DecisionNodeBuilder::new(artifact, ArtifactSnapshot::new("fn main() {}"), fitness)
+        .constitutional_valid(true)
+        .causal_parents(parent.into_iter().collect())
 }
 
 fn make_builder_with_outcome(
@@ -63,24 +59,17 @@ fn make_builder_with_outcome(
     correctness: f64,
     parent: Option<NodeId>,
 ) -> DecisionNodeBuilder {
-    DecisionNodeBuilder::new(
-        artifact,
-        ArtifactSnapshot::new("fn main() {}"),
-        fitness,
-    )
-    .constitutional_valid(true)
-    .sandbox_outcome(Some(SandboxOutcome {
-        correctness,
-        reproducibility: 0.98,
-        empirical_confidence: 0.9,
-    }))
-    .causal_parents(parent.into_iter().collect())
+    DecisionNodeBuilder::new(artifact, ArtifactSnapshot::new("fn main() {}"), fitness)
+        .constitutional_valid(true)
+        .sandbox_outcome(Some(SandboxOutcome {
+            correctness,
+            reproducibility: 0.98,
+            empirical_confidence: 0.9,
+        }))
+        .causal_parents(parent.into_iter().collect())
 }
 
-fn build_graph_with_iterations(
-    artifact: &str,
-    n: usize,
-) -> CausalMemoryGraph {
+fn build_graph_with_iterations(artifact: &str, n: usize) -> CausalMemoryGraph {
     let mut g = CausalMemoryGraph::new();
     let mut parent: Option<NodeId> = None;
     for i in 0..n {
@@ -211,11 +200,7 @@ fn find_similar_has_valid_fields() {
 fn cosine_similarity_identical_is_one() {
     let v = high_security();
     let sim = MemoryQuery::cosine_similarity(&v, &v);
-    assert!(
-        (sim - 1.0).abs() < 1e-6,
-        "expected 1.0, got {}",
-        sim
-    );
+    assert!((sim - 1.0).abs() < 1e-6, "expected 1.0, got {}", sim);
 }
 
 #[test]
@@ -257,8 +242,7 @@ fn counterfactual_gain_alternative_better() {
         gain,
         CounterfactualGain::AlternativeWasBetter { .. }
     ));
-    if let CounterfactualGain::AlternativeWasBetter { dimensions_better } = gain
-    {
+    if let CounterfactualGain::AlternativeWasBetter { dimensions_better } = gain {
         assert_eq!(dimensions_better, 6, "all 6 dimensions should be better");
     }
 }
@@ -349,8 +333,10 @@ fn best_rejected_alternative_none_when_node_missing() {
 #[test]
 fn query_only_returns_matching_artifact() {
     let mut g = CausalMemoryGraph::new();
-    g.record_from_builder(make_builder("alpha", high_security(), None)).unwrap();
-    g.record_from_builder(make_builder("beta", low_security(), None)).unwrap();
+    g.record_from_builder(make_builder("alpha", high_security(), None))
+        .unwrap();
+    g.record_from_builder(make_builder("beta", low_security(), None))
+        .unwrap();
 
     let q = MemoryQuery::new(&g);
     let evo = q.fitness_evolution("alpha");

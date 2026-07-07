@@ -87,9 +87,7 @@ fn gate_simple_code_high_maintainability() {
 #[test]
 fn gate_complex_code_lower_maintainability() {
     let simple = analyze_code("fn main() { let x = 1; }");
-    let complex = analyze_code(
-        "fn foo() { if a { if b { if c { if d { } } } } }"
-    );
+    let complex = analyze_code("fn foo() { if a { if b { if c { if d { } } } } }");
     assert!(complex.maintainability < simple.maintainability);
 }
 
@@ -173,22 +171,33 @@ fn week19_gate_complete() {
     let safe = analyze_code("fn main() { let x = 42; }");
     let unsafe_code = analyze_code("unsafe { *ptr; }");
     let tested = analyze_code("#[test]\nfn test_it() {} fn main() {}");
-    let complex = analyze_code("fn foo() { if a && b || c { if d { match e { 1 => {}, _ => {} } } } }");
+    let complex =
+        analyze_code("fn foo() { if a && b || c { if d { match e { 1 => {}, _ => {} } } } }");
     let io = analyze_code("fn main() { println!(\"hi\"); fs::write(\"a\", \"b\"); }");
 
     println!("═══════════════════════════════════════════════");
     println!("  Week 19 Gate — Static Code Analysis");
     println!("═══════════════════════════════════════════════");
-    println!("  Safe code:      sec={:.2} cov={:.2} maint={:.2}",
-        safe.security, safe.test_coverage, safe.maintainability);
-    println!("  Unsafe code:    sec={:.2} (should be < 0.8)",
-        unsafe_code.security);
-    println!("  Tested code:    cov={:.2} (should be > 0.0)",
-        tested.test_coverage);
-    println!("  Complex code:   maint={:.2} (should be < 0.9)",
-        complex.maintainability);
-    println!("  IO code:        rev={:.2} (should be < 1.0)",
-        io.reversibility);
+    println!(
+        "  Safe code:      sec={:.2} cov={:.2} maint={:.2}",
+        safe.security, safe.test_coverage, safe.maintainability
+    );
+    println!(
+        "  Unsafe code:    sec={:.2} (should be < 0.8)",
+        unsafe_code.security
+    );
+    println!(
+        "  Tested code:    cov={:.2} (should be > 0.0)",
+        tested.test_coverage
+    );
+    println!(
+        "  Complex code:   maint={:.2} (should be < 0.9)",
+        complex.maintainability
+    );
+    println!(
+        "  IO code:        rev={:.2} (should be < 1.0)",
+        io.reversibility
+    );
     println!("═══════════════════════════════════════════════");
 
     assert!(safe.security > 0.9);

@@ -2,21 +2,25 @@
 
 //! Final Gate — Phase 6 complete verification
 
-use ec_fitness::fitness::FitnessVector;
 use ec_analysis::analyze_code_full;
+use ec_epistemic::BayesianEvidence;
+use ec_fitness::fitness::FitnessVector;
+use ec_governance::audit::*;
+use ec_governance::proposal::*;
+use ec_governance::storage::GovernanceStorage;
+use ec_memory::ArtifactSnapshot;
 use ec_memory::CausalMemoryGraph;
-use ec_memory::SqliteStorage;
+use ec_memory::DecisionNodeBuilder;
 use ec_memory::MemoryStorage;
 use ec_memory::OutcomeStorage;
-use ec_memory::ArtifactSnapshot;
-use ec_memory::DecisionNodeBuilder;
-use ec_governance::proposal::*;
-use ec_governance::audit::*;
-use ec_governance::storage::GovernanceStorage;
-use ec_epistemic::BayesianEvidence;
+use ec_memory::SqliteStorage;
 
 fn make_fitness(sec: f64, perf: f64) -> FitnessVector {
-    FitnessVector { security: sec, performance: perf, ..Default::default() }
+    FitnessVector {
+        security: sec,
+        performance: perf,
+        ..Default::default()
+    }
 }
 
 // ─── D1-D8 verification ────────────────────────────────────────────
@@ -48,7 +52,10 @@ fn final_d1_append_only_audit() {
 
 #[test]
 fn final_d5_single_similarity_source() {
-    let a = FitnessVector { security: 0.8, ..Default::default() };
+    let a = FitnessVector {
+        security: 0.8,
+        ..Default::default()
+    };
     assert!((a.cosine_similarity(&a) - 1.0).abs() < 1e-10);
 }
 
@@ -67,29 +74,39 @@ fn final_proposal_lifecycle() {
     let mut audit = AuditLog::new();
 
     let p = ConstitutionalProposal::new(
-        ProposalOrigin::Human { name: "engineer".into() },
+        ProposalOrigin::Human {
+            name: "engineer".into(),
+        },
         ProposedChange::AdjustThreshold {
             dimension: "security".into(),
             current: 0.70,
             proposed: 0.75,
             direction: ThresholdDirection::Tighten,
         },
-        "تشديد الأمن"
+        "تشديد الأمن",
     );
     let id = p.id;
 
     store.submit(p);
     audit.record(
-        GovernanceEvent::ProposalCreated { id, change_type: "AdjustThreshold".into() },
-        "system", ""
+        GovernanceEvent::ProposalCreated {
+            id,
+            change_type: "AdjustThreshold".into(),
+        },
+        "system",
+        "",
     );
 
     assert_eq!(store.pending().len(), 1);
 
     store.approve(id, "lead", "موافق").unwrap();
     audit.record(
-        GovernanceEvent::ProposalApproved { id, by: "lead".into() },
-        "lead", ""
+        GovernanceEvent::ProposalApproved {
+            id,
+            by: "lead".into(),
+        },
+        "lead",
+        "",
     );
 
     assert_eq!(store.pending().len(), 0);
@@ -99,22 +116,22 @@ fn final_proposal_lifecycle() {
 #[test]
 fn final_governance_storage_roundtrip() {
     let storage = GovernanceStorage::in_memory().unwrap();
-    
+
     let p = ConstitutionalProposal::new(
         ProposalOrigin::System {
             trigger: SystemTrigger::DriftDetected {
                 angle_degrees: 15.0,
                 classification: "ValueShift".into(),
-            }
+            },
         },
         ProposedChange::AddInvariant {
             name: "test".into(),
             description: "test invariant".into(),
             severity: "medium".into(),
         },
-        "auto-fix"
+        "auto-fix",
     );
-    
+
     storage.save_proposal(&p).unwrap();
     let loaded = storage.load_proposals().unwrap();
     assert_eq!(loaded.len(), 1);
@@ -135,8 +152,7 @@ fn final_sqlite_still_works() {
     let mut graph = CausalMemoryGraph::new();
     let snap = ArtifactSnapshot::new("fn f() {}");
     let fitness = make_fitness(0.8, 0.7);
-    let builder = DecisionNodeBuilder::new("art1", snap, fitness)
-        .constitutional_valid(true);
+    let builder = DecisionNodeBuilder::new("art1", snap, fitness).constitutional_valid(true);
     graph.record_from_builder(builder).unwrap();
     storage.save(&graph).unwrap();
     let loaded = storage.load().unwrap();

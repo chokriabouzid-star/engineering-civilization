@@ -18,19 +18,27 @@ use std::sync::Arc;
 #[derive(Debug)]
 struct AlwaysAccept;
 impl Invariant for AlwaysAccept {
-    fn name(&self) -> &'static str { "AlwaysAccept" }
-    fn check(&self, _: &FitnessVector, _: &EpistemicState)
-        -> Result<(), ViolationReport> { Ok(()) }
+    fn name(&self) -> &'static str {
+        "AlwaysAccept"
+    }
+    fn check(&self, _: &FitnessVector, _: &EpistemicState) -> Result<(), ViolationReport> {
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
 struct AlwaysReject;
 impl Invariant for AlwaysReject {
-    fn name(&self) -> &'static str { "AlwaysReject" }
-    fn check(&self, _: &FitnessVector, _: &EpistemicState)
-        -> Result<(), ViolationReport> {
+    fn name(&self) -> &'static str {
+        "AlwaysReject"
+    }
+    fn check(&self, _: &FitnessVector, _: &EpistemicState) -> Result<(), ViolationReport> {
         Err(ViolationReport::new(
-            "AlwaysReject", "Always rejected", 0.0, 1.0, true,
+            "AlwaysReject",
+            "Always rejected",
+            0.0,
+            1.0,
+            true,
         ))
     }
 }
@@ -57,11 +65,8 @@ fn strict_constitution() -> Constitution {
 }
 
 fn simulated_pipeline() -> IntegrationPipeline {
-    IntegrationPipeline::new_simulated(
-        permissive_constitution(),
-        CatastropheThresholds::default(),
-    )
-    .unwrap()
+    IntegrationPipeline::new_simulated(permissive_constitution(), CatastropheThresholds::default())
+        .unwrap()
 }
 
 // ─── Test 1: Pipeline يعمل ───────────────────────────────────────────
@@ -101,11 +106,9 @@ fn pipeline_simulated_fail_code_rejected() {
 
 #[test]
 fn pipeline_constitutional_rejection() {
-    let mut p = IntegrationPipeline::new_simulated(
-        strict_constitution(),
-        CatastropheThresholds::default(),
-    )
-    .unwrap();
+    let mut p =
+        IntegrationPipeline::new_simulated(strict_constitution(), CatastropheThresholds::default())
+            .unwrap();
 
     let result = p.run("test", "fn main() {}");
 
@@ -293,7 +296,11 @@ fn week17_gate_full_pipeline_integration() {
 
     // ─── Scenario 1: Good code → Accepted
     let r1 = pipeline.run("good-code", "fn main() { println!(\"ok\"); }");
-    assert!(r1.is_accepted(), "Good code should be accepted: {:?}", r1.verdict);
+    assert!(
+        r1.is_accepted(),
+        "Good code should be accepted: {:?}",
+        r1.verdict
+    );
     assert_eq!(r1.prediction_error.validity_error, 0.0);
 
     // ─── Scenario 2: Fail code → Rejected by Reality

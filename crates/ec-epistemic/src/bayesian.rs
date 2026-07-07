@@ -33,11 +33,7 @@ impl BayesianEvidence {
     }
 
     /// إنشاء من تاريخ فعلي
-    pub fn from_history(
-        successes: u32,
-        failures: u32,
-        mean_score: f64,
-    ) -> EpistemicResult<Self> {
+    pub fn from_history(successes: u32, failures: u32, mean_score: f64) -> EpistemicResult<Self> {
         ensure_in_range("mean_score", mean_score, 0.0, 1.0)?;
         Ok(Self {
             successes,
@@ -48,11 +44,7 @@ impl BayesianEvidence {
     }
 
     /// تحديث Bayesian بعد تشغيل فعلي
-    pub fn update_with_outcome(
-        &self,
-        was_correct: bool,
-        score: f64,
-    ) -> EpistemicResult<Self> {
+    pub fn update_with_outcome(&self, was_correct: bool, score: f64) -> EpistemicResult<Self> {
         ensure_in_range("score", score, 0.0, 1.0)?;
         let n = (self.successes + self.failures) as f64;
         let new_mean = if n > 0.0 {

@@ -8,12 +8,17 @@ pub struct PerformanceVisitor {
 }
 
 impl Default for PerformanceVisitor {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PerformanceVisitor {
     pub fn new() -> Self {
-        Self { allocations: 0, clones: 0 }
+        Self {
+            allocations: 0,
+            clones: 0,
+        }
     }
 
     /// (performance_score, confidence)
@@ -27,17 +32,27 @@ impl PerformanceVisitor {
 impl<'ast> Visit<'ast> for PerformanceVisitor {
     fn visit_expr_call(&mut self, node: &'ast syn::ExprCall) {
         if let syn::Expr::Path(ref path) = *node.func {
-            let segments: Vec<String> = path.path.segments.iter()
+            let segments: Vec<String> = path
+                .path
+                .segments
+                .iter()
                 .map(|s| s.ident.to_string())
                 .collect();
             let full = segments.join("::");
 
             match full.as_str() {
-                "Vec::new" | "Vec::with_capacity" |
-                "String::new" | "String::from" | "String::with_capacity" |
-                "Box::new" | "HashMap::new" | "HashSet::new" |
-                "BTreeMap::new" | "BTreeSet::new" |
-                "Rc::new" | "Arc::new" => {
+                "Vec::new"
+                | "Vec::with_capacity"
+                | "String::new"
+                | "String::from"
+                | "String::with_capacity"
+                | "Box::new"
+                | "HashMap::new"
+                | "HashSet::new"
+                | "BTreeMap::new"
+                | "BTreeSet::new"
+                | "Rc::new"
+                | "Arc::new" => {
                     self.allocations += 1;
                 }
                 _ => {}
@@ -58,7 +73,10 @@ impl<'ast> Visit<'ast> for PerformanceVisitor {
     }
 
     fn visit_macro(&mut self, node: &'ast syn::Macro) {
-        let name = node.path.segments.last()
+        let name = node
+            .path
+            .segments
+            .last()
             .map(|s| s.ident.to_string())
             .unwrap_or_default();
         if name == "format" || name == "vec" {

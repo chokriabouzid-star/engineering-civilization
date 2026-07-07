@@ -15,10 +15,7 @@ pub enum ReviewReason {
     /// تنوع القرارات منخفض جداً.
     LowDecisionDiversity(f64),
     /// الأولويات المطبقة انجرفت عن خط الأساس.
-    ValueDriftDetected {
-        degrees: f64,
-        threshold: f64,
-    },
+    ValueDriftDetected { degrees: f64, threshold: f64 },
 }
 
 /// كاشف التحجر الدستوري.
@@ -122,7 +119,7 @@ impl ValueDriftDetector {
             performance: 0.0,
             architectural_stability: 0.0,
         };
-        
+
         for fv in &self.current_accepted {
             sum.security += fv.security;
             sum.reversibility += fv.reversibility;
@@ -131,14 +128,14 @@ impl ValueDriftDetector {
             sum.performance += fv.performance;
             sum.architectural_stability += fv.architectural_stability;
         }
-        
+
         sum.security /= n;
         sum.reversibility /= n;
         sum.test_coverage /= n;
         sum.maintainability /= n;
         sum.performance /= n;
         sum.architectural_stability /= n;
-        
+
         Some(sum)
     }
 

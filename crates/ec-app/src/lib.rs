@@ -13,7 +13,6 @@
 pub mod pipeline;
 
 pub use pipeline::{
-    AttemptRecord, IntegrationPipeline, IterativePipeline,
+    build_epistemic_from_reality, AttemptRecord, IntegrationPipeline, IterativePipeline,
     IterativePipelineResult, PipelineResult, PipelineVerdict,
-    build_epistemic_from_reality,
 };

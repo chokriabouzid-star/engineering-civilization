@@ -17,7 +17,9 @@ pub struct ComplexityVisitor {
 }
 
 impl Default for ComplexityVisitor {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ComplexityVisitor {
@@ -32,31 +34,28 @@ impl ComplexityVisitor {
 
     /// (maintainability_score, confidence)
     pub fn score(&self) -> (f64, f64) {
-        let prod: Vec<_> = self.functions.iter()
-            .filter(|f| !f.is_test)
-            .collect();
+        let prod: Vec<_> = self.functions.iter().filter(|f| !f.is_test).collect();
 
         if prod.is_empty() {
             return (1.0, 0.80);
         }
 
-        let avg = prod.iter().map(|f| f.cc as f64).sum::<f64>()
-            / prod.len() as f64;
+        let avg = prod.iter().map(|f| f.cc as f64).sum::<f64>() / prod.len() as f64;
         let max = prod.iter().map(|f| f.cc).max().unwrap_or(1);
 
         let penalty = match max {
             31..=u32::MAX => 0.25,
-            21..=30       => 0.15,
-            _             => 0.0,
+            21..=30 => 0.15,
+            _ => 0.0,
         };
 
-        let score = ((1.0 - (avg - 1.0) / 19.0).clamp(0.0, 1.0) - penalty)
-            .max(0.0);
+        let score = ((1.0 - (avg - 1.0) / 19.0).clamp(0.0, 1.0) - penalty).max(0.0);
         (score, 0.88)
     }
 
     pub fn high_complexity(&self) -> Vec<(String, u32)> {
-        self.functions.iter()
+        self.functions
+            .iter()
             .filter(|f| f.cc > 10)
             .map(|f| (f.name.clone(), f.cc))
             .collect()
@@ -65,14 +64,13 @@ impl ComplexityVisitor {
 
 impl<'ast> Visit<'ast> for ComplexityVisitor {
     fn visit_item_fn(&mut self, node: &'ast syn::ItemFn) {
-        let saved_name      = self.current_name.take();
+        let saved_name = self.current_name.take();
         let saved_decisions = self.current_decisions;
-        let saved_is_test   = self.current_is_test;
+        let saved_is_test = self.current_is_test;
 
-        self.current_name      = Some(node.sig.ident.to_string());
+        self.current_name = Some(node.sig.ident.to_string());
         self.current_decisions = 0;
-        self.current_is_test   = node.attrs.iter()
-            .any(|a| a.path().is_ident("test"));
+        self.current_is_test = node.attrs.iter().any(|a| a.path().is_ident("test"));
 
         syn::visit::visit_item_fn(self, node);
 
@@ -84,9 +82,9 @@ impl<'ast> Visit<'ast> for ComplexityVisitor {
             });
         }
 
-        self.current_name      = saved_name;
+        self.current_name = saved_name;
         self.current_decisions = saved_decisions;
-        self.current_is_test   = saved_is_test;
+        self.current_is_test = saved_is_test;
     }
 
     fn visit_expr_if(&mut self, n: &'ast syn::ExprIf) {

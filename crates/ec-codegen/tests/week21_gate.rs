@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use ec_analysis::analyze_code;
-use ec_codegen::{CodeGenerator, GenerationSpec, GenerationResult};
+use ec_codegen::{CodeGenerator, GenerationResult, GenerationSpec};
 
 #[test]
 fn gate_generator_creates() {
@@ -83,7 +83,9 @@ fn gate_generates_struct() {
 
 #[test]
 fn gate_generation_result_api() {
-    let r: GenerationResult = GenerationResult::Failed { reason: "oops".into() };
+    let r: GenerationResult = GenerationResult::Failed {
+        reason: "oops".into(),
+    };
     assert!(!r.succeeded());
     assert!(r.code().is_none());
 }

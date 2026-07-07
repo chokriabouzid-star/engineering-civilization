@@ -9,19 +9,23 @@ pub struct SideEffectVisitor {
 }
 
 impl Default for SideEffectVisitor {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SideEffectVisitor {
     pub fn new() -> Self {
-        Self { stdout_writes: 0, static_muts: 0, io_calls: 0 }
+        Self {
+            stdout_writes: 0,
+            static_muts: 0,
+            io_calls: 0,
+        }
     }
 
     /// (reversibility_score, confidence)
     pub fn score(&self) -> (f64, f64) {
-        let total = self.stdout_writes
-            + self.static_muts * 2
-            + self.io_calls;
+        let total = self.stdout_writes + self.static_muts * 2 + self.io_calls;
         ((1.0 - (total as f64 * 0.12).min(1.0)).max(0.0), 0.70)
     }
 }
@@ -35,7 +39,10 @@ impl<'ast> Visit<'ast> for SideEffectVisitor {
     }
 
     fn visit_macro(&mut self, node: &'ast syn::Macro) {
-        let name = node.path.segments.last()
+        let name = node
+            .path
+            .segments
+            .last()
             .map(|s| s.ident.to_string())
             .unwrap_or_default();
         match name.as_str() {

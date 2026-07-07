@@ -96,11 +96,7 @@ impl ConstitutionalCache {
 
         if let Some(entry) = self.map.get(&key) {
             if entry.inserted_at.elapsed() < self.ttl {
-                debug!(
-                    artifact_hash,
-                    constitution_version,
-                    "Cache hit"
-                );
+                debug!(artifact_hash, constitution_version, "Cache hit");
                 return Some(entry.evaluation.clone());
             }
             drop(entry);
@@ -205,9 +201,7 @@ impl ConstitutionalEngine {
         info!(counter.evaluations_total = 1);
 
         let start = Instant::now();
-        let evaluation = self
-            .constitution
-            .evaluate(artifact_id, fitness, epistemic);
+        let evaluation = self.constitution.evaluate(artifact_id, fitness, epistemic);
         let elapsed = start.elapsed();
 
         // Record duration metric
@@ -229,8 +223,11 @@ impl ConstitutionalEngine {
         }
 
         // Cache store
-        self.cache
-            .insert(artifact_hash, &self.constitution_version, evaluation.clone());
+        self.cache.insert(
+            artifact_hash,
+            &self.constitution_version,
+            evaluation.clone(),
+        );
 
         evaluation
     }

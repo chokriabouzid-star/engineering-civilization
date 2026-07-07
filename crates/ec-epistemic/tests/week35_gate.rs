@@ -11,8 +11,11 @@ fn w35_initial_prior_unbiased() {
     let p = BayesianEvidence::initial_prior().unwrap();
     assert_eq!(p.successes, 0);
     assert_eq!(p.failures, 0);
-    assert!((p.mean_score - 0.5).abs() < 0.01,
-        "Prior يجب أن يكون غير متحيز: {}", p.mean_score);
+    assert!(
+        (p.mean_score - 0.5).abs() < 0.01,
+        "Prior يجب أن يكون غير متحيز: {}",
+        p.mean_score
+    );
 }
 
 #[test]
@@ -32,15 +35,22 @@ fn w35_confidence_grows_with_successes() {
         e = e.update_with_outcome(true, 0.9).unwrap();
     }
 
-    assert!(e.credible_confidence() > init,
-        "بعد 15 نجاح: {} يجب أن يكون أعلى من {}", e.credible_confidence(), init);
+    assert!(
+        e.credible_confidence() > init,
+        "بعد 15 نجاح: {} يجب أن يكون أعلى من {}",
+        e.credible_confidence(),
+        init
+    );
 }
 
 #[test]
 fn w35_confidence_low_with_few_samples() {
     let e = BayesianEvidence::initial_prior().unwrap();
-    assert!(e.credible_confidence() < 0.50,
-        "بدون بيانات: confidence يجب أن تكون منخفضة، got: {}", e.credible_confidence());
+    assert!(
+        e.credible_confidence() < 0.50,
+        "بدون بيانات: confidence يجب أن تكون منخفضة، got: {}",
+        e.credible_confidence()
+    );
 }
 
 // ─── Gate 3: نتائج مختلطة ──────────────────────────────────────────
@@ -50,10 +60,16 @@ fn w35_mixed_outcomes_moderate_confidence() {
     let mut e = BayesianEvidence::initial_prior().unwrap();
     for i in 0..10 {
         let ok = i % 2 == 0;
-        e = e.update_with_outcome(ok, if ok { 0.9 } else { 0.1 }).unwrap();
+        e = e
+            .update_with_outcome(ok, if ok { 0.9 } else { 0.1 })
+            .unwrap();
     }
     let c = e.credible_confidence();
-    assert!((0.30..0.80).contains(&c), "نتائج مختلطة → ثقة معتدلة: {}", c);
+    assert!(
+        (0.30..0.80).contains(&c),
+        "نتائج مختلطة → ثقة معتدلة: {}",
+        c
+    );
 }
 
 // ─── Gate 4: فشل يخفض الثقة ────────────────────────────────────────
@@ -68,8 +84,12 @@ fn w35_failures_lower_confidence() {
     for _ in 0..10 {
         e_ok = e_ok.update_with_outcome(true, 0.9).unwrap();
     }
-    assert!(e_fail.credible_confidence() < e_ok.credible_confidence(),
-        "فشل={:.3}  نجاح={:.3}", e_fail.credible_confidence(), e_ok.credible_confidence());
+    assert!(
+        e_fail.credible_confidence() < e_ok.credible_confidence(),
+        "فشل={:.3}  نجاح={:.3}",
+        e_fail.credible_confidence(),
+        e_ok.credible_confidence()
+    );
 }
 
 // ─── Gate 5: update يُراكم بشكل صحيح ───────────────────────────────
@@ -125,10 +145,17 @@ fn w35_gate_complete() {
     println!("═══════════════════════════════════════════════");
     println!("  Week 35 Gate — BayesianEvidence");
     println!("═══════════════════════════════════════════════");
-    println!("  Prior:       s={} f={} mean={:.2}",
-        p.successes, p.failures, p.mean_score);
-    println!("  After 5 ok:  s={} f={} mean={:.2} conf={:.3}",
-        e.successes, e.failures, e.mean_score, e.credible_confidence());
+    println!(
+        "  Prior:       s={} f={} mean={:.2}",
+        p.successes, p.failures, p.mean_score
+    );
+    println!(
+        "  After 5 ok:  s={} f={} mean={:.2} conf={:.3}",
+        e.successes,
+        e.failures,
+        e.mean_score,
+        e.credible_confidence()
+    );
     println!("═══════════════════════════════════════════════");
 
     assert_eq!(p.successes, 0);

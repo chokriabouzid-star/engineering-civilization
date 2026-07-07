@@ -7,7 +7,9 @@ use uuid::Uuid;
 
 fn make_proposal(dim: &str, from: f64, to: f64) -> ConstitutionalProposal {
     ConstitutionalProposal::new(
-        ProposalOrigin::Human { name: "engineer".into() },
+        ProposalOrigin::Human {
+            name: "engineer".into(),
+        },
         ProposedChange::AdjustThreshold {
             dimension: dim.into(),
             current: from,
@@ -143,8 +145,8 @@ fn w44_audit_last_n() {
 
 #[test]
 fn w44_proposal_with_evidence() {
-    let p = make_proposal("security", 0.70, 0.75)
-        .with_evidence(vec!["node-1".into(), "node-2".into()]);
+    let p =
+        make_proposal("security", 0.70, 0.75).with_evidence(vec!["node-1".into(), "node-2".into()]);
     assert_eq!(p.evidence_refs.len(), 2);
 }
 
@@ -288,12 +290,20 @@ fn w44_gate_complete() {
     store.submit(p1);
     store.submit(p2);
     audit.record(
-        GovernanceEvent::ProposalCreated { id: id1, change_type: "AdjustThreshold".into() },
-        "system", "",
+        GovernanceEvent::ProposalCreated {
+            id: id1,
+            change_type: "AdjustThreshold".into(),
+        },
+        "system",
+        "",
     );
     audit.record(
-        GovernanceEvent::ProposalCreated { id: id2, change_type: "AdjustThreshold".into() },
-        "system", "",
+        GovernanceEvent::ProposalCreated {
+            id: id2,
+            change_type: "AdjustThreshold".into(),
+        },
+        "system",
+        "",
     );
 
     store.approve(id1, "lead", "ok").unwrap();
@@ -304,7 +314,10 @@ fn w44_gate_complete() {
     println!("═══════════════════════════════════════════════");
     println!("  Proposals:     {}", store.all().len());
     println!("  Pending:       {}", store.pending().len());
-    println!("  Approved:      {}", store.approved_pending_application().len());
+    println!(
+        "  Approved:      {}",
+        store.approved_pending_application().len()
+    );
     println!("  Audit entries: {}", audit.all().len());
     println!("═══════════════════════════════════════════════");
 

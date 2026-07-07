@@ -2,12 +2,12 @@
 
 //! AppState — shared state for the API server
 
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use ec_governance::proposal::ProposalStore;
 use ec_governance::audit::AuditLog;
+use ec_governance::proposal::ProposalStore;
 use ec_governance::storage::GovernanceStorage;
 use ec_memory::CausalMemoryGraph;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 /// Shared application state — thin wrapper, no business logic
 #[derive(Clone)]

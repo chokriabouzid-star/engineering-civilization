@@ -39,10 +39,7 @@ fn gate_reality_vector_from_real_execution() {
     let config = SandboxConfig::new(SandboxMode::Docker);
     let executor = SandboxExecutor::new(config).unwrap();
 
-    let result = executor.execute(
-        "real-rv",
-        r#"fn main() { println!("42"); }"#,
-    );
+    let result = executor.execute("real-rv", r#"fn main() { println!("42"); }"#);
 
     assert!(result.success);
     let reality = result.reality.as_ref().unwrap();
@@ -62,10 +59,7 @@ fn gate_correct_program_produces_trustworthy_reality() {
     config.runs_for_reproducibility = 3;
     let executor = SandboxExecutor::new(config).unwrap();
 
-    let result = executor.execute(
-        "trustworthy",
-        r#"fn main() { println!("stable output"); }"#,
-    );
+    let result = executor.execute("trustworthy", r#"fn main() { println!("stable output"); }"#);
 
     assert!(result.success);
     let reality = result.reality.as_ref().unwrap();
@@ -112,10 +106,7 @@ fn gate_real_latency_measured() {
     config.runs_for_reproducibility = 3;
     let executor = SandboxExecutor::new(config).unwrap();
 
-    let result = executor.execute(
-        "latency",
-        r#"fn main() { println!("done"); }"#,
-    );
+    let result = executor.execute("latency", r#"fn main() { println!("done"); }"#);
 
     assert!(result.success);
     let reality = result.reality.as_ref().unwrap();
@@ -394,11 +385,9 @@ fn gate_zero_escapes_in_20_executions() {
     }
 
     assert_eq!(
-        escapes,
-        0,
+        escapes, 0,
         "CRITICAL: {} escapes in {} executions",
-        escapes,
-        total
+        escapes, total
     );
     println!("✅ Zero escapes: {}/{} executions secure", total, total);
 }

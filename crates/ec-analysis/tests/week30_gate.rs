@@ -2,9 +2,9 @@
 
 //! Week 30 Gate — ComplexityVisitor (Cyclomatic Complexity)
 
-use syn::visit::Visit;
 use ec_analysis::analyze_code_full;
 use ec_analysis::visitors::ComplexityVisitor;
+use syn::visit::Visit;
 
 fn cc_of(code: &str) -> u32 {
     let ast = syn::parse_file(code).unwrap();
@@ -82,12 +82,14 @@ fn w30_multiple_question_marks() {
 #[test]
 fn w30_complex_lower_maintainability() {
     let simple = analyze_code_full("fn f() -> i32 { 1 }");
-    let complex = analyze_code_full(
-        "fn f(a: bool, b: bool, c: bool) { if a { if b { if c {} } } }"
-    );
-    assert!(simple.fitness.maintainability > complex.fitness.maintainability,
+    let complex =
+        analyze_code_full("fn f(a: bool, b: bool, c: bool) { if a { if b { if c {} } } }");
+    assert!(
+        simple.fitness.maintainability > complex.fitness.maintainability,
         "simple={:.2}, complex={:.2}",
-        simple.fitness.maintainability, complex.fitness.maintainability);
+        simple.fitness.maintainability,
+        complex.fitness.maintainability
+    );
 }
 
 #[test]
@@ -132,8 +134,11 @@ fn w30_multiple_functions_independent() {
 #[test]
 fn w30_confidence_reasonable() {
     let r = analyze_code_full("fn f() -> i32 { 1 }");
-    assert!(r.confidence.maintainability >= 0.80,
-        "got: {}", r.confidence.maintainability);
+    assert!(
+        r.confidence.maintainability >= 0.80,
+        "got: {}",
+        r.confidence.maintainability
+    );
 }
 
 #[test]
@@ -148,17 +153,20 @@ fn w30_high_complexity_no_crash() {
 #[test]
 fn week30_gate_complete() {
     let simple = analyze_code_full("fn f() -> i32 { 1 }");
-    let complex = analyze_code_full(
-        "fn f(a: bool, b: bool, c: bool) { if a && b || c { if d {} } }"
-    );
+    let complex =
+        analyze_code_full("fn f(a: bool, b: bool, c: bool) { if a && b || c { if d {} } }");
 
     println!("═══════════════════════════════════════════════");
     println!("  Week 30 Gate — ComplexityVisitor (CC)");
     println!("═══════════════════════════════════════════════");
-    println!("  Simple fn:   maint={:.2} conf={:.2}",
-        simple.fitness.maintainability, simple.confidence.maintainability);
-    println!("  Complex fn:  maint={:.2} conf={:.2}",
-        complex.fitness.maintainability, complex.confidence.maintainability);
+    println!(
+        "  Simple fn:   maint={:.2} conf={:.2}",
+        simple.fitness.maintainability, simple.confidence.maintainability
+    );
+    println!(
+        "  Complex fn:  maint={:.2} conf={:.2}",
+        complex.fitness.maintainability, complex.confidence.maintainability
+    );
     println!("═══════════════════════════════════════════════");
 
     assert!(simple.fitness.maintainability > complex.fitness.maintainability);

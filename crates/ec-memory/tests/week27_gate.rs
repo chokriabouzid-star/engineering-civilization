@@ -2,11 +2,11 @@
 
 //! Week 27 Gate — SQLite Persistence
 
-use ec_memory::{
-    ArtifactSnapshot, CausalMemoryGraph, DecisionNodeBuilder,
-    MemoryStorage, RetrospectiveAssessment, SqliteStorage,
-};
 use ec_fitness::fitness::FitnessVector;
+use ec_memory::{
+    ArtifactSnapshot, CausalMemoryGraph, DecisionNodeBuilder, MemoryStorage,
+    RetrospectiveAssessment, SqliteStorage,
+};
 
 fn make_builder(name: &str) -> DecisionNodeBuilder {
     let snap = ArtifactSnapshot::new(format!("fn {}() {{}}", name));
@@ -141,7 +141,9 @@ fn gate_storage_works_with_real_file() {
     {
         let storage = SqliteStorage::new(path).unwrap();
         let mut graph = CausalMemoryGraph::new();
-        let _id = graph.record_from_builder(make_builder("persist_fn")).unwrap();
+        let _id = graph
+            .record_from_builder(make_builder("persist_fn"))
+            .unwrap();
         storage.save(&graph).unwrap();
         assert!(std::path::Path::new(path).exists());
     }
@@ -190,8 +192,7 @@ fn gate_storage_preserves_constitutional_valid() {
         .unwrap();
     let id_invalid = graph
         .record_from_builder(
-            DecisionNodeBuilder::new("invalid", snap, fitness)
-                .constitutional_valid(false),
+            DecisionNodeBuilder::new("invalid", snap, fitness).constitutional_valid(false),
         )
         .unwrap();
 

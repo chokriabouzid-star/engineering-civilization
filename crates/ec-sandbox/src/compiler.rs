@@ -94,10 +94,7 @@ impl RustSandboxCompiler {
     }
 
     /// compile + run source code.
-    pub fn compile_and_run(
-        &self,
-        source_code: &str,
-    ) -> Result<CompilationResult, DockerError> {
+    pub fn compile_and_run(&self, source_code: &str) -> Result<CompilationResult, DockerError> {
         // تشغيل أول مرة: compilation + execution
         let first = self.runner.compile_and_run_code(source_code)?;
 
@@ -146,7 +143,9 @@ impl RustSandboxCompiler {
 /// استخراج output البرنامج بعد marker.
 fn extract_program_output(raw: &str) -> String {
     if let Some(pos) = raw.find("---OUTPUT---") {
-        raw[pos + "---OUTPUT---".len()..].trim_start_matches('\n').to_string()
+        raw[pos + "---OUTPUT---".len()..]
+            .trim_start_matches('\n')
+            .to_string()
     } else {
         raw.to_string()
     }
@@ -173,9 +172,7 @@ mod tests {
 
     #[test]
     fn fails_on_syntax_error() {
-        let result = compiler(1)
-            .compile_and_run("this is not rust")
-            .unwrap();
+        let result = compiler(1).compile_and_run("this is not rust").unwrap();
 
         assert!(!result.succeeded());
     }

@@ -11,13 +11,13 @@ use std::time::Duration;
 pub struct ResourceLimits {
     /// الحد الأقصى لاستخدام CPU (بالنسبة المئوية، 0.0-1.0).
     pub max_cpu_percent: f64,
-    
+
     /// الحد الأقصى للذاكرة بالميجابايت.
     pub max_memory_mb: u64,
-    
+
     /// الحد الأقصى لمساحة القرص بالميجابايت.
     pub max_disk_mb: u64,
-    
+
     /// الحد الأقصى لوقت التنفيذ.
     pub max_execution_time: Duration,
 }
@@ -25,9 +25,9 @@ pub struct ResourceLimits {
 impl Default for ResourceLimits {
     fn default() -> Self {
         Self {
-            max_cpu_percent: 0.5,        // 50% من CPU واحد
-            max_memory_mb: 512,          // 512 MB
-            max_disk_mb: 100,            // 100 MB
+            max_cpu_percent: 0.5, // 50% من CPU واحد
+            max_memory_mb: 512,   // 512 MB
+            max_disk_mb: 100,     // 100 MB
             max_execution_time: Duration::from_secs(30),
         }
     }
@@ -41,14 +41,8 @@ impl ResourceLimits {
             "max_cpu_percent must be in (0.0, 1.0], got {}",
             self.max_cpu_percent
         );
-        anyhow::ensure!(
-            self.max_memory_mb > 0,
-            "max_memory_mb must be > 0"
-        );
-        anyhow::ensure!(
-            self.max_disk_mb > 0,
-            "max_disk_mb must be > 0"
-        );
+        anyhow::ensure!(self.max_memory_mb > 0, "max_memory_mb must be > 0");
+        anyhow::ensure!(self.max_disk_mb > 0, "max_disk_mb must be > 0");
         anyhow::ensure!(
             self.max_execution_time > Duration::from_millis(100),
             "max_execution_time must be > 100ms"
@@ -58,36 +52,32 @@ impl ResourceLimits {
 }
 
 /// سياسة الشبكة للـ sandbox.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum NetworkPolicy {
     /// معزول تماماً — لا اتصال شبكي.
     #[default]
     Isolated,
-    
+
     /// Loopback فقط (localhost).
     LoopbackOnly,
-    
+
     /// قائمة بيضاء من النطاقات المسموحة.
     Allowlist(Vec<String>),
 }
 
-
 /// سياسة Syscalls المسموحة.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SyscallPolicy {
     /// Allowlist: syscalls محددة فقط.
     Allowlist(Vec<String>),
-    
+
     /// Blocklist: كل syscalls ما عدا هذه.
     Blocklist(Vec<String>),
-    
+
     /// Default safe set (read, write, exit, etc.).
     #[default]
     DefaultSafe,
 }
-
 
 impl SyscallPolicy {
     /// القائمة الآمنة الافتراضية.
@@ -121,36 +111,34 @@ impl SyscallPolicy {
 }
 
 /// وضع التشغيل للـ sandbox.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SandboxMode {
     /// محاكاة — لا تنفيذ حقيقي (للتطوير).
     #[default]
     Simulated,
-    
+
     /// تنفيذ محلي بدون docker.
     Local,
-    
+
     /// تنفيذ في Docker container.
     Docker,
 }
-
 
 /// تكوين Sandbox الكامل.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SandboxConfig {
     /// وضع التشغيل.
     pub mode: SandboxMode,
-    
+
     /// حدود الموارد.
     pub limits: ResourceLimits,
-    
+
     /// سياسة الشبكة.
     pub network: NetworkPolicy,
-    
+
     /// سياسة Syscalls.
     pub syscalls: SyscallPolicy,
-    
+
     /// عدد التشغيلات لقياس reproducibility.
     pub runs_for_reproducibility: usize,
 }
@@ -175,16 +163,16 @@ impl SandboxConfig {
             ..Default::default()
         }
     }
-    
+
     /// التحقق من صحة التكوين.
     pub fn validate(&self) -> anyhow::Result<()> {
         self.limits.validate()?;
-        
+
         anyhow::ensure!(
             self.runs_for_reproducibility >= 1,
             "runs_for_reproducibility must be >= 1"
         );
-        
+
         Ok(())
     }
 }

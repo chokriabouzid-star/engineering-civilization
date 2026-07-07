@@ -11,9 +11,9 @@
 //! ✓ confidence معقولة
 //! ✓ يمر عبر analyze_code_full()
 
-use syn::visit::Visit;
 use ec_analysis::analyze_code_full;
 use ec_analysis::visitors::PerformanceVisitor;
+use syn::visit::Visit;
 
 fn perf_visitor(code: &str) -> PerformanceVisitor {
     let ast = syn::parse_file(code).unwrap();
@@ -103,7 +103,8 @@ fn w33_vec_macro_penalized() {
 #[test]
 fn w33_more_allocs_lower_score() {
     let s1 = perf_score("fn f() { let v = Vec::new(); }");
-    let s3 = perf_score("fn f() { let v = Vec::new(); let s = String::new(); let b = Box::new(1); }");
+    let s3 =
+        perf_score("fn f() { let v = Vec::new(); let s = String::new(); let b = Box::new(1); }");
     assert!(s3 < s1, "s1={:.2}, s3={:.2}", s1, s3);
 }
 
@@ -128,7 +129,11 @@ fn w33_full_report_perf() {
 #[test]
 fn w33_full_report_alloc_code() {
     let r = analyze_code_full("fn f() { let v = Vec::new(); let s = String::from(\"hi\"); }");
-    assert!(r.fitness.performance < 1.0, "got: {}", r.fitness.performance);
+    assert!(
+        r.fitness.performance < 1.0,
+        "got: {}",
+        r.fitness.performance
+    );
 }
 
 // ─── Final Gate ─────────────────────────────────────────────────────
@@ -143,10 +148,14 @@ fn week33_gate_complete() {
     println!("═══════════════════════════════════════════════");
     println!("  Week 33 Gate — PerformanceVisitor");
     println!("═══════════════════════════════════════════════");
-    println!("  Pure code:   perf={:.2} conf={:.2}",
-        pure.fitness.performance, pure.confidence.performance);
-    println!("  Alloc code:  perf={:.2} conf={:.2}",
-        alloc.fitness.performance, alloc.confidence.performance);
+    println!(
+        "  Pure code:   perf={:.2} conf={:.2}",
+        pure.fitness.performance, pure.confidence.performance
+    );
+    println!(
+        "  Alloc code:  perf={:.2} conf={:.2}",
+        alloc.fitness.performance, alloc.confidence.performance
+    );
     println!("═══════════════════════════════════════════════");
 
     assert_eq!(pure.fitness.performance, 1.0);

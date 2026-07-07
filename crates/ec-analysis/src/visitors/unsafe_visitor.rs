@@ -19,9 +19,9 @@ pub enum UnsafeKind {
 impl UnsafeKind {
     pub fn risk(&self) -> f64 {
         match self {
-            Self::ExprBlock   => 0.40,
-            Self::UnsafeFn    => 0.30,
-            Self::UnsafeImpl  => 0.20,
+            Self::ExprBlock => 0.40,
+            Self::UnsafeFn => 0.30,
+            Self::UnsafeImpl => 0.20,
             Self::UnsafeTrait => 0.15,
         }
     }
@@ -36,7 +36,9 @@ pub struct UnsafeVisitor {
 }
 
 impl Default for UnsafeVisitor {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl UnsafeVisitor {
@@ -55,10 +57,17 @@ impl UnsafeVisitor {
         if self.blocks.is_empty() {
             return (1.0, 0.95);
         }
-        let risk: f64 = self.blocks.iter().map(|b| {
-            if b.has_safety_comment { b.kind.risk() * 0.60 }
-            else { b.kind.risk() }
-        }).sum();
+        let risk: f64 = self
+            .blocks
+            .iter()
+            .map(|b| {
+                if b.has_safety_comment {
+                    b.kind.risk() * 0.60
+                } else {
+                    b.kind.risk()
+                }
+            })
+            .sum();
         let score = (1.0 - (risk / 2.0).min(1.0)).max(0.0);
         (score, 0.90)
     }

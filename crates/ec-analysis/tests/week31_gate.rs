@@ -2,9 +2,9 @@
 
 //! Week 31 Gate — TestVisitor + CouplingVisitor + SideEffectVisitor
 
-use syn::visit::Visit;
 use ec_analysis::analyze_code_full;
-use ec_analysis::visitors::{TestVisitor, CouplingVisitor, SideEffectVisitor};
+use ec_analysis::visitors::{CouplingVisitor, SideEffectVisitor, TestVisitor};
+use syn::visit::Visit;
 
 // ─── TestVisitor ────────────────────────────────────────────────────
 
@@ -96,7 +96,11 @@ fn w31_external_uses_more_penalty() {
     // use serde::Serialize → UsePath { ident: "serde" } → external_uses = 1 → 0.12 penalty
     let v = coupling_visitor("use serde::Serialize;");
     let (score, _) = v.score();
-    assert!(score < 0.95, "external use → bigger penalty, got: {}", score);
+    assert!(
+        score < 0.95,
+        "external use → bigger penalty, got: {}",
+        score
+    );
 }
 
 #[test]
@@ -197,7 +201,8 @@ fn w31_full_report_unsafe_io_code() {
 
 #[test]
 fn w31_full_report_with_tests() {
-    let code = "#[test]\nfn test_add() { assert_eq!(1 + 1, 2); }\nfn add(a: i32, b: i32) -> i32 { a + b }";
+    let code =
+        "#[test]\nfn test_add() { assert_eq!(1 + 1, 2); }\nfn add(a: i32, b: i32) -> i32 { a + b }";
     let r = analyze_code_full(code);
     assert!(r.fitness.test_coverage > 0.0);
     assert!(r.confidence.test_coverage >= 0.40);
@@ -215,10 +220,16 @@ fn week31_gate_complete() {
     println!("═══════════════════════════════════════════════");
     println!("  Week 31 Gate — 3 Visitors");
     println!("═══════════════════════════════════════════════");
-    println!("  Safe:      rev={:.2} stab={:.2} cov={:.2}",
-        safe.fitness.reversibility, safe.fitness.architectural_stability,
-        safe.fitness.test_coverage);
-    println!("  Coupled:   stab={:.2}", coupled.fitness.architectural_stability);
+    println!(
+        "  Safe:      rev={:.2} stab={:.2} cov={:.2}",
+        safe.fitness.reversibility,
+        safe.fitness.architectural_stability,
+        safe.fitness.test_coverage
+    );
+    println!(
+        "  Coupled:   stab={:.2}",
+        coupled.fitness.architectural_stability
+    );
     println!("  SideFx:    rev={:.2}", side.fitness.reversibility);
     println!("  Tested:    cov={:.2}", tested.fitness.test_coverage);
     println!("═══════════════════════════════════════════════");

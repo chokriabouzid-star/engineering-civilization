@@ -50,8 +50,12 @@ fn w41_confidence_grows_with_runs() {
     let last = p.run("a_final", "fn main() {}");
 
     assert!(last.total_observations > first.total_observations);
-    assert!(last.raw_confidence >= first.raw_confidence - 0.01,
-        "last={:.3} >= first={:.3}", last.raw_confidence, first.raw_confidence);
+    assert!(
+        last.raw_confidence >= first.raw_confidence - 0.01,
+        "last={:.3} >= first={:.3}",
+        last.raw_confidence,
+        first.raw_confidence
+    );
 }
 
 // ─── Gate 4: calibration diagnosis ─────────────────────────────────
@@ -60,8 +64,10 @@ fn w41_confidence_grows_with_runs() {
 fn w41_insufficient_data_initially() {
     let mut p = BayesianPipeline::new(permissive_constitution()).unwrap();
     let r = p.run("a1", "fn main() {}");
-    assert!(matches!(r.calibration_diagnosis,
-        ec_epistemic::CalibrationDiagnosis::InsufficientData { .. }));
+    assert!(matches!(
+        r.calibration_diagnosis,
+        ec_epistemic::CalibrationDiagnosis::InsufficientData { .. }
+    ));
 }
 
 #[test]
@@ -71,8 +77,10 @@ fn w41_calibration_after_many_runs() {
         p.run(&format!("a{}", i), "fn main() {}");
     }
     let r = p.run("final", "fn main() {}");
-    assert!(!matches!(r.calibration_diagnosis,
-        ec_epistemic::CalibrationDiagnosis::InsufficientData { .. }));
+    assert!(!matches!(
+        r.calibration_diagnosis,
+        ec_epistemic::CalibrationDiagnosis::InsufficientData { .. }
+    ));
 }
 
 // ─── Gate 5: build_epistemic_from_bayesian ──────────────────────────
@@ -94,7 +102,8 @@ fn w41_old_pipeline_still_works() {
     let mut p = ec_app::pipeline::IntegrationPipeline::new_simulated(
         permissive_constitution(),
         ec_fitness::fitness::CatastropheThresholds::default(),
-    ).unwrap();
+    )
+    .unwrap();
     let r = p.run("test", "fn main() {}");
     assert!(r.is_accepted());
 }
@@ -129,14 +138,18 @@ fn w41_gate_complete() {
     println!("═══════════════════════════════════════════════");
     println!("  Runs:         {}", last.total_observations);
     println!("  First conf:   {:.3}", first.raw_confidence);
-    println!("  Last conf:    {:.3} (raw) → {:.3} (adjusted)",
-        last.raw_confidence, last.bayesian_confidence);
+    println!(
+        "  Last conf:    {:.3} (raw) → {:.3} (adjusted)",
+        last.raw_confidence, last.bayesian_confidence
+    );
     println!("  Diagnosis:    {:?}", last.calibration_diagnosis);
     println!("═══════════════════════════════════════════════");
 
     assert_eq!(last.total_observations, 25);
-    assert!(!matches!(last.calibration_diagnosis,
-        ec_epistemic::CalibrationDiagnosis::InsufficientData { .. }));
+    assert!(!matches!(
+        last.calibration_diagnosis,
+        ec_epistemic::CalibrationDiagnosis::InsufficientData { .. }
+    ));
 
     println!("  ✅ Week 41 Gate: PASSED");
 }

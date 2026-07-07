@@ -11,15 +11,16 @@ pub struct BayesianTracker {
 }
 
 impl Default for BayesianTracker {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl BayesianTracker {
     /// إنشاء tracker جديد بـ prior غير متحيز
     pub fn new() -> Self {
         Self {
-            evidence: BayesianEvidence::initial_prior()
-                .expect("initial_prior should never fail"),
+            evidence: BayesianEvidence::initial_prior().expect("initial_prior should never fail"),
         }
     }
 

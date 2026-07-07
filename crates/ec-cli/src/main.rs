@@ -4,8 +4,8 @@
 
 use clap::{Parser, Subcommand};
 use ec_analysis::analyze_code_full;
-use std::path::PathBuf;
 use ec_memory::MemoryStorage;
+use std::path::PathBuf;
 
 mod check;
 
@@ -24,19 +24,25 @@ enum Commands {
     /// تحليل ملف واحد
     Analyze {
         path: PathBuf,
-        #[arg(long)] json: bool,
-        #[arg(long)] verbose: bool,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        verbose: bool,
     },
     /// فحص مشروع كامل (مجلد)
     Check {
         path: PathBuf,
-        #[arg(long)] json: bool,
-        #[arg(long)] verbose: bool,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        verbose: bool,
     },
     /// عرض تقرير الانجراف القيمي
     Drift {
-        #[arg(long, default_value = "10")] baseline: usize,
-        #[arg(long, default_value = "5")] window: usize,
+        #[arg(long, default_value = "10")]
+        baseline: usize,
+        #[arg(long, default_value = "5")]
+        window: usize,
     },
     /// إدارة الاقتراحات الدستورية
     Propose {
@@ -45,7 +51,8 @@ enum Commands {
     },
     /// عرض سجل التدقيق
     Audit {
-        #[arg(long, default_value = "20")] limit: usize,
+        #[arg(long, default_value = "20")]
+        limit: usize,
     },
     /// فحص صحة النظام
     Health,
@@ -55,19 +62,26 @@ enum Commands {
 enum ProposeAction {
     /// تقديم اقتراح جديد
     Submit {
-        #[arg(long)] dimension: String,
-        #[arg(long)] current: f64,
-        #[arg(long)] proposed: f64,
-        #[arg(long)] justification: String,
-        #[arg(long, default_value = "cli-user")] by: String,
+        #[arg(long)]
+        dimension: String,
+        #[arg(long)]
+        current: f64,
+        #[arg(long)]
+        proposed: f64,
+        #[arg(long)]
+        justification: String,
+        #[arg(long, default_value = "cli-user")]
+        by: String,
     },
     /// قائمة الاقتراحات
     List,
     /// الموافقة على اقتراح
     Approve {
         id: String,
-        #[arg(long)] by: String,
-        #[arg(long, default_value = "")] note: String,
+        #[arg(long)]
+        by: String,
+        #[arg(long, default_value = "")]
+        note: String,
     },
 }
 
@@ -75,8 +89,16 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Analyze { path, json, verbose } => cmd_analyze(path, json, verbose),
-        Commands::Check { path, json, verbose } => cmd_check(path, json, verbose),
+        Commands::Analyze {
+            path,
+            json,
+            verbose,
+        } => cmd_analyze(path, json, verbose),
+        Commands::Check {
+            path,
+            json,
+            verbose,
+        } => cmd_check(path, json, verbose),
         Commands::Drift { baseline, window } => cmd_drift(&cli.db, baseline, window),
         Commands::Audit { limit } => cmd_audit(&cli.db, limit),
         Commands::Health => cmd_health(),
@@ -93,22 +115,30 @@ fn cmd_check(path: PathBuf, json: bool, verbose: bool) {
     let report = check::check_workspace(&path);
 
     if json {
-        let violations: Vec<_> = report.violations.iter().map(|v| {
-            serde_json::json!({
-                "path": v.path,
-                "dimension": v.dimension,
-                "value": v.value,
-                "threshold": v.threshold,
+        let violations: Vec<_> = report
+            .violations
+            .iter()
+            .map(|v| {
+                serde_json::json!({
+                    "path": v.path,
+                    "dimension": v.dimension,
+                    "value": v.value,
+                    "threshold": v.threshold,
+                })
             })
-        }).collect();
+            .collect();
 
-        println!("{}", serde_json::to_string_pretty(&serde_json::json!({
-            "files_scanned": report.files_scanned,
-            "files_passed": report.files_passed,
-            "files_failed": report.files_failed,
-            "project_score": format!("{:.3}", report.project_score),
-            "violations": violations,
-        })).unwrap());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "files_scanned": report.files_scanned,
+                "files_passed": report.files_passed,
+                "files_failed": report.files_failed,
+                "project_score": format!("{:.3}", report.project_score),
+                "violations": violations,
+            }))
+            .unwrap()
+        );
         return;
     }
 
@@ -116,10 +146,22 @@ fn cmd_check(path: PathBuf, json: bool, verbose: bool) {
     println!("╔══════════════════════════════════════════════════════════════╗");
     println!("║  EC Workspace Check — {:39}║", path.display());
     println!("╠══════════════════════════════════════════════════════════════╣");
-    println!("║  Files scanned:  {:5}                                       ║", report.files_scanned);
-    println!("║  Files passed:   {:5}  ✅                                    ║", report.files_passed);
-    println!("║  Files failed:   {:5}  ❌                                    ║", report.files_failed);
-    println!("║  Project score:  {:.3} / 1.0                                  ║", report.project_score);
+    println!(
+        "║  Files scanned:  {:5}                                       ║",
+        report.files_scanned
+    );
+    println!(
+        "║  Files passed:   {:5}  ✅                                    ║",
+        report.files_passed
+    );
+    println!(
+        "║  Files failed:   {:5}  ❌                                    ║",
+        report.files_failed
+    );
+    println!(
+        "║  Project score:  {:.3} / 1.0                                  ║",
+        report.project_score
+    );
     println!("╠══════════════════════════════════════════════════════════════╣");
 
     if report.violations.is_empty() {
@@ -133,8 +175,10 @@ fn cmd_check(path: PathBuf, json: bool, verbose: bool) {
                 v.path.clone()
             };
             println!("║    {:42} ║", path_display);
-            println!("║      {}={:.2} (threshold: {:.2})                             ║",
-                v.dimension, v.value, v.threshold);
+            println!(
+                "║      {}={:.2} (threshold: {:.2})                             ║",
+                v.dimension, v.value, v.threshold
+            );
         }
     }
 
@@ -143,8 +187,10 @@ fn cmd_check(path: PathBuf, json: bool, verbose: bool) {
 
     if verbose {
         for v in &report.violations {
-            println!("  ❌ {} — {}={:.2} < {:.2}",
-                v.path, v.dimension, v.value, v.threshold);
+            println!(
+                "  ❌ {} — {}={:.2} < {:.2}",
+                v.path, v.dimension, v.value, v.threshold
+            );
         }
     }
 }
@@ -190,16 +236,50 @@ fn cmd_analyze(path: PathBuf, json: bool, verbose: bool) {
     println!("├────────────────────┼──────────┼────────────┼────────────┤");
 
     let dims = [
-        ("Security", report.fitness.security, report.confidence.security, 0.70),
-        ("Test Coverage", report.fitness.test_coverage, report.confidence.test_coverage, 0.60),
-        ("Maintainability", report.fitness.maintainability, report.confidence.maintainability, 0.40),
-        ("Performance", report.fitness.performance, report.confidence.performance, 0.20),
-        ("Stability", report.fitness.architectural_stability, report.confidence.architectural_stability, 0.50),
-        ("Reversibility", report.fitness.reversibility, report.confidence.reversibility, 0.30),
+        (
+            "Security",
+            report.fitness.security,
+            report.confidence.security,
+            0.70,
+        ),
+        (
+            "Test Coverage",
+            report.fitness.test_coverage,
+            report.confidence.test_coverage,
+            0.60,
+        ),
+        (
+            "Maintainability",
+            report.fitness.maintainability,
+            report.confidence.maintainability,
+            0.40,
+        ),
+        (
+            "Performance",
+            report.fitness.performance,
+            report.confidence.performance,
+            0.20,
+        ),
+        (
+            "Stability",
+            report.fitness.architectural_stability,
+            report.confidence.architectural_stability,
+            0.50,
+        ),
+        (
+            "Reversibility",
+            report.fitness.reversibility,
+            report.confidence.reversibility,
+            0.30,
+        ),
     ];
 
     for (name, value, conf, threshold) in dims {
-        let status = if value >= threshold { "✅ OK" } else { "❌ LOW" };
+        let status = if value >= threshold {
+            "✅ OK"
+        } else {
+            "❌ LOW"
+        };
         let conf_str = if conf >= 0.80 {
             format!("{:.2} ●", conf)
         } else {
@@ -215,7 +295,11 @@ fn cmd_analyze(path: PathBuf, json: bool, verbose: bool) {
     println!(
         "│  Overall confidence: {:.2}  │  Parse: {}       │",
         report.confidence.overall(),
-        if report.parse_successful { "✅" } else { "❌" }
+        if report.parse_successful {
+            "✅"
+        } else {
+            "❌"
+        }
     );
     println!("└──────────────────────────────────────────────────────────┘");
 
@@ -292,10 +376,7 @@ fn cmd_propose(_db: &str, action: ProposeAction) {
         }
         ProposeAction::Approve { id, by, note } => {
             println!("ℹ️  Approve via REST API:");
-            println!(
-                "   PATCH /api/v1/governance/proposals/{}/approve",
-                id
-            );
+            println!("   PATCH /api/v1/governance/proposals/{}/approve", id);
             println!("   {{ \"by\": \"{}\", \"note\": \"{}\" }}", by, note);
         }
     }

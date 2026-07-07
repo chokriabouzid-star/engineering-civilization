@@ -57,15 +57,9 @@ impl SandboxExecutor {
         let start = Instant::now();
 
         match self.config.mode {
-            SandboxMode::Simulated => {
-                self.execute_simulated(execution_id, artifact_id, start)
-            }
-            SandboxMode::Local => {
-                self.execute_local(execution_id, start)
-            }
-            SandboxMode::Docker => {
-                self.execute_docker(execution_id, code, start)
-            }
+            SandboxMode::Simulated => self.execute_simulated(execution_id, artifact_id, start),
+            SandboxMode::Local => self.execute_local(execution_id, start),
+            SandboxMode::Docker => self.execute_docker(execution_id, code, start),
         }
     }
 
@@ -79,7 +73,11 @@ impl SandboxExecutor {
     ) -> ExecutionResult {
         let success = !artifact_id.contains("fail");
         let correctness = if success { 1.0 } else { 0.0 };
-        let reproducibility = if artifact_id.contains("flaky") { 0.6 } else { 0.98 };
+        let reproducibility = if artifact_id.contains("flaky") {
+            0.6
+        } else {
+            0.98
+        };
 
         let mut latencies = Vec::new();
         for i in 0..self.config.runs_for_reproducibility {
@@ -138,12 +136,7 @@ impl SandboxExecutor {
 
     // ─── Docker (Week 14) ────────────────────────────────────────────
 
-    fn execute_docker(
-        &self,
-        execution_id: Uuid,
-        code: &str,
-        start: Instant,
-    ) -> ExecutionResult {
+    fn execute_docker(&self, execution_id: Uuid, code: &str, start: Instant) -> ExecutionResult {
         let runner = DockerRunner::new(
             "rust:1.75-slim",
             self.config.limits.max_memory_mb,
@@ -151,10 +144,7 @@ impl SandboxExecutor {
             self.config.limits.max_execution_time,
         );
 
-        let compiler = RustSandboxCompiler::new(
-            runner,
-            self.config.runs_for_reproducibility,
-        );
+        let compiler = RustSandboxCompiler::new(runner, self.config.runs_for_reproducibility);
 
         match compiler.compile_and_run(code) {
             Err(e) => ExecutionResult {
@@ -192,7 +182,11 @@ impl SandboxExecutor {
                 let reality = RealityVector::new(
                     correctness,
                     metrics.reproducibility,
-                    if metrics.reproducibility > 0.9 { 0.95 } else { 0.5 },
+                    if metrics.reproducibility > 0.9 {
+                        0.95
+                    } else {
+                        0.5
+                    },
                     metrics.run_count,
                     metrics.latency,
                 )
@@ -316,10 +310,7 @@ mod tests {
 
         assert!(!result.success);
         assert!(result.error_message.is_some());
-        assert!(result
-            .error_message
-            .unwrap()
-            .contains("Compilation failed"));
+        assert!(result.error_message.unwrap().contains("Compilation failed"));
     }
 
     #[test]
@@ -327,10 +318,7 @@ mod tests {
         let config = SandboxConfig::new(SandboxMode::Docker);
         let executor = SandboxExecutor::new(config).unwrap();
 
-        let result = executor.execute(
-            "latency-test",
-            r#"fn main() { println!("done"); }"#,
-        );
+        let result = executor.execute("latency-test", r#"fn main() { println!("done"); }"#);
 
         assert!(result.success);
         let reality = result.reality.unwrap();
@@ -346,10 +334,7 @@ mod tests {
         let config = SandboxConfig::new(SandboxMode::Docker);
         let executor = SandboxExecutor::new(config).unwrap();
 
-        let result = executor.execute(
-            "stable",
-            r#"fn main() { println!("42"); }"#,
-        );
+        let result = executor.execute("stable", r#"fn main() { println!("42"); }"#);
 
         assert!(result.success);
         let reality = result.reality.unwrap();

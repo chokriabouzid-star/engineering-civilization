@@ -3,8 +3,8 @@
 //! Bayesian Calibration — يكشف overconfident/underconfident ويُعدّل
 //! Week 40 — إضافة فقط
 
-use crate::calibration::CalibrationState;
 use crate::bayesian::BayesianEvidence;
+use crate::calibration::CalibrationState;
 
 /// نتيجة تشخيص المعايرة
 #[derive(Debug, Clone, PartialEq)]
@@ -71,17 +71,17 @@ impl BayesianCalibration {
         } else if avg_gap > 0.05 {
             CalibrationDiagnosis::Overconfident { ece, avg_gap }
         } else if avg_gap < -0.05 {
-            CalibrationDiagnosis::Underconfident { ece, avg_gap: -avg_gap }
+            CalibrationDiagnosis::Underconfident {
+                ece,
+                avg_gap: -avg_gap,
+            }
         } else {
             CalibrationDiagnosis::WellCalibrated { ece }
         }
     }
 
     /// تعديل الثقة بناءً على التشخيص
-    pub fn adjust_confidence(
-        confidence: f64,
-        diagnosis: &CalibrationDiagnosis,
-    ) -> f64 {
+    pub fn adjust_confidence(confidence: f64, diagnosis: &CalibrationDiagnosis) -> f64 {
         match diagnosis {
             CalibrationDiagnosis::WellCalibrated { .. } => confidence,
             CalibrationDiagnosis::Overconfident { avg_gap, .. } => {
@@ -90,9 +90,7 @@ impl BayesianCalibration {
             CalibrationDiagnosis::Underconfident { avg_gap, .. } => {
                 (confidence + avg_gap * 0.5).clamp(0.10, 1.0)
             }
-            CalibrationDiagnosis::InsufficientData { .. } => {
-                (confidence - 0.10).clamp(0.10, 1.0)
-            }
+            CalibrationDiagnosis::InsufficientData { .. } => (confidence - 0.10).clamp(0.10, 1.0),
         }
     }
 

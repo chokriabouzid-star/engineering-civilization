@@ -37,8 +37,7 @@ const SCHEMA: &str = r#"
 impl GovernanceStorage {
     /// فتح تخزين في ملف
     pub fn open(path: &Path) -> Result<Self, GovernanceError> {
-        let conn = Connection::open(path)
-            .map_err(|e| GovernanceError::Storage(e.to_string()))?;
+        let conn = Connection::open(path).map_err(|e| GovernanceError::Storage(e.to_string()))?;
         conn.execute_batch(SCHEMA)
             .map_err(|e| GovernanceError::Storage(e.to_string()))?;
         Ok(Self {
@@ -48,8 +47,8 @@ impl GovernanceStorage {
 
     /// تخزين في الذاكرة (للاختبارات)
     pub fn in_memory() -> Result<Self, GovernanceError> {
-        let conn = Connection::open(":memory:")
-            .map_err(|e| GovernanceError::Storage(e.to_string()))?;
+        let conn =
+            Connection::open(":memory:").map_err(|e| GovernanceError::Storage(e.to_string()))?;
         conn.execute_batch(SCHEMA)
             .map_err(|e| GovernanceError::Storage(e.to_string()))?;
         Ok(Self {
@@ -58,16 +57,12 @@ impl GovernanceStorage {
     }
 
     /// حفظ اقتراح
-    pub fn save_proposal(
-        &self,
-        p: &ConstitutionalProposal,
-    ) -> Result<(), GovernanceError> {
+    pub fn save_proposal(&self, p: &ConstitutionalProposal) -> Result<(), GovernanceError> {
         let conn = self
             .conn
             .lock()
             .map_err(|e| GovernanceError::Storage(e.to_string()))?;
-        let data = serde_json::to_string(p)
-            .map_err(|e| GovernanceError::Storage(e.to_string()))?;
+        let data = serde_json::to_string(p).map_err(|e| GovernanceError::Storage(e.to_string()))?;
         let status = format!("{:?}", p.status)
             .split_whitespace()
             .next()
@@ -76,21 +71,14 @@ impl GovernanceStorage {
         conn.execute(
             "INSERT OR REPLACE INTO proposals (id, created_at, data, status)
              VALUES (?1, ?2, ?3, ?4)",
-            rusqlite::params![
-                p.id.to_string(),
-                p.created_at.to_rfc3339(),
-                data,
-                status,
-            ],
+            rusqlite::params![p.id.to_string(), p.created_at.to_rfc3339(), data, status,],
         )
         .map_err(|e| GovernanceError::Storage(e.to_string()))?;
         Ok(())
     }
 
     /// تحميل كل الاقتراحات
-    pub fn load_proposals(
-        &self,
-    ) -> Result<Vec<ConstitutionalProposal>, GovernanceError> {
+    pub fn load_proposals(&self) -> Result<Vec<ConstitutionalProposal>, GovernanceError> {
         let conn = self
             .conn
             .lock()
@@ -118,8 +106,8 @@ impl GovernanceStorage {
             .conn
             .lock()
             .map_err(|e| GovernanceError::Storage(e.to_string()))?;
-        let data = serde_json::to_string(entry)
-            .map_err(|e| GovernanceError::Storage(e.to_string()))?;
+        let data =
+            serde_json::to_string(entry).map_err(|e| GovernanceError::Storage(e.to_string()))?;
         let event_type = format!("{:?}", entry.event)
             .split_whitespace()
             .next()

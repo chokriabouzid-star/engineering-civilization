@@ -3,10 +3,10 @@
 //! Bayesian Query — استعلامات مشابهة مع ثقة Bayesian
 //! Week 38 — إضافة فقط
 
-use crate::OutcomeStorage;
 use crate::graph::CausalMemoryGraph;
 use crate::storage::StorageError;
 use crate::types::NodeId;
+use crate::OutcomeStorage;
 use ec_fitness::FitnessVector;
 
 /// استعلامات مدعومة بـ Bayesian evidence
@@ -34,10 +34,7 @@ impl<'a, S: OutcomeStorage> BayesianQuery<'a, S> {
             .map(|n| (n.fitness.cosine_similarity(target), n))
             .collect();
 
-        scored.sort_by(|a, b| {
-            b.0.partial_cmp(&a.0)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         let mut results = Vec::new();
         for (similarity, node) in scored.into_iter().take(k) {
@@ -80,28 +77,36 @@ impl<'a, S: OutcomeStorage> BayesianQuery<'a, S> {
                 .as_ref()
                 .map(|o| o.correctness > 0.99)
                 .unwrap_or(false);
-            scored.push((conf, node.id, node.artifact_id.clone(),
-                         node.fitness.clone(), was_accepted,
-                         evidence.total_observations()));
+            scored.push((
+                conf,
+                node.id,
+                node.artifact_id.clone(),
+                node.fitness.clone(),
+                was_accepted,
+                evidence.total_observations(),
+            ));
         }
 
-        scored.sort_by(|a, b| {
-            b.0.partial_cmp(&a.0)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        Ok(scored.into_iter().take(k).map(|(bayesian_conf, node_id, artifact_id, fitness, was_accepted, total_obs)| {
-            BayesianSimilarDecision {
-                node_id,
-                artifact_id: artifact_id.clone(),
-                similarity: 1.0,
-                bayesian_confidence: bayesian_conf,
-                combined: bayesian_conf,
-                fitness,
-                was_accepted,
-                total_observations: total_obs,
-            }
-        }).collect())
+        Ok(scored
+            .into_iter()
+            .take(k)
+            .map(
+                |(bayesian_conf, node_id, artifact_id, fitness, was_accepted, total_obs)| {
+                    BayesianSimilarDecision {
+                        node_id,
+                        artifact_id: artifact_id.clone(),
+                        similarity: 1.0,
+                        bayesian_confidence: bayesian_conf,
+                        combined: bayesian_conf,
+                        fitness,
+                        was_accepted,
+                        total_observations: total_obs,
+                    }
+                },
+            )
+            .collect())
     }
 }
 

@@ -7,7 +7,9 @@ use uuid::Uuid;
 
 fn make_proposal(dim: &str, from: f64, to: f64) -> ConstitutionalProposal {
     ConstitutionalProposal::new(
-        ProposalOrigin::Human { name: "engineer".into() },
+        ProposalOrigin::Human {
+            name: "engineer".into(),
+        },
         ProposedChange::AdjustThreshold {
             dimension: dim.into(),
             current: from,
@@ -132,27 +134,42 @@ fn w46_mixed_audit_events() {
     let storage = GovernanceStorage::open(&path).unwrap();
 
     let pid = Uuid::new_v4();
-    storage.save_audit(&AuditEntry {
-        id: Uuid::new_v4(),
-        timestamp: chrono::Utc::now(),
-        event: GovernanceEvent::ProposalCreated { id: pid, change_type: "AdjustThreshold".into() },
-        actor: "system".into(),
-        context: "".into(),
-    }).unwrap();
-    storage.save_audit(&AuditEntry {
-        id: Uuid::new_v4(),
-        timestamp: chrono::Utc::now(),
-        event: GovernanceEvent::ProposalApproved { id: pid, by: "lead".into() },
-        actor: "lead".into(),
-        context: "".into(),
-    }).unwrap();
-    storage.save_audit(&AuditEntry {
-        id: Uuid::new_v4(),
-        timestamp: chrono::Utc::now(),
-        event: GovernanceEvent::SystemAlertFired { kind: "drift".into(), details: "50°".into() },
-        actor: "system".into(),
-        context: "".into(),
-    }).unwrap();
+    storage
+        .save_audit(&AuditEntry {
+            id: Uuid::new_v4(),
+            timestamp: chrono::Utc::now(),
+            event: GovernanceEvent::ProposalCreated {
+                id: pid,
+                change_type: "AdjustThreshold".into(),
+            },
+            actor: "system".into(),
+            context: "".into(),
+        })
+        .unwrap();
+    storage
+        .save_audit(&AuditEntry {
+            id: Uuid::new_v4(),
+            timestamp: chrono::Utc::now(),
+            event: GovernanceEvent::ProposalApproved {
+                id: pid,
+                by: "lead".into(),
+            },
+            actor: "lead".into(),
+            context: "".into(),
+        })
+        .unwrap();
+    storage
+        .save_audit(&AuditEntry {
+            id: Uuid::new_v4(),
+            timestamp: chrono::Utc::now(),
+            event: GovernanceEvent::SystemAlertFired {
+                kind: "drift".into(),
+                details: "50°".into(),
+            },
+            actor: "system".into(),
+            context: "".into(),
+        })
+        .unwrap();
 
     let loaded = storage.load_audit().unwrap();
     assert_eq!(loaded.len(), 3);
@@ -235,8 +252,12 @@ fn w46_gate_complete() {
         store.submit(p.clone());
         storage.save_proposal(&p).unwrap();
         audit.record(
-            GovernanceEvent::ProposalCreated { id, change_type: "AdjustThreshold".into() },
-            "system", "",
+            GovernanceEvent::ProposalCreated {
+                id,
+                change_type: "AdjustThreshold".into(),
+            },
+            "system",
+            "",
         );
     }
 
@@ -246,8 +267,12 @@ fn w46_gate_complete() {
             storage.save_proposal(updated).unwrap();
         }
         audit.record(
-            GovernanceEvent::ProposalApproved { id, by: "lead".into() },
-            "lead", "",
+            GovernanceEvent::ProposalApproved {
+                id,
+                by: "lead".into(),
+            },
+            "lead",
+            "",
         );
     }
 
@@ -259,9 +284,18 @@ fn w46_gate_complete() {
     println!("═══════════════════════════════════════════════");
     println!("  Week 46 Gate — GovernanceStorage Persistence");
     println!("═══════════════════════════════════════════════");
-    println!("  Proposals on disk:  {}", storage.load_proposals().unwrap().len());
-    println!("  Audit on disk:      {}", storage.load_audit().unwrap().len());
-    println!("  Approved:           {}", store.approved_pending_application().len());
+    println!(
+        "  Proposals on disk:  {}",
+        storage.load_proposals().unwrap().len()
+    );
+    println!(
+        "  Audit on disk:      {}",
+        storage.load_audit().unwrap().len()
+    );
+    println!(
+        "  Approved:           {}",
+        store.approved_pending_application().len()
+    );
     println!("═══════════════════════════════════════════════");
 
     assert_eq!(storage.load_proposals().unwrap().len(), 3);

@@ -24,11 +24,7 @@ fn write_unsafe_code(dir: &TempDir) -> std::path::PathBuf {
 
 fn write_test_code(dir: &TempDir) -> std::path::PathBuf {
     let path = dir.path().join("tested.rs");
-    fs::write(
-        &path,
-        "#[test]\nfn it_works() { assert_eq!(2 + 2, 4); }\n",
-    )
-    .unwrap();
+    fs::write(&path, "#[test]\nfn it_works() { assert_eq!(2 + 2, 4); }\n").unwrap();
     path
 }
 
@@ -62,7 +58,12 @@ fn w54_analyze_json_mode() {
     let dir = TempDir::new().unwrap();
     let path = write_sample_code(&dir);
 
-    let output = ec().arg("analyze").arg(path).arg("--json").output().unwrap();
+    let output = ec()
+        .arg("analyze")
+        .arg(path)
+        .arg("--json")
+        .output()
+        .unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     let v: serde_json::Value = serde_json::from_str(&stdout).unwrap();
     assert!(v["fitness"]["security"].as_f64().unwrap() >= 0.0);
@@ -76,7 +77,11 @@ fn w54_analyze_verbose() {
     let dir = TempDir::new().unwrap();
     let path = write_sample_code(&dir);
 
-    ec().arg("analyze").arg(path).arg("--verbose").assert().success();
+    ec().arg("analyze")
+        .arg(path)
+        .arg("--verbose")
+        .assert()
+        .success();
 }
 
 // ─── Gate 2: analyze unsafe code ────────────────────────────────────
@@ -87,8 +92,18 @@ fn w54_analyze_unsafe_lower_security() {
     let safe_path = write_sample_code(&dir);
     let unsafe_path = write_unsafe_code(&dir);
 
-    let safe_out = ec().arg("analyze").arg(&safe_path).arg("--json").output().unwrap();
-    let unsafe_out = ec().arg("analyze").arg(&unsafe_path).arg("--json").output().unwrap();
+    let safe_out = ec()
+        .arg("analyze")
+        .arg(&safe_path)
+        .arg("--json")
+        .output()
+        .unwrap();
+    let unsafe_out = ec()
+        .arg("analyze")
+        .arg(&unsafe_path)
+        .arg("--json")
+        .output()
+        .unwrap();
 
     let safe_json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&safe_out.stdout)).unwrap();
@@ -97,7 +112,12 @@ fn w54_analyze_unsafe_lower_security() {
 
     let safe_sec = safe_json["fitness"]["security"].as_f64().unwrap();
     let unsafe_sec = unsafe_json["fitness"]["security"].as_f64().unwrap();
-    assert!(safe_sec > unsafe_sec, "safe={} should be > unsafe={}", safe_sec, unsafe_sec);
+    assert!(
+        safe_sec > unsafe_sec,
+        "safe={} should be > unsafe={}",
+        safe_sec,
+        unsafe_sec
+    );
 }
 
 // ─── Gate 3: analyze tested code ────────────────────────────────────
@@ -108,8 +128,18 @@ fn w54_analyze_tested_higher_coverage() {
     let plain_path = write_sample_code(&dir);
     let tested_path = write_test_code(&dir);
 
-    let plain_out = ec().arg("analyze").arg(&plain_path).arg("--json").output().unwrap();
-    let tested_out = ec().arg("analyze").arg(&tested_path).arg("--json").output().unwrap();
+    let plain_out = ec()
+        .arg("analyze")
+        .arg(&plain_path)
+        .arg("--json")
+        .output()
+        .unwrap();
+    let tested_out = ec()
+        .arg("analyze")
+        .arg(&tested_path)
+        .arg("--json")
+        .output()
+        .unwrap();
 
     let plain_json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&plain_out.stdout)).unwrap();
@@ -118,7 +148,12 @@ fn w54_analyze_tested_higher_coverage() {
 
     let plain_cov = plain_json["fitness"]["test_coverage"].as_f64().unwrap();
     let tested_cov = tested_json["fitness"]["test_coverage"].as_f64().unwrap();
-    assert!(tested_cov > plain_cov, "tested={} should be > plain={}", tested_cov, plain_cov);
+    assert!(
+        tested_cov > plain_cov,
+        "tested={} should be > plain={}",
+        tested_cov,
+        plain_cov
+    );
 }
 
 // ─── Gate 4: analyze nonexistent file ───────────────────────────────

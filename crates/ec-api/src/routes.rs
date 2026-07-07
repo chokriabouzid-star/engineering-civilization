@@ -2,10 +2,10 @@
 
 //! Route definitions
 
-use axum::routing::{get, patch, post};
-use axum::Router;
 use crate::handlers;
 use crate::state::AppState;
+use axum::routing::{get, patch, post};
+use axum::Router;
 
 /// Build the API router
 pub fn build_router(state: AppState) -> Router {

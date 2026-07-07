@@ -18,11 +18,9 @@ pub mod security;
 
 // ─── Re-exports (العقد — الاختبارات تعتمد عليها) ────────────────────
 
-pub use config::{
-    NetworkPolicy, ResourceLimits, SandboxConfig, SandboxMode, SyscallPolicy,
-};
+pub use bayesian::BayesianTracker;
+pub use config::{NetworkPolicy, ResourceLimits, SandboxConfig, SandboxMode, SyscallPolicy};
 pub use executor::{ExecutionResult, SandboxExecutor};
 pub use feedback::{PredictionError, PredictionRecord, RealityFeedback};
 pub use reality::{LatencyMeasurement, RealityVector};
 pub use security::SecurityViolation;
-pub use bayesian::BayesianTracker;

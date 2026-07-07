@@ -304,7 +304,10 @@ async fn w50_gate_complete() {
             "proposed_by": "lead"
         }))
         .await;
-    let id = res.json::<serde_json::Value>()["id"].as_str().unwrap().to_string();
+    let id = res.json::<serde_json::Value>()["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
 
     server
         .patch(&format!("/api/v1/governance/proposals/{}/approve", id))

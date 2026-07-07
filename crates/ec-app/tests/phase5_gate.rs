@@ -9,15 +9,22 @@
 
 use ec_app::pipeline::{BayesianPipeline, PipelineVerdict};
 use ec_constitutional::Constitution;
-use ec_epistemic::{BayesianEvidence, BayesianCalibration, CalibrationDiagnosis, CalibrationState};
-use ec_memory::OutcomeStorage;
+use ec_epistemic::{BayesianCalibration, BayesianEvidence, CalibrationDiagnosis, CalibrationState};
 use ec_fitness::fitness::CatastropheThresholds as CT;
+use ec_memory::OutcomeStorage;
 
 fn permissive_constitution() -> Constitution {
-    Constitution::new(vec![], CT {
-        min_security: 0.0, min_reversibility: 0.0, min_test_coverage: 0.0,
-        min_maintainability: 0.0, min_performance: 0.0, min_architectural_stability: 0.0,
-    })
+    Constitution::new(
+        vec![],
+        CT {
+            min_security: 0.0,
+            min_reversibility: 0.0,
+            min_test_coverage: 0.0,
+            min_maintainability: 0.0,
+            min_performance: 0.0,
+            min_architectural_stability: 0.0,
+        },
+    )
 }
 
 // ─── D1-D8 preserved ────────────────────────────────────────────────
@@ -25,13 +32,20 @@ fn permissive_constitution() -> Constitution {
 #[test]
 fn p5_d1_append_only_preserved() {
     let mut g = ec_memory::CausalMemoryGraph::new();
-    let id = g.record_from_builder(
-        ec_memory::DecisionNodeBuilder::new(
-            "a1", ec_memory::ArtifactSnapshot::new("fn f() {}"),
-            ec_fitness::FitnessVector { security: 0.9, reversibility: 0.8, test_coverage: 0.7,
-                maintainability: 0.6, performance: 0.8, architectural_stability: 0.7 },
-        )
-    ).unwrap();
+    let id = g
+        .record_from_builder(ec_memory::DecisionNodeBuilder::new(
+            "a1",
+            ec_memory::ArtifactSnapshot::new("fn f() {}"),
+            ec_fitness::FitnessVector {
+                security: 0.9,
+                reversibility: 0.8,
+                test_coverage: 0.7,
+                maintainability: 0.6,
+                performance: 0.8,
+                architectural_stability: 0.7,
+            },
+        ))
+        .unwrap();
     // لا delete, no clear
     assert!(g.get(id).is_some());
     assert_eq!(g.len(), 1);
@@ -56,15 +70,20 @@ fn p5_bayesian_prior_to_confident() {
         e = e.update_with_outcome(true, 0.9).unwrap();
     }
     assert_eq!(e.successes, 30);
-    assert!(e.credible_confidence() > 0.80,
-        "30 successes: {}", e.credible_confidence());
+    assert!(
+        e.credible_confidence() > 0.80,
+        "30 successes: {}",
+        e.credible_confidence()
+    );
 }
 
 #[test]
 fn p5_bayesian_mixed_moderate() {
     let mut e = BayesianEvidence::initial_prior().unwrap();
     for i in 0..20 {
-        e = e.update_with_outcome(i % 3 != 0, if i % 3 != 0 { 0.8 } else { 0.2 }).unwrap();
+        e = e
+            .update_with_outcome(i % 3 != 0, if i % 3 != 0 { 0.8 } else { 0.2 })
+            .unwrap();
     }
     let c = e.credible_confidence();
     assert!(c > 0.30 && c < 0.95, "mixed: {}", c);
@@ -101,7 +120,12 @@ fn p5_calibration_adjustment_works() {
     let e = BayesianEvidence::from_history(15, 2, 0.85).unwrap();
     let raw = e.credible_confidence();
     let adjusted = BayesianCalibration::adjusted_credible_confidence(&e, &cal);
-    assert!(adjusted < raw, "overconfident → adjusted down: {:.3} < {:.3}", adjusted, raw);
+    assert!(
+        adjusted < raw,
+        "overconfident → adjusted down: {:.3} < {:.3}",
+        adjusted,
+        raw
+    );
 }
 
 // ─── OutcomeStorage ─────────────────────────────────────────────────
@@ -134,8 +158,10 @@ fn p5_bayesian_pipeline_full_cycle() {
     let last = results.last().unwrap();
     assert_eq!(last.total_observations, 30);
     assert!(matches!(last.verdict, PipelineVerdict::Accepted));
-    assert!(!matches!(last.calibration_diagnosis,
-        CalibrationDiagnosis::InsufficientData { .. }));
+    assert!(!matches!(
+        last.calibration_diagnosis,
+        CalibrationDiagnosis::InsufficientData { .. }
+    ));
 }
 
 // ─── Old APIs ───────────────────────────────────────────────────────
@@ -145,7 +171,8 @@ fn p5_old_integration_pipeline_works() {
     let mut p = ec_app::pipeline::IntegrationPipeline::new_simulated(
         permissive_constitution(),
         ec_fitness::fitness::CatastropheThresholds::default(),
-    ).unwrap();
+    )
+    .unwrap();
     let r = p.run("test", "fn main() {}");
     assert!(r.is_accepted());
 }
@@ -175,8 +202,12 @@ fn p5_old_memory_query_works() {
     let g = ec_memory::CausalMemoryGraph::new();
     let q = ec_memory::MemoryQuery::new(&g);
     let target = ec_fitness::FitnessVector {
-        security: 0.9, reversibility: 0.8, test_coverage: 0.9,
-        maintainability: 0.7, performance: 0.8, architectural_stability: 0.7,
+        security: 0.9,
+        reversibility: 0.8,
+        test_coverage: 0.9,
+        maintainability: 0.7,
+        performance: 0.8,
+        architectural_stability: 0.7,
     };
     let results = q.find_similar(&target, 5);
     assert!(results.is_empty());
@@ -205,9 +236,18 @@ fn phase5_gate_complete() {
     println!("║  D1-D8 preserved:            ✅              ║");
     println!("║  Old APIs unchanged:         ✅              ║");
     println!("╠══════════════════════════════════════════════╣");
-    println!("║  Observations:  {}                           ║", final_r.total_observations);
-    println!("║  Raw conf:      {:.3}                        ║", final_r.raw_confidence);
-    println!("║  Adjusted conf: {:.3}                        ║", final_r.bayesian_confidence);
+    println!(
+        "║  Observations:  {}                           ║",
+        final_r.total_observations
+    );
+    println!(
+        "║  Raw conf:      {:.3}                        ║",
+        final_r.raw_confidence
+    );
+    println!(
+        "║  Adjusted conf: {:.3}                        ║",
+        final_r.bayesian_confidence
+    );
     println!("║  Diagnosis:     {:?}  ║", final_r.calibration_diagnosis);
     println!("╚══════════════════════════════════════════════╝");
 

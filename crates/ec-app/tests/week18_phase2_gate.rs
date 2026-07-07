@@ -5,10 +5,7 @@
 //!
 //! الشروط الإلزامية لإتمام Phase 2.
 
-use ec_app::pipeline::{
-    IntegrationPipeline,
-    build_epistemic_from_reality,
-};
+use ec_app::pipeline::{build_epistemic_from_reality, IntegrationPipeline};
 use ec_constitutional::constitution::Constitution;
 use ec_constitutional::invariant::{Invariant, ViolationReport};
 use ec_epistemic::state::EpistemicState;
@@ -25,9 +22,12 @@ use std::sync::Arc;
 #[derive(Debug)]
 struct AlwaysAccept;
 impl Invariant for AlwaysAccept {
-    fn name(&self) -> &'static str { "AlwaysAccept" }
-    fn check(&self, _: &FitnessVector, _: &EpistemicState)
-        -> Result<(), ViolationReport> { Ok(()) }
+    fn name(&self) -> &'static str {
+        "AlwaysAccept"
+    }
+    fn check(&self, _: &FitnessVector, _: &EpistemicState) -> Result<(), ViolationReport> {
+        Ok(())
+    }
 }
 
 fn permissive() -> Constitution {
@@ -45,11 +45,7 @@ fn permissive() -> Constitution {
 }
 
 fn pipeline() -> IntegrationPipeline {
-    IntegrationPipeline::new_simulated(
-        permissive(),
-        CatastropheThresholds::default(),
-    )
-    .unwrap()
+    IntegrationPipeline::new_simulated(permissive(), CatastropheThresholds::default()).unwrap()
 }
 
 // ─── Gate 1: Truth ≠ Fitness ─────────────────────────────────────────
@@ -62,8 +58,7 @@ fn gate_truth_not_equal_fitness() {
     // RealityVector.correctness لا يُساوي أي بُعد مباشرة
     // هو تقدير، لا conversion
     assert!(
-        fitness.security != reality.correctness
-            || fitness.test_coverage != reality.reproducibility,
+        fitness.security != reality.correctness || fitness.test_coverage != reality.reproducibility,
         "Truth and Fitness must not be directly mapped"
     );
 }
@@ -186,10 +181,11 @@ fn main() {
 
 #[test]
 fn gate_adr_documentation_exists() {
-
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent().unwrap()  // crates/
-        .parent().unwrap(); // workspace root
+        .parent()
+        .unwrap() // crates/
+        .parent()
+        .unwrap(); // workspace root
 
     let adrs = [
         "docs/adr/ADR-009-sandbox-foundation.md",
@@ -291,8 +287,10 @@ fn phase2_gate_complete() {
 
     // 6. ADRs
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent().unwrap()
-        .parent().unwrap();
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap();
     assert!(root.join("docs/adr/ADR-009-sandbox-foundation.md").exists());
     assert!(root.join("docs/adr/ADR-012-security-hardening.md").exists());
     println!("✅ Gate 6: ADR documentation present");

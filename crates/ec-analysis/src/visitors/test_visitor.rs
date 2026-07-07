@@ -11,7 +11,11 @@ pub struct TestVisitor {
 
 impl TestVisitor {
     pub fn new() -> Self {
-        Self { test_fns: 0, production_fns: 0, assert_count: 0 }
+        Self {
+            test_fns: 0,
+            production_fns: 0,
+            assert_count: 0,
+        }
     }
 
     /// (test_coverage_score, confidence)
@@ -20,8 +24,7 @@ impl TestVisitor {
             // لا دوال إنتاج في هذا الملف — الاختبارات في tests/ منفصل
             return (1.0, 0.30);
         }
-        let ratio = (self.test_fns as f64 / self.production_fns as f64)
-            .min(1.0);
+        let ratio = (self.test_fns as f64 / self.production_fns as f64).min(1.0);
         let conf = if self.test_fns == 0 { 0.25 } else { 0.50 };
         (ratio, conf)
     }
@@ -38,7 +41,10 @@ impl<'ast> Visit<'ast> for TestVisitor {
     }
 
     fn visit_macro(&mut self, node: &'ast syn::Macro) {
-        let name = node.path.segments.last()
+        let name = node
+            .path
+            .segments
+            .last()
             .map(|s| s.ident.to_string())
             .unwrap_or_default();
         if matches!(name.as_str(), "assert" | "assert_eq" | "assert_ne") {

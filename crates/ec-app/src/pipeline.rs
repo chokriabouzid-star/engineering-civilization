@@ -9,12 +9,9 @@
 
 use ec_analysis::analyze_code;
 use ec_constitutional::evaluation::ConstitutionalEvaluation;
-use ec_constitutional::{
-    Constitution, ConstitutionalEngine, EvaluationContext,
-};
+use ec_constitutional::{Constitution, ConstitutionalEngine, EvaluationContext};
 use ec_epistemic::{
-    CalibrationState, EpistemicResult, EpistemicState, Evidence,
-    UncertaintyDecomposition,
+    CalibrationState, EpistemicResult, EpistemicState, Evidence, UncertaintyDecomposition,
 };
 use ec_fitness::fitness::{CatastropheThresholds, FitnessVector};
 use ec_sandbox::config::SandboxMode;
@@ -278,10 +275,7 @@ pub struct IterativePipeline {
 
 impl IterativePipeline {
     /// إنشاء pipeline تكراري.
-    pub fn new(
-        constitution: Constitution,
-        max_iterations: usize,
-    ) -> anyhow::Result<Self> {
+    pub fn new(constitution: Constitution, max_iterations: usize) -> anyhow::Result<Self> {
         let config = ec_sandbox::config::SandboxConfig::default();
         let executor = SandboxExecutor::new(config)?;
         let engine = ConstitutionalEngine::with_default_cache(constitution);
@@ -296,10 +290,7 @@ impl IterativePipeline {
     }
 
     /// تشغيل الدورة التكرارية.
-    pub fn run(
-        &mut self,
-        spec: &ec_codegen::GenerationSpec,
-    ) -> IterativePipelineResult {
+    pub fn run(&mut self, spec: &ec_codegen::GenerationSpec) -> IterativePipelineResult {
         let mut attempts: Vec<AttemptRecord> = Vec::new();
         let mut previous_node_id: Option<ec_memory::NodeId> = None;
 
@@ -334,21 +325,21 @@ impl IterativePipeline {
             );
 
             // ─── Step 4: Sandbox Execution ─────────────────────
-            let execution =
-                self.executor.execute(&spec.function_name, &code);
+            let execution = self.executor.execute(&spec.function_name, &code);
 
             // ─── Step 5: Determine verdict ─────────────────────
             let verdict = determine_verdict(&eval, &execution);
             let is_accepted = matches!(verdict, PipelineVerdict::Accepted);
 
             // ─── Step 6: Record in Memory ──────────────────────
-            let sandbox_outcome = execution.reality.as_ref().map(|r| {
-                ec_memory::SandboxOutcome {
+            let sandbox_outcome = execution
+                .reality
+                .as_ref()
+                .map(|r| ec_memory::SandboxOutcome {
                     correctness: r.correctness,
                     reproducibility: r.reproducibility,
                     empirical_confidence: r.empirical_confidence,
-                }
-            });
+                });
 
             let mut builder = ec_memory::DecisionNodeBuilder::new(
                 format!("{}-iter-{}", spec.function_name, attempt_num),
@@ -377,7 +368,11 @@ impl IterativePipeline {
                 .record_from_builder(builder)
                 .expect("record in memory");
 
-            let node = self.memory.get(node_id).expect("node just recorded must exist").clone();
+            let node = self
+                .memory
+                .get(node_id)
+                .expect("node just recorded must exist")
+                .clone();
 
             // ─── Step 7: Track attempt ─────────────────────────
             attempts.push(AttemptRecord {
@@ -386,18 +381,12 @@ impl IterativePipeline {
                 code: code.clone(),
                 fitness: fitness.clone(),
                 is_constitutional: eval.is_valid,
-                sandbox_correctness: execution
-                    .reality
-                    .as_ref()
-                    .map(|r| r.correctness),
+                sandbox_correctness: execution.reality.as_ref().map(|r| r.correctness),
             });
 
             // ─── Step 8: Learn from feedback ───────────────────
             let prediction = PredictionRecord {
-                artifact_id: format!(
-                    "{}-iter-{}",
-                    spec.function_name, attempt_num
-                ),
+                artifact_id: format!("{}-iter-{}", spec.function_name, attempt_num),
                 predicted_validity: eval.is_valid,
                 predicted_confidence: eval.epistemic.confidence,
             };
@@ -426,10 +415,7 @@ impl IterativePipeline {
             attempts,
             total_iterations: self.max_iterations,
             verdict: PipelineVerdict::RejectedAfterMaxAttempts {
-                reason: format!(
-                    "Failed after {} attempts",
-                    self.max_iterations
-                ),
+                reason: format!("Failed after {} attempts", self.max_iterations),
             },
         }
     }
@@ -459,10 +445,7 @@ impl IterativePipeline {
     }
 
     /// تتبع السلسلة السببية.
-    pub fn trace_causal_chain(
-        &self,
-        node_id: ec_memory::NodeId,
-    ) -> Vec<&ec_memory::DecisionNode> {
+    pub fn trace_causal_chain(&self, node_id: ec_memory::NodeId) -> Vec<&ec_memory::DecisionNode> {
         self.memory.causal_chain(node_id)
     }
 }
@@ -498,9 +481,7 @@ fn build_epistemic_from_fitness(fitness: &FitnessVector) -> EpistemicState {
 }
 
 /// بناء EpistemicState من RealityVector.
-pub fn build_epistemic_from_reality(
-    reality: &RealityVector,
-) -> EpistemicResult<EpistemicState> {
+pub fn build_epistemic_from_reality(reality: &RealityVector) -> EpistemicResult<EpistemicState> {
     let confidence = reality.empirical_confidence;
 
     EpistemicState::new(
@@ -545,9 +526,7 @@ fn determine_verdict(
             return PipelineVerdict::RejectedByReality {
                 reason: format!(
                     "Not trustworthy: correctness={}, reproducibility={}, confidence={}",
-                    reality.correctness,
-                    reality.reproducibility,
-                    reality.empirical_confidence
+                    reality.correctness, reality.reproducibility, reality.empirical_confidence
                 ),
             };
         }
@@ -576,11 +555,7 @@ mod tests_integration {
         fn name(&self) -> &'static str {
             "AlwaysAccept"
         }
-        fn check(
-            &self,
-            _: &FitnessVector,
-            _: &EpistemicState,
-        ) -> Result<(), ViolationReport> {
+        fn check(&self, _: &FitnessVector, _: &EpistemicState) -> Result<(), ViolationReport> {
             Ok(())
         }
     }
@@ -681,8 +656,8 @@ mod tests_integration {
 mod tests_iterative {
     use super::*;
     use ec_constitutional::{
-        Invariant, ReversibilityInvariant, SecurityInvariant,
-        TestCoverageInvariant, TypeSafetyInvariant,
+        Invariant, ReversibilityInvariant, SecurityInvariant, TestCoverageInvariant,
+        TypeSafetyInvariant,
     };
     use std::sync::Arc;
 
@@ -699,11 +674,9 @@ mod tests_iterative {
     #[test]
     fn iterative_pipeline_runs_and_stores_in_memory() {
         let constitution = make_constitution();
-        let mut pipeline =
-            IterativePipeline::new(constitution, 3).unwrap();
+        let mut pipeline = IterativePipeline::new(constitution, 3).unwrap();
 
-        let spec =
-            ec_codegen::GenerationSpec::simple("add", vec!["i32", "i32"], "i32");
+        let spec = ec_codegen::GenerationSpec::simple("add", vec!["i32", "i32"], "i32");
         let result = pipeline.run(&spec);
 
         assert!(result.total_iterations > 0);
@@ -711,8 +684,7 @@ mod tests_iterative {
         assert_eq!(pipeline.memory().len(), result.attempts.len());
 
         if result.attempts.len() >= 2 {
-            let chain = pipeline
-                .trace_causal_chain(result.attempts.last().unwrap().node_id);
+            let chain = pipeline.trace_causal_chain(result.attempts.last().unwrap().node_id);
             assert!(!chain.is_empty());
         }
     }
@@ -720,19 +692,10 @@ mod tests_iterative {
     #[test]
     fn iterative_pipeline_multiple_artifacts() {
         let constitution = make_constitution();
-        let mut pipeline =
-            IterativePipeline::new(constitution, 2).unwrap();
+        let mut pipeline = IterativePipeline::new(constitution, 2).unwrap();
 
-        let spec1 = ec_codegen::GenerationSpec::simple(
-            "multiply",
-            vec!["f64", "f64"],
-            "f64",
-        );
-        let spec2 = ec_codegen::GenerationSpec::simple(
-            "divide",
-            vec!["f64", "f64"],
-            "f64",
-        );
+        let spec1 = ec_codegen::GenerationSpec::simple("multiply", vec!["f64", "f64"], "f64");
+        let spec2 = ec_codegen::GenerationSpec::simple("divide", vec!["f64", "f64"], "f64");
 
         let r1 = pipeline.run(&spec1);
         let r2 = pipeline.run(&spec2);
@@ -755,25 +718,19 @@ mod tests_iterative {
     #[test]
     fn iterative_pipeline_learn_from_history() {
         let constitution = make_constitution();
-        let mut pipeline =
-            IterativePipeline::new(constitution, 3).unwrap();
+        let mut pipeline = IterativePipeline::new(constitution, 3).unwrap();
 
-        let spec =
-            ec_codegen::GenerationSpec::simple("test_fn", vec!["i32"], "i32");
+        let spec = ec_codegen::GenerationSpec::simple("test_fn", vec!["i32"], "i32");
         let result = pipeline.run(&spec);
 
         if let Some(first_attempt) = result.attempts.first() {
-            let assessment =
-                ec_memory::RetrospectiveAssessment::new(true, 0.85, "was good")
-                    .expect("assessment");
+            let assessment = ec_memory::RetrospectiveAssessment::new(true, 0.85, "was good")
+                .expect("assessment");
             pipeline
                 .learn_from_history(first_attempt.node_id, assessment)
                 .unwrap();
 
-            let node = pipeline
-                .memory()
-                .get(first_attempt.node_id)
-                .unwrap();
+            let node = pipeline.memory().get(first_attempt.node_id).unwrap();
             assert!(!node.retrospective.is_empty());
         }
     }
@@ -781,11 +738,9 @@ mod tests_iterative {
     #[test]
     fn iterative_pipeline_pure_function() {
         let constitution = make_constitution();
-        let mut pipeline =
-            IterativePipeline::new(constitution, 3).unwrap();
+        let mut pipeline = IterativePipeline::new(constitution, 3).unwrap();
 
-        let mut spec =
-            ec_codegen::GenerationSpec::simple("square", vec!["f64"], "f64");
+        let mut spec = ec_codegen::GenerationSpec::simple("square", vec!["f64"], "f64");
         spec.constraints.push("pure".into());
         spec.constraints.push("no_side_effects".into());
 
@@ -804,9 +759,8 @@ pub fn build_epistemic_from_bayesian(
     calibration: &CalibrationState,
 ) -> EpistemicResult<EpistemicState> {
     let raw_confidence = evidence.credible_confidence();
-    let adjusted = ec_epistemic::BayesianCalibration::adjusted_credible_confidence(
-        evidence, calibration,
-    );
+    let adjusted =
+        ec_epistemic::BayesianCalibration::adjusted_credible_confidence(evidence, calibration);
 
     EpistemicState::new(
         adjusted.clamp(0.10, 0.95),
@@ -869,14 +823,16 @@ impl BayesianPipeline {
 
         // Step 2: Build Bayesian epistemic
         let bayesian_evidence = self.tracker.evidence().clone();
-        let epistemic = build_epistemic_from_bayesian(
-            &bayesian_evidence, &self.calibration,
-        ).unwrap_or_else(|_| build_epistemic_from_fitness(&fitness));
+        let epistemic = build_epistemic_from_bayesian(&bayesian_evidence, &self.calibration)
+            .unwrap_or_else(|_| build_epistemic_from_fitness(&fitness));
 
         // Step 3: Constitutional evaluation
         let artifact_hash = hash_code(code);
         let evaluation = self.engine.evaluate(
-            artifact_id, artifact_hash, &fitness, &epistemic,
+            artifact_id,
+            artifact_hash,
+            &fitness,
+            &epistemic,
             &EvaluationContext::default(),
         );
 
@@ -892,7 +848,9 @@ impl BayesianPipeline {
         self.tracker.record(was_correct, score);
 
         // Step 7: Record calibration
-        let actual = execution.reality.as_ref()
+        let actual = execution
+            .reality
+            .as_ref()
             .map(|r| r.correctness)
             .unwrap_or(0.0);
         let predicted = evaluation.epistemic.confidence;
@@ -902,7 +860,8 @@ impl BayesianPipeline {
         let diagnosis = ec_epistemic::BayesianCalibration::diagnose(&self.calibration);
         let raw_confidence = bayesian_evidence.credible_confidence();
         let bayesian_confidence = ec_epistemic::BayesianCalibration::adjusted_credible_confidence(
-            self.tracker.evidence(), &self.calibration,
+            self.tracker.evidence(),
+            &self.calibration,
         );
 
         BayesianPipelineResult {

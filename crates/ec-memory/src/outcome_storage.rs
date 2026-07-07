@@ -98,8 +98,7 @@ impl OutcomeStorage for SqliteStorage {
                    WHERE artifact_id = ?1 ORDER BY rowid ASC"#,
             )?;
 
-            let mut evidence = BayesianEvidence::initial_prior()
-                .map_err(to_storage_error)?;
+            let mut evidence = BayesianEvidence::initial_prior().map_err(to_storage_error)?;
 
             let rows: Vec<(bool, f64)> = stmt
                 .query_map(rusqlite::params![artifact_id], |row| {
@@ -111,7 +110,8 @@ impl OutcomeStorage for SqliteStorage {
                 .collect();
 
             for (was_correct, score) in rows {
-                evidence = evidence.update_with_outcome(was_correct, score)
+                evidence = evidence
+                    .update_with_outcome(was_correct, score)
                     .map_err(to_storage_error)?;
             }
 
@@ -126,8 +126,7 @@ impl OutcomeStorage for SqliteStorage {
                    ORDER BY rowid ASC"#,
             )?;
 
-            let mut evidence = BayesianEvidence::initial_prior()
-                .map_err(to_storage_error)?;
+            let mut evidence = BayesianEvidence::initial_prior().map_err(to_storage_error)?;
 
             let rows: Vec<(bool, f64)> = stmt
                 .query_map([], |row| {
@@ -139,7 +138,8 @@ impl OutcomeStorage for SqliteStorage {
                 .collect();
 
             for (was_correct, score) in rows {
-                evidence = evidence.update_with_outcome(was_correct, score)
+                evidence = evidence
+                    .update_with_outcome(was_correct, score)
                     .map_err(to_storage_error)?;
             }
 
@@ -149,11 +149,10 @@ impl OutcomeStorage for SqliteStorage {
 
     fn outcome_count(&self) -> Result<u32, StorageError> {
         self.with_conn(|conn| {
-            let count: u32 = conn.query_row(
-                "SELECT COUNT(*) FROM bayesian_outcomes",
-                [],
-                |row| row.get(0),
-            )?;
+            let count: u32 =
+                conn.query_row("SELECT COUNT(*) FROM bayesian_outcomes", [], |row| {
+                    row.get(0)
+                })?;
             Ok(count)
         })
     }

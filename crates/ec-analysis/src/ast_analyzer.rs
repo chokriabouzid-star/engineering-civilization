@@ -2,30 +2,34 @@
 
 //! AstAnalyzer — يحلل AST بدلاً من keyword counting
 
-use syn::{File, visit::Visit};
-use ec_fitness::FitnessVector;
-use crate::report::{AnalysisReport, ConfidenceVector, AnalysisWarning};
+use crate::report::{AnalysisReport, AnalysisWarning, ConfidenceVector};
 use crate::visitors::{
-    UnsafeVisitor, ComplexityVisitor, TestVisitor,
-    CouplingVisitor, SideEffectVisitor, PerformanceVisitor,
+    ComplexityVisitor, CouplingVisitor, PerformanceVisitor, SideEffectVisitor, TestVisitor,
+    UnsafeVisitor,
 };
+use ec_fitness::FitnessVector;
+use syn::{visit::Visit, File};
 
 pub struct AstAnalyzer;
 
 impl Default for AstAnalyzer {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AstAnalyzer {
-    pub fn new() -> Self { Self }
+    pub fn new() -> Self {
+        Self
+    }
 
     pub fn analyze_file(&self, ast: &File) -> AnalysisReport {
-        let mut unsafe_v   = UnsafeVisitor::new();
-        let mut complex_v  = ComplexityVisitor::new();
-        let mut test_v     = TestVisitor::new();
+        let mut unsafe_v = UnsafeVisitor::new();
+        let mut complex_v = ComplexityVisitor::new();
+        let mut test_v = TestVisitor::new();
         let mut coupling_v = CouplingVisitor::new();
-        let mut side_v     = SideEffectVisitor::new();
-        let mut perf_v     = PerformanceVisitor::new();
+        let mut side_v = SideEffectVisitor::new();
+        let mut perf_v = PerformanceVisitor::new();
 
         unsafe_v.visit_file(ast);
         complex_v.visit_file(ast);
@@ -34,12 +38,12 @@ impl AstAnalyzer {
         side_v.visit_file(ast);
         perf_v.visit_file(ast);
 
-        let (security,   sec_conf)   = unsafe_v.score();
-        let (maint,      maint_conf) = complex_v.score();
-        let (coverage,   cov_conf)   = test_v.score();
-        let (stability,  stab_conf)  = coupling_v.score();
-        let (revers,     rev_conf)   = side_v.score();
-        let (perf,       perf_conf)  = perf_v.score();
+        let (security, sec_conf) = unsafe_v.score();
+        let (maint, maint_conf) = complex_v.score();
+        let (coverage, cov_conf) = test_v.score();
+        let (stability, stab_conf) = coupling_v.score();
+        let (revers, rev_conf) = side_v.score();
+        let (perf, perf_conf) = perf_v.score();
 
         let fitness = FitnessVector {
             security,
@@ -69,10 +73,7 @@ impl AstAnalyzer {
 
         for (name, cc) in complex_v.high_complexity() {
             if cc > 20 {
-                warnings.push(AnalysisWarning::HighComplexity {
-                    function: name,
-                    cc,
-                });
+                warnings.push(AnalysisWarning::HighComplexity { function: name, cc });
             }
         }
 

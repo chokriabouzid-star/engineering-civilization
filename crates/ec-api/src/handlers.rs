@@ -11,7 +11,7 @@ use crate::state::AppState;
 use ec_analysis::analyze_code_full;
 use ec_governance::audit::GovernanceEvent;
 use ec_governance::proposal::{
-    ConstitutionalProposal, ProposedChange, ProposalOrigin, ThresholdDirection,
+    ConstitutionalProposal, ProposalOrigin, ProposedChange, ThresholdDirection,
 };
 
 // ─── DTOs (ec-api only — never in kernels) ──────────────────────────
@@ -66,9 +66,7 @@ pub struct HealthResponse {
 // ─── Handlers ───────────────────────────────────────────────────────
 
 /// POST /api/v1/analyze — analyze code
-pub async fn analyze(
-    Json(req): Json<AnalyzeRequest>,
-) -> Json<AnalyzeResponse> {
+pub async fn analyze(Json(req): Json<AnalyzeRequest>) -> Json<AnalyzeResponse> {
     let report = analyze_code_full(&req.code);
     Json(AnalyzeResponse {
         security: report.fitness.security,

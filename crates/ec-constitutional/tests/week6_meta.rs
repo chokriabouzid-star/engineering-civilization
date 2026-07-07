@@ -2,9 +2,7 @@
 #![forbid(unsafe_code)]
 
 use ec_constitutional::evaluation::ConstitutionalEvaluation;
-use ec_constitutional::meta::{
-    OssificationDetector, ReviewReason, ValueDriftDetector,
-};
+use ec_constitutional::meta::{OssificationDetector, ReviewReason, ValueDriftDetector};
 use ec_epistemic::state::EpistemicState;
 use ec_fitness::fitness::FitnessVector;
 
@@ -147,7 +145,11 @@ fn drift_90_degrees_simple() {
     }
 
     let degrees = detector.drift_degrees().unwrap();
-    assert!((degrees - 90.0).abs() < 1e-6, "Expected 90 degrees, got {}", degrees);
+    assert!(
+        (degrees - 90.0).abs() < 1e-6,
+        "Expected 90 degrees, got {}",
+        degrees
+    );
     assert!(detector.needs_review().is_some());
 }
 
@@ -169,7 +171,11 @@ fn drift_45_degrees_simple() {
     }
 
     let degrees = detector.drift_degrees().unwrap();
-    assert!((degrees - 45.0).abs() < 1e-6, "Expected 45 degrees, got {}", degrees);
+    assert!(
+        (degrees - 45.0).abs() < 1e-6,
+        "Expected 45 degrees, got {}",
+        degrees
+    );
     assert!(detector.needs_review().is_some());
 }
 
@@ -198,6 +204,10 @@ fn drift_complex_vector_triggers_review() {
     }
 
     let degrees = detector.drift_degrees().unwrap();
-    assert!(degrees > 30.0, "Expected >30 degrees drift, got {}", degrees);
+    assert!(
+        degrees > 30.0,
+        "Expected >30 degrees drift, got {}",
+        degrees
+    );
     assert!(detector.needs_review().is_some());
 }

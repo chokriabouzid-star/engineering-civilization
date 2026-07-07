@@ -8,7 +8,7 @@ use ec_constitutional::invariant::Invariant;
 use ec_constitutional::reversibility::ReversibilityInvariant;
 use ec_constitutional::security::SecurityInvariant;
 use ec_epistemic::calibration::CalibrationState;
-use ec_epistemic::state::{Evidence, EpistemicState, UncertaintyDecomposition};
+use ec_epistemic::state::{EpistemicState, Evidence, UncertaintyDecomposition};
 use ec_fitness::fitness::{CatastropheThresholds, FitnessVector};
 use std::sync::Arc;
 use std::time::Duration;
@@ -117,13 +117,19 @@ fn bench_frontier_100(c: &mut Criterion) {
     let context = EvaluationContext::default();
 
     let evaluations: Vec<_> = (0..100)
-        .map(|i| engine.evaluate(&format!("art-{}", i), i as u64, &fitness, &epistemic, &context))
+        .map(|i| {
+            engine.evaluate(
+                &format!("art-{}", i),
+                i as u64,
+                &fitness,
+                &epistemic,
+                &context,
+            )
+        })
         .collect();
 
     c.bench_function("frontier_100_artifacts", |b| {
-        b.iter(|| {
-            black_box(engine.build_frontier(black_box(&evaluations)))
-        })
+        b.iter(|| black_box(engine.build_frontier(black_box(&evaluations))))
     });
 }
 
@@ -134,16 +140,22 @@ fn bench_frontier_1000(c: &mut Criterion) {
     let context = EvaluationContext::default();
 
     let evaluations: Vec<_> = (0..1000)
-        .map(|i| engine.evaluate(&format!("art-{}", i), i as u64, &fitness, &epistemic, &context))
+        .map(|i| {
+            engine.evaluate(
+                &format!("art-{}", i),
+                i as u64,
+                &fitness,
+                &epistemic,
+                &context,
+            )
+        })
         .collect();
 
     let mut group = c.benchmark_group("frontier_large");
     group.measurement_time(Duration::from_secs(10));
 
     group.bench_function("frontier_1000_artifacts", |b| {
-        b.iter(|| {
-            black_box(engine.build_frontier(black_box(&evaluations)))
-        })
+        b.iter(|| black_box(engine.build_frontier(black_box(&evaluations))))
     });
 
     group.finish();
@@ -159,9 +171,7 @@ fn bench_compare(c: &mut Criterion) {
     let right = engine.evaluate("right", 2, &fitness, &epistemic, &context);
 
     c.bench_function("compare_two_evaluations", |b| {
-        b.iter(|| {
-            black_box(engine.compare(black_box(&left), black_box(&right)))
-        })
+        b.iter(|| black_box(engine.compare(black_box(&left), black_box(&right))))
     });
 }
 

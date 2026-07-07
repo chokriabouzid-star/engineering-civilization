@@ -4,7 +4,7 @@
 
 use ec_analysis::analyze_code;
 use ec_fitness::fitness::FitnessVector;
-use ec_memory::{CausalMemoryGraph, DecisionNodeBuilder, ArtifactSnapshot};
+use ec_memory::{ArtifactSnapshot, CausalMemoryGraph, DecisionNodeBuilder};
 
 /// جذر المشروع (3 مستويات فوق crates/ec-app)
 fn project_root() -> std::path::PathBuf {
@@ -19,8 +19,16 @@ fn project_root() -> std::path::PathBuf {
 // ─── Gate 1: Design Invariant D5 — Single Source of Similarity ──────
 #[test]
 fn gate_single_source_of_similarity() {
-    let a = FitnessVector { security: 0.8, reversibility: 0.7, ..Default::default() };
-    let b = FitnessVector { security: 0.8, reversibility: 0.7, ..Default::default() };
+    let a = FitnessVector {
+        security: 0.8,
+        reversibility: 0.7,
+        ..Default::default()
+    };
+    let b = FitnessVector {
+        security: 0.8,
+        reversibility: 0.7,
+        ..Default::default()
+    };
     assert!((a.cosine_similarity(&b) - 1.0).abs() < 1e-10);
     assert!(a.cosine_angle_degrees(&b) < 0.001);
 }
@@ -64,10 +72,22 @@ fn gate_analyze_code_produces_valid_fitness() {
 // ─── Gate 5: Drift uses FitnessVector method (no local dup) ────────
 #[test]
 fn gate_drift_uses_fitness_method() {
-    let a = FitnessVector { security: 0.9, performance: 0.3, ..Default::default() };
-    let b = FitnessVector { security: 0.2, performance: 0.9, ..Default::default() };
+    let a = FitnessVector {
+        security: 0.9,
+        performance: 0.3,
+        ..Default::default()
+    };
+    let b = FitnessVector {
+        security: 0.2,
+        performance: 0.9,
+        ..Default::default()
+    };
     let angle = a.cosine_angle_degrees(&b);
-    assert!(angle > 10.0, "drift between opposing vectors must be > 10°, got {:.1}°", angle);
+    assert!(
+        angle > 10.0,
+        "drift between opposing vectors must be > 10°, got {:.1}°",
+        angle
+    );
 }
 
 // ─── Gate 6: ADR documentation complete ─────────────────────────────
@@ -86,7 +106,8 @@ fn gate_adr_documentation_exists() {
         assert!(
             full.exists(),
             "Missing ADR: {} (looked at {:?})",
-            path, full
+            path,
+            full
         );
     }
 }

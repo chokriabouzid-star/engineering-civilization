@@ -10,7 +10,10 @@ use ec_epistemic::{BayesianCalibration, BayesianEvidence, CalibrationDiagnosis, 
 fn w40_insufficient_data_few_samples() {
     let cal = CalibrationState::default();
     let d = BayesianCalibration::diagnose(&cal);
-    assert!(matches!(d, CalibrationDiagnosis::InsufficientData { samples: 0 }));
+    assert!(matches!(
+        d,
+        CalibrationDiagnosis::InsufficientData { samples: 0 }
+    ));
 }
 
 #[test]
@@ -20,7 +23,10 @@ fn w40_insufficient_data_9_samples() {
         cal.record(0.8, 0.8).unwrap();
     }
     let d = BayesianCalibration::diagnose(&cal);
-    assert!(matches!(d, CalibrationDiagnosis::InsufficientData { samples: 9 }));
+    assert!(matches!(
+        d,
+        CalibrationDiagnosis::InsufficientData { samples: 9 }
+    ));
 }
 
 // ─── Gate 2: well calibrated ────────────────────────────────────────
@@ -88,14 +94,20 @@ fn w40_well_calibrated_no_adjustment() {
 
 #[test]
 fn w40_overconfident_reduces_confidence() {
-    let d = CalibrationDiagnosis::Overconfident { ece: 0.3, avg_gap: 0.2 };
+    let d = CalibrationDiagnosis::Overconfident {
+        ece: 0.3,
+        avg_gap: 0.2,
+    };
     let adjusted = BayesianCalibration::adjust_confidence(0.80, &d);
     assert!(adjusted < 0.80, "adjusted={:.3}", adjusted);
 }
 
 #[test]
 fn w40_underconfident_increases_confidence() {
-    let d = CalibrationDiagnosis::Underconfident { ece: 0.3, avg_gap: 0.2 };
+    let d = CalibrationDiagnosis::Underconfident {
+        ece: 0.3,
+        avg_gap: 0.2,
+    };
     let adjusted = BayesianCalibration::adjust_confidence(0.50, &d);
     assert!(adjusted > 0.50, "adjusted={:.3}", adjusted);
 }
@@ -109,7 +121,10 @@ fn w40_insufficient_data_reduces_slightly() {
 
 #[test]
 fn w40_adjustment_never_below_floor() {
-    let d = CalibrationDiagnosis::Overconfident { ece: 0.5, avg_gap: 0.9 };
+    let d = CalibrationDiagnosis::Overconfident {
+        ece: 0.5,
+        avg_gap: 0.9,
+    };
     let adjusted = BayesianCalibration::adjust_confidence(0.20, &d);
     assert!(adjusted >= 0.10, "floor=0.10, got: {}", adjusted);
 }
@@ -180,7 +195,10 @@ fn w40_gate_complete() {
 
     assert!(matches!(d_ok, CalibrationDiagnosis::WellCalibrated { .. }));
     assert!(matches!(d_over, CalibrationDiagnosis::Overconfident { .. }));
-    assert!(matches!(d_under, CalibrationDiagnosis::Underconfident { .. }));
+    assert!(matches!(
+        d_under,
+        CalibrationDiagnosis::Underconfident { .. }
+    ));
 
     println!("  ✅ Week 40 Gate: PASSED");
 }

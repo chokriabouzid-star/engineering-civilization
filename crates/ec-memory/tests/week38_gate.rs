@@ -2,8 +2,8 @@
 
 //! Week 38 Gate — BayesianQuery (Analogies + Confidence)
 
-use ec_memory::*;
 use ec_fitness::FitnessVector;
+use ec_memory::*;
 
 fn make_graph_with_outcomes() -> (CausalMemoryGraph, SqliteStorage) {
     let graph = CausalMemoryGraph::new();
@@ -23,13 +23,13 @@ fn sample_fitness(sec: f64, cov: f64) -> FitnessVector {
 }
 
 fn add_node(graph: &mut CausalMemoryGraph, artifact: &str, fitness: FitnessVector) -> NodeId {
-    graph.record_from_builder(
-        crate::node::DecisionNodeBuilder::new(
+    graph
+        .record_from_builder(crate::node::DecisionNodeBuilder::new(
             artifact,
             crate::types::ArtifactSnapshot::new("fn f() {}"),
             fitness,
-        )
-    ).unwrap()
+        ))
+        .unwrap()
 }
 
 // ─── Gate 1: empty graph ────────────────────────────────────────────
@@ -55,8 +55,11 @@ fn w38_nodes_without_outcomes_low_confidence() {
     let results = q.find_similar_with_confidence(&target, 5).unwrap();
 
     assert_eq!(results.len(), 1);
-    assert!(results[0].bayesian_confidence < 0.50,
-        "got: {}", results[0].bayesian_confidence);
+    assert!(
+        results[0].bayesian_confidence < 0.50,
+        "got: {}",
+        results[0].bayesian_confidence
+    );
     assert!(results[0].total_observations == 0);
 }
 
@@ -76,8 +79,11 @@ fn w38_with_outcomes_higher_confidence() {
     let results = q.find_similar_with_confidence(&target, 5).unwrap();
 
     assert_eq!(results.len(), 1);
-    assert!(results[0].bayesian_confidence > 0.45,
-        "after 15 successes: {}", results[0].bayesian_confidence);
+    assert!(
+        results[0].bayesian_confidence > 0.45,
+        "after 15 successes: {}",
+        results[0].bayesian_confidence
+    );
     assert_eq!(results[0].total_observations, 15);
 }
 
@@ -95,9 +101,13 @@ fn w38_combined_is_min() {
 
     assert!(!results.is_empty());
     let r = &results[0];
-    assert!((r.combined - r.similarity.min(r.bayesian_confidence)).abs() < 0.001,
+    assert!(
+        (r.combined - r.similarity.min(r.bayesian_confidence)).abs() < 0.001,
         "combined={:.3}, min({:.3},{:.3})",
-        r.combined, r.similarity, r.bayesian_confidence);
+        r.combined,
+        r.similarity,
+        r.bayesian_confidence
+    );
 }
 
 // ─── Gate 5: ranked by similarity ──────────────────────────────────
@@ -118,8 +128,12 @@ fn w38_ranked_by_similarity() {
     let results = q.find_similar_with_confidence(&target, 5).unwrap();
 
     assert!(results.len() >= 2);
-    assert!(results[0].similarity >= results[1].similarity,
-        "first={:.3} >= second={:.3}", results[0].similarity, results[1].similarity);
+    assert!(
+        results[0].similarity >= results[1].similarity,
+        "first={:.3} >= second={:.3}",
+        results[0].similarity,
+        results[1].similarity
+    );
 }
 
 // ─── Gate 6: best_by_confidence ─────────────────────────────────────
@@ -183,9 +197,10 @@ fn w38_gate_complete() {
     println!("  Week 38 Gate — BayesianQuery");
     println!("═══════════════════════════════════════════════");
     for r in &results {
-        println!("  {} sim={:.3} bayes={:.3} combined={:.3} obs={}",
-            r.artifact_id, r.similarity, r.bayesian_confidence,
-            r.combined, r.total_observations);
+        println!(
+            "  {} sim={:.3} bayes={:.3} combined={:.3} obs={}",
+            r.artifact_id, r.similarity, r.bayesian_confidence, r.combined, r.total_observations
+        );
     }
     println!("═══════════════════════════════════════════════");
 

@@ -31,10 +31,25 @@ struct DimensionTotals {
 
 impl DimensionTotals {
     fn new() -> Self {
-        Self { security: 0.0, coverage: 0.0, maintain: 0.0, perf: 0.0, stability: 0.0, revers: 0.0 }
+        Self {
+            security: 0.0,
+            coverage: 0.0,
+            maintain: 0.0,
+            perf: 0.0,
+            stability: 0.0,
+            revers: 0.0,
+        }
     }
 
-    fn add(&mut self, security: f64, coverage: f64, maintain: f64, perf: f64, stability: f64, revers: f64) {
+    fn add(
+        &mut self,
+        security: f64,
+        coverage: f64,
+        maintain: f64,
+        perf: f64,
+        stability: f64,
+        revers: f64,
+    ) {
         self.security += security;
         self.coverage += coverage;
         self.maintain += maintain;
@@ -44,9 +59,12 @@ impl DimensionTotals {
     }
 
     fn project_score(&self, n: usize) -> f64 {
-        if n == 0 { return 0.0; }
+        if n == 0 {
+            return 0.0;
+        }
         let nf = n as f64;
-        (self.security + self.coverage + self.maintain + self.perf + self.stability + self.revers) / (6.0 * nf)
+        (self.security + self.coverage + self.maintain + self.perf + self.stability + self.revers)
+            / (6.0 * nf)
     }
 }
 
@@ -95,7 +113,14 @@ fn analyze_file(path: &Path, report: &mut WorkspaceReport, totals: &mut Dimensio
     report.files_scanned += 1;
 
     let f = &result.fitness;
-    totals.add(f.security, f.test_coverage, f.maintainability, f.performance, f.architectural_stability, f.reversibility);
+    totals.add(
+        f.security,
+        f.test_coverage,
+        f.maintainability,
+        f.performance,
+        f.architectural_stability,
+        f.reversibility,
+    );
 
     let path_str = path.to_string_lossy().to_string();
 

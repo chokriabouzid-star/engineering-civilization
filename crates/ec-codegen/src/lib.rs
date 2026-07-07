@@ -10,11 +10,11 @@
 //! - الكود المُولَّد يمر عبر ec-analysis و ec-constitutional
 //! - كل محاولة تُسجل في ec-memory
 
-pub mod spec;
-pub mod template;
-pub mod rust;
 pub mod generator;
 pub mod result;
+pub mod rust;
+pub mod spec;
+pub mod template;
 
 pub use generator::CodeGenerator;
 pub use result::{GenerationResult, GenerationSuccess};

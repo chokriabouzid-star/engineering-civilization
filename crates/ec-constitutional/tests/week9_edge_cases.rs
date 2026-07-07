@@ -5,7 +5,7 @@ use ec_constitutional::constitution::Constitution;
 use ec_constitutional::engine::{ConstitutionalEngine, EvaluationContext};
 use ec_constitutional::policy::PolicySet;
 use ec_epistemic::calibration::CalibrationState;
-use ec_epistemic::state::{Evidence, EpistemicState, UncertaintyDecomposition};
+use ec_epistemic::state::{EpistemicState, Evidence, UncertaintyDecomposition};
 use ec_fitness::fitness::{CatastropheThresholds, FitnessVector};
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -48,7 +48,13 @@ fn nan_in_fitness_vector() {
     let mut fitness = zero_fitness();
     fitness.security = f64::NAN;
 
-    let eval = engine.evaluate("nan-test", 1, &fitness, &minimal_valid_epistemic(), &context);
+    let eval = engine.evaluate(
+        "nan-test",
+        1,
+        &fitness,
+        &minimal_valid_epistemic(),
+        &context,
+    );
     assert!(!eval.is_valid || eval.catastrophic.is_some());
 }
 
@@ -67,7 +73,13 @@ fn all_dimensions_catastrophic() {
         architectural_stability: 0.0,
     };
 
-    let eval = engine.evaluate("catastrophe-all", 2, &fitness, &minimal_valid_epistemic(), &context);
+    let eval = engine.evaluate(
+        "catastrophe-all",
+        2,
+        &fitness,
+        &minimal_valid_epistemic(),
+        &context,
+    );
     assert!(!eval.is_valid);
     assert!(eval.catastrophic.is_some());
 }
@@ -104,16 +116,16 @@ fn valid_toml_wrong_types() {
 fn frontier_with_1000_artifacts() {
     let engine = ConstitutionalEngine::with_default_cache(build_empty_constitution());
     let context = EvaluationContext::default();
-    
+
     let mut evaluations = Vec::new();
     for i in 0..1000 {
         // Generate valid fitness vectors above thresholds
         let fitness = FitnessVector {
-            security: 0.8 + (i % 100) as f64 * 0.001, // 0.8 to 0.899
+            security: 0.8 + (i % 100) as f64 * 0.001,     // 0.8 to 0.899
             reversibility: 0.5 + (i % 50) as f64 * 0.002, // 0.5 to 0.598
             test_coverage: 0.7 + (i % 80) as f64 * 0.0015, // 0.7 to 0.819
             maintainability: 0.6 + (i % 60) as f64 * 0.001, // 0.6 to 0.659
-            performance: 0.4 + (i % 120) as f64 * 0.001, // 0.4 to 0.519
+            performance: 0.4 + (i % 120) as f64 * 0.001,  // 0.4 to 0.519
             architectural_stability: 0.6 + (i % 70) as f64 * 0.0015, // 0.6 to 0.704
         };
         let eval = engine.evaluate(
@@ -129,9 +141,12 @@ fn frontier_with_1000_artifacts() {
     }
 
     let frontier = engine.build_frontier(&evaluations);
-    
+
     // With no invariants, all should be valid and some should be on frontier
-    assert!(!frontier.is_empty(), "Frontier should not be empty with 1000 valid artifacts");
+    assert!(
+        !frontier.is_empty(),
+        "Frontier should not be empty with 1000 valid artifacts"
+    );
     println!("Frontier size from 1000 artifacts: {}", frontier.len());
 }
 
@@ -150,8 +165,14 @@ fn extremely_high_values() {
         architectural_stability: f64::MAX,
     };
 
-    let _eval = engine.evaluate("overflow-test", 3, &fitness, &minimal_valid_epistemic(), &context);
-    
+    let _eval = engine.evaluate(
+        "overflow-test",
+        3,
+        &fitness,
+        &minimal_valid_epistemic(),
+        &context,
+    );
+
     // Extremely high values should either:
     // 1. Be rejected as catastrophic (if they exceed thresholds)
     // 2. Be rejected as invalid (if they cause internal errors like overflow)
@@ -174,7 +195,13 @@ fn negative_fitness_values() {
         ..FitnessVector::default()
     };
 
-    let eval = engine.evaluate("negative-test", 4, &fitness, &minimal_valid_epistemic(), &context);
+    let eval = engine.evaluate(
+        "negative-test",
+        4,
+        &fitness,
+        &minimal_valid_epistemic(),
+        &context,
+    );
     assert!(!eval.is_valid);
 }
 
@@ -190,7 +217,13 @@ fn extremely_small_positive_values() {
         ..FitnessVector::default()
     };
 
-    let eval = engine.evaluate("tiny-values", 5, &fitness, &minimal_valid_epistemic(), &context);
+    let eval = engine.evaluate(
+        "tiny-values",
+        5,
+        &fitness,
+        &minimal_valid_epistemic(),
+        &context,
+    );
     assert!(eval.is_valid || eval.catastrophic.is_some());
 }
 
@@ -200,7 +233,7 @@ fn extremely_small_positive_values() {
 fn duplicate_artifact_ids() {
     let engine = ConstitutionalEngine::with_default_cache(build_empty_constitution());
     let context = EvaluationContext::default();
-    
+
     let fitness1 = FitnessVector {
         security: 0.9,
         ..FitnessVector::default()
@@ -210,8 +243,20 @@ fn duplicate_artifact_ids() {
         ..FitnessVector::default()
     };
 
-    let eval1 = engine.evaluate("duplicate-id", 100, &fitness1, &minimal_valid_epistemic(), &context);
-    let eval2 = engine.evaluate("duplicate-id", 100, &fitness2, &minimal_valid_epistemic(), &context);
-    
+    let eval1 = engine.evaluate(
+        "duplicate-id",
+        100,
+        &fitness1,
+        &minimal_valid_epistemic(),
+        &context,
+    );
+    let eval2 = engine.evaluate(
+        "duplicate-id",
+        100,
+        &fitness2,
+        &minimal_valid_epistemic(),
+        &context,
+    );
+
     assert_eq!(eval1.artifact_id, eval2.artifact_id);
 }

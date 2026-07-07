@@ -6,8 +6,8 @@
 //! D1-D8: كلها محفوظة
 //! كل الـ APIs القديمة لا تزال تعمل
 
-use ec_epistemic::{BayesianEvidence, Evidence, EpistemicState};
-use ec_epistemic::{UncertaintyDecomposition, CalibrationState};
+use ec_epistemic::{BayesianEvidence, EpistemicState, Evidence};
+use ec_epistemic::{CalibrationState, UncertaintyDecomposition};
 
 // ─── D8: Confidence منفصل ──────────────────────────────────────────
 
@@ -43,8 +43,12 @@ fn p5_bayesian_lifecycle() {
     assert_eq!(e.failures, 5);
     let conf_after_mixed = e.credible_confidence();
 
-    assert!(conf_after_success > conf_after_mixed,
-        "pure success ({:.3}) > mixed ({:.3})", conf_after_success, conf_after_mixed);
+    assert!(
+        conf_after_success > conf_after_mixed,
+        "pure success ({:.3}) > mixed ({:.3})",
+        conf_after_success,
+        conf_after_mixed
+    );
 }
 
 #[test]
@@ -58,7 +62,11 @@ fn p5_wilson_converges() {
     let conf_after = e.credible_confidence();
 
     assert!(conf_after > conf_before);
-    assert!(conf_after > 0.80, "50 successes → high confidence: {}", conf_after);
+    assert!(
+        conf_after > 0.80,
+        "50 successes → high confidence: {}",
+        conf_after
+    );
 }
 
 #[test]
@@ -88,7 +96,8 @@ fn p5_old_evidence_unchanged() {
 fn p5_old_epistemic_state_unchanged() {
     let evidence = Evidence::new(50, 0, 0.9, 0.8).unwrap();
     let uncertainty = UncertaintyDecomposition::new(0.1, 0.2, 0.05).unwrap();
-    let state = EpistemicState::new(0.85, evidence, uncertainty, CalibrationState::default()).unwrap();
+    let state =
+        EpistemicState::new(0.85, evidence, uncertainty, CalibrationState::default()).unwrap();
     assert!((state.confidence - 0.85).abs() < 0.001);
     assert!(state.total_uncertainty() > 0.0);
 }
@@ -107,9 +116,14 @@ fn p5_confidence_monotonic_with_successes() {
 
     // بعد أول 5 مشاهدات، يجب أن يرتفع أو يبقى ثابت
     for i in 5..confs.len() {
-        assert!(confs[i] >= confs[i-1] - 0.01,
+        assert!(
+            confs[i] >= confs[i - 1] - 0.01,
             "conf[{}]={:.3} dropped from conf[{}]={:.3}",
-            i, confs[i], i-1, confs[i-1]);
+            i,
+            confs[i],
+            i - 1,
+            confs[i - 1]
+        );
     }
 }
 
@@ -154,13 +168,28 @@ fn phase5_partial_gate_complete() {
     println!("║  Old EpistemicState API:     ✅              ║");
     println!("║  D1-D8 preserved:            ✅              ║");
     println!("╠══════════════════════════════════════════════╣");
-    println!("║  Prior:        conf={:.3}                    ║", prior.credible_confidence());
-    println!("║  Success only: conf={:.3} s={} f={}         ║",
-        success_only.credible_confidence(), success_only.successes, success_only.failures);
-    println!("║  Mixed:        conf={:.3} s={} f={}          ║",
-        mixed.credible_confidence(), mixed.successes, mixed.failures);
-    println!("║  Failure only: conf={:.3} s={} f={}         ║",
-        failure_only.credible_confidence(), failure_only.successes, failure_only.failures);
+    println!(
+        "║  Prior:        conf={:.3}                    ║",
+        prior.credible_confidence()
+    );
+    println!(
+        "║  Success only: conf={:.3} s={} f={}         ║",
+        success_only.credible_confidence(),
+        success_only.successes,
+        success_only.failures
+    );
+    println!(
+        "║  Mixed:        conf={:.3} s={} f={}          ║",
+        mixed.credible_confidence(),
+        mixed.successes,
+        mixed.failures
+    );
+    println!(
+        "║  Failure only: conf={:.3} s={} f={}         ║",
+        failure_only.credible_confidence(),
+        failure_only.successes,
+        failure_only.failures
+    );
     println!("╚══════════════════════════════════════════════╝");
 
     assert!(success_only.credible_confidence() > mixed.credible_confidence());

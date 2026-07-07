@@ -28,23 +28,15 @@ pub mod storage;
 
 pub use graph::{CausalMemoryGraph, MemoryError};
 pub use node::{DecisionNode, DecisionNodeBuilder, RejectedAlternative, SandboxOutcome};
-pub use query::{
-    CounterfactualGain, FitnessSnapshot, MemoryQuery, SimilarDecision,
-};
-pub use types::{
-    ArtifactHash, ArtifactSnapshot, NodeId, RejectionReason,
-    RetrospectiveAssessment,
-};
+pub use query::{CounterfactualGain, FitnessSnapshot, MemoryQuery, SimilarDecision};
+pub use types::{ArtifactHash, ArtifactSnapshot, NodeId, RejectionReason, RetrospectiveAssessment};
 
 /// كشف الانجراف القيمي من الذاكرة التاريخية (Week 24).
 pub mod drift;
 
 pub use storage::{MemoryStorage, SqliteStorage, StorageError};
 
-pub use drift::{
-    DriftAction, DriftClassification, DriftReport,
-    HistoricalDriftAnalyzer,
-};
+pub use drift::{DriftAction, DriftClassification, DriftReport, HistoricalDriftAnalyzer};
 pub mod outcome_storage;
 pub use outcome_storage::OutcomeStorage;
 pub mod bayesian_query;

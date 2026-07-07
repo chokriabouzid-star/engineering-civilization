@@ -89,17 +89,11 @@ impl HardenedDockerRunner {
 
     /// إنشاء runner مُقوَّى بدون seccomp (للاختبار).
     pub fn for_testing() -> anyhow::Result<Self> {
-        Self::new(
-            DockerRunner::default(),
-            HardenedConfig::without_seccomp(),
-        )
+        Self::new(DockerRunner::default(), HardenedConfig::without_seccomp())
     }
 
     /// تجميع وتشغيل Rust code بأمان كامل.
-    pub fn compile_and_run_hardened(
-        &self,
-        source_code: &str,
-    ) -> Result<DockerOutput, DockerError> {
+    pub fn compile_and_run_hardened(&self, source_code: &str) -> Result<DockerOutput, DockerError> {
         let escaped = source_code.replace('\'', r#"'"'"'"#);
 
         let script = format!(
@@ -151,7 +145,10 @@ impl HardenedDockerRunner {
         }
 
         args.push("--user".to_string());
-        args.push(format!("{}:{}", self.hardened.user_id, self.hardened.group_id));
+        args.push(format!(
+            "{}:{}",
+            self.hardened.user_id, self.hardened.group_id
+        ));
 
         // image
         args.push(self.base.image.clone());

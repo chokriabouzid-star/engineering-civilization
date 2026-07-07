@@ -71,7 +71,10 @@ impl CausalMemoryGraph {
     ///
     /// الطريقة الموصىى بها لإنشاء قرارات من خارج ec-memory.
     /// id و created_at يُنشآن هنا — لا يتحكم فيهما المستخدم.
-    pub fn record_from_builder(&mut self, builder: DecisionNodeBuilder) -> Result<NodeId, MemoryError> {
+    pub fn record_from_builder(
+        &mut self,
+        builder: DecisionNodeBuilder,
+    ) -> Result<NodeId, MemoryError> {
         let node = builder.build();
         self.record(node)
     }
@@ -288,8 +291,7 @@ mod tests {
         let mut g = CausalMemoryGraph::new();
         let id = g.record(dummy_node("test", vec![])).unwrap();
 
-        let assessment =
-            RetrospectiveAssessment::new(true, 0.9, "better").unwrap();
+        let assessment = RetrospectiveAssessment::new(true, 0.9, "better").unwrap();
         assert!(g.update_retrospective(id, assessment).is_ok());
 
         let node = g.get(id).unwrap();
@@ -300,8 +302,7 @@ mod tests {
     fn graph_update_retrospective_missing_node() {
         let mut g = CausalMemoryGraph::new();
         let id = NodeId::new();
-        let assessment =
-            RetrospectiveAssessment::new(true, 0.9, "test").unwrap();
+        let assessment = RetrospectiveAssessment::new(true, 0.9, "test").unwrap();
 
         assert!(matches!(
             g.update_retrospective(id, assessment),
@@ -338,7 +339,8 @@ mod tests {
     fn graph_latest_n() {
         let mut g = CausalMemoryGraph::new();
         for i in 0..10 {
-            g.record(dummy_node(&format!("node-{}", i), vec![])).unwrap();
+            g.record(dummy_node(&format!("node-{}", i), vec![]))
+                .unwrap();
         }
 
         let latest = g.latest_n(3);
