@@ -7,6 +7,8 @@
 //! - non-root user
 //! - read-only filesystem
 //! - tmpfs للـ workspace فقط
+//! - pids-limit (يمنع fork bombs بشكل حاسم — أُضيف بعد Phase 1 CI، انظر
+//!   PIDS_LIMIT أدناه للتفاصيل)
 
 use crate::docker::{DockerError, DockerOutput, DockerRunner};
 use std::path::PathBuf;
@@ -76,6 +78,26 @@ pub struct HardenedDockerRunner {
 }
 
 impl HardenedDockerRunner {
+    /// الحد الأقصى لعدد الـ PIDs (processes/threads) داخل الحاوية عبر
+    /// cgroup pids controller.
+    ///
+    /// اكتُشفت الحاجة لهذا في Phase 1 CI (GitHub Actions): الاحتواء كان
+    /// يعتمد ضمنيًا على حدود الذاكرة/CPU فقط، وهذا غير كافٍ لمنع fork bomb —
+    /// `--memory` لا تحدّ عدد الـ threads المسموح إنشاؤها، فقط استهلاك
+    /// الذاكرة الكلي. على بيئة أقوى من WSL2 (4 CPU / 15.6GB) تمكّن اختبار
+    /// fork bomb من إنشاء 10,000 thread دون أي حد. `--pids-limit` يمنع هذا
+    /// بشكل حاسم ومستقل عن موارد الـ host.
+    ///
+    /// القيمة 256: هامش مريح فوق احتياجات تجميع/تشغيل أي برنامج Rust
+    /// معقول (rustc + linker + البرنامج الناتج)، وصغيرة كفاية لإيقاف أي
+    /// fork bomb حقيقي. إن كسرت اختبارات التجميع العادية، ارفعها إلى 512.
+    const PIDS_LIMIT: u32 = 256;
+
+    /// عتبة اعتبار الاختبار "هروبًا": أي عدد أعلى من PIDS_LIMIT + هامش
+    /// أمان يعني أن pids-limit لم يُطبَّق فعليًا (لا مجرد اقتراب طبيعي
+    /// من الحد المُهيّأ).
+    const FORK_BOMB_ESCAPE_THRESHOLD: u32 = Self::PIDS_LIMIT + 50;
+
     /// إنشاء runner مُقوَّى.
     pub fn new(base: DockerRunner, hardened: HardenedConfig) -> anyhow::Result<Self> {
         hardened.validate()?;
@@ -116,6 +138,11 @@ impl HardenedDockerRunner {
             "--cpus".to_string(),
             self.base.cpu_limit.to_string(),
         ];
+
+        // حد صارم على عدد processes/threads داخل الحاوية — يمنع fork bombs
+        // بشكل حاسم، مستقل عن ذاكرة/CPU الـ host (انظر توثيق PIDS_LIMIT أعلاه)
+        args.push("--pids-limit".to_string());
+        args.push(Self::PIDS_LIMIT.to_string());
 
         // tmpfs workspace
         args.push("--tmpfs".to_string());
@@ -236,12 +263,12 @@ fn main() {
     }
 
     /// اختبار: هل يمكن fork bomb؟
-    /// المقياس الحقيقي: هل يستطيع استنزاف موارد الـ host؟
-    /// الـ container يُقتل بـ OOM أو timeout — كلاهما "contained"
+    /// المقياس الحقيقي: هل pids-limit يوقف محاولة استنزاف موارد الـ host؟
+    /// (لم يعد الاعتماد على حدود الذاكرة الضمنية وحدها — انظر PIDS_LIMIT)
     pub fn test_fork_bomb_escape(&self) -> EscapeTestResult {
-        // كود يحاول spawn عدد هائل من الـ threads ثم يتحقق من عدد الـ handles
-        // إذا وصل لـ 10000 thread = escaped (استنزف الـ host)
-        // إذا فشل أو timeout = contained
+        // كود يحاول spawn عدد هائل من الـ threads. إذا تجاوز العدد
+        // FORK_BOMB_ESCAPE_THRESHOLD = pids-limit لم يُطبَّق فعليًا = هروب حقيقي.
+        // إذا توقف عنده أو قبله = pids-limit يعمل = محتوى فعليًا.
         let code = r#"
 use std::thread;
 use std::time::Duration;
@@ -258,16 +285,20 @@ fn main() {
             Err(_) => break,
         }
     }
-    // إذا spawned < 5000 = الـ memory limit حدّ الـ fork bomb
-    if spawned >= 5000 {
-        println!("ESCAPED: spawned {} threads", spawned);
+    if spawned > __ESCAPE_THRESHOLD__ {
+        println!("ESCAPED: spawned {} threads (pids-limit not enforced)", spawned);
     } else {
-        println!("CONTAINED: only {} threads before limit", spawned);
+        println!("CONTAINED: pids-limit stopped fork bomb at {} threads", spawned);
     }
 }
-"#;
+"#
+        .replace(
+            "__ESCAPE_THRESHOLD__",
+            &Self::FORK_BOMB_ESCAPE_THRESHOLD.to_string(),
+        );
+
         let runner = self.clone_with_timeout(Duration::from_secs(15));
-        let result = runner.compile_and_run_hardened(code);
+        let result = runner.compile_and_run_hardened(&code);
 
         match result {
             Err(DockerError::Timeout { .. }) => EscapeTestResult {

@@ -84,6 +84,20 @@ impl Default for DockerRunner {
 }
 
 impl DockerRunner {
+    /// الحد الأقصى لعدد الـ PIDs (processes/threads) داخل الحاوية عبر
+    /// cgroup pids controller.
+    ///
+    /// اكتُشفت الحاجة لهذا في Phase 1 CI (GitHub Actions): الاحتواء كان
+    /// يعتمد ضمنيًا على حدود الذاكرة/CPU فقط، وهذا غير كافٍ لمنع fork bomb —
+    /// `--memory` لا تحدّ عدد الـ threads (task_struct allocations bypass
+    /// memory accounting). على بيئة أقوى من WSL2 (4 CPU / 15.6GB) تمكّن
+    /// اختبار fork bomb من إنشاء 10,000 thread دون أي حد.
+    ///
+    /// القيمة 256: هامش مريح فوق احتياجات تجميع/تشغيل Rust معقول (rustc +
+    /// linker + البرنامج الناتج)، وصغيرة كفاية لإيقاف أي fork bomb حقيقي.
+    /// إن كسرت اختبارات التجميع العادية، ارفعها إلى 512.
+    pub const PIDS_LIMIT: u32 = 256;
+
     /// إنشاء runner جديد.
     pub fn new(image: &str, memory_mb: u64, cpu_limit: f64, timeout: Duration) -> Self {
         Self {
@@ -125,6 +139,8 @@ impl DockerRunner {
             &format!("{}m", self.memory_mb),
             "--cpus",
             &self.cpu_limit.to_string(),
+            "--pids-limit",
+            &Self::PIDS_LIMIT.to_string(),
             "--tmpfs",
             "/workspace:size=200m,exec",
             "--tmpfs",
@@ -176,6 +192,8 @@ impl DockerRunner {
             &format!("{}m", self.memory_mb),
             "--cpus",
             &self.cpu_limit.to_string(),
+            "--pids-limit",
+            &Self::PIDS_LIMIT.to_string(),
             "--tmpfs",
             "/tmp:size=50m",
             "--security-opt",
@@ -305,5 +323,40 @@ mod tests {
             out.stdout,
             out.stderr
         );
+    }
+
+    /// اختبار أمني: يتحقق أن --pids-limit مفعّل ويمنع fork bomb.
+    /// اكتُشفت الحاجة له في Phase 1 CI بعد فشل gate_escape_vector_5.
+    #[test]
+    fn docker_pids_limit_blocks_fork_bomb() {
+        let code = r#"
+use std::thread;
+use std::time::Duration;
+fn main() {
+    let mut spawned = 0u32;
+    let mut handles = vec![];
+    for _ in 0..10_000 {
+        match thread::Builder::new()
+            .stack_size(4096)
+            .spawn(|| thread::sleep(Duration::from_secs(30)))
+        {
+            Ok(h) => { handles.push(h); spawned += 1; }
+            Err(_) => break,
+        }
+    }
+    println!("SPAWNED:{}", spawned);
+}
+"#;
+        let out = runner().compile_and_run_code(code).unwrap();
+        let combined = format!("{}{}", out.stdout, out.stderr);
+        // pids-limit=256، فأي عدد > 306 (256 + 50 هامش) يعني الحد لا يعمل
+        let has_high_spawn = combined.lines().any(|line| {
+            if let Some(n) = line.strip_prefix("SPAWNED:") {
+                n.trim().parse::<u32>().map(|v| v > 306).unwrap_or(false)
+            } else {
+                false
+            }
+        });
+        assert!(!has_high_spawn, "pids-limit not enforced: {}", combined);
     }
 }
