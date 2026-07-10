@@ -129,6 +129,10 @@ fn gate_constitutional_review_triggered() {
 // ─── Gate 6: Escape Vectors ──────────────────────────────────────────
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_hardened_escape_vectors_contained() {
     let runner = HardenedDockerRunner::for_testing().unwrap();
 
@@ -153,6 +157,10 @@ fn gate_hardened_escape_vectors_contained() {
 // ─── Gate 7: Network Isolation ───────────────────────────────────────
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_network_isolation() {
     let runner = HardenedDockerRunner::for_testing().unwrap();
 
@@ -215,7 +223,7 @@ fn gate_epistemic_built_from_reality() {
 // ─── Gate 10: Slow (100 executions) ─────────────────────────────────
 
 #[test]
-#[ignore = "slow: 100 Docker executions"]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_zero_escapes_in_100_executions() {
     let runner = HardenedDockerRunner::for_testing().unwrap();
     let mut escapes = 0;
@@ -242,6 +250,10 @@ fn gate_zero_escapes_in_100_executions() {
 // ─── Phase 2 Final Gate ──────────────────────────────────────────────
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn phase2_gate_complete() {
     println!("════════════════════════════════════════════════");
     println!("  PHASE 2 GATE — Engineering Civilization");

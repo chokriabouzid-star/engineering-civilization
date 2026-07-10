@@ -284,6 +284,10 @@ mod tests {
     // ─── Docker tests (Week 14) ──────────────────────────────────────
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_compiles_and_runs_hello_world() {
         let config = SandboxConfig::new(SandboxMode::Docker);
         let executor = SandboxExecutor::new(config).unwrap();
@@ -302,6 +306,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_fails_on_invalid_code() {
         let config = SandboxConfig::new(SandboxMode::Docker);
         let executor = SandboxExecutor::new(config).unwrap();
@@ -314,6 +322,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_measures_real_latency() {
         let config = SandboxConfig::new(SandboxMode::Docker);
         let executor = SandboxExecutor::new(config).unwrap();
@@ -330,6 +342,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_reproducibility_from_real_runs() {
         let config = SandboxConfig::new(SandboxMode::Docker);
         let executor = SandboxExecutor::new(config).unwrap();

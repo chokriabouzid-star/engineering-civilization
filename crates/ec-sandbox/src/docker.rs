@@ -268,11 +268,19 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_available() {
         assert!(runner().check_docker_available().is_ok());
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_runs_echo() {
         let out = runner().run_simple(&["echo", "hello"]).unwrap();
         assert!(out.success());
@@ -280,6 +288,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_network_is_isolated() {
         let out = runner()
             .run_simple(&["sh", "-c", "wget -q google.com 2>&1 || echo BLOCKED"])
@@ -289,6 +301,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_workspace_tmpfs_is_writable() {
         // tmpfs /workspace يجب أن يكون writable
         let out = runner()
@@ -313,6 +329,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_compiles_hello_world() {
         let out = runner()
             .compile_and_run_code(r#"fn main() { println!("hello from docker"); }"#)
@@ -328,6 +348,10 @@ mod tests {
     /// اختبار أمني: يتحقق أن --pids-limit مفعّل ويمنع fork bomb.
     /// اكتُشفت الحاجة له في Phase 1 CI بعد فشل gate_escape_vector_5.
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn docker_pids_limit_blocks_fork_bomb() {
         let code = r#"
 use std::thread;

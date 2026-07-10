@@ -35,6 +35,10 @@ fn gate_hardened_runner_creates() {
 // ─── Gate 2: Basic Execution ─────────────────────────────────────────
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_hardened_compiles_and_runs() {
     let r = runner();
     let out = r
@@ -49,6 +53,10 @@ fn gate_hardened_compiles_and_runs() {
 }
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_hardened_runs_as_non_root() {
     let r = runner();
     let out = r.compile_and_run_hardened(
@@ -96,6 +104,10 @@ fn main() {
 }
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_read_only_filesystem_prevents_writes() {
     let r = runner();
     let out = r
@@ -121,6 +133,10 @@ fn main() {
 }
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_workspace_tmpfs_writable() {
     let r = runner();
     let out = r
@@ -146,6 +162,10 @@ fn main() {
 // ─── Gate 3: Escape Vectors ──────────────────────────────────────────
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_escape_vector_1_proc_sysrq_blocked() {
     let result = runner().test_proc_escape();
     assert!(
@@ -156,6 +176,10 @@ fn gate_escape_vector_1_proc_sysrq_blocked() {
 }
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_escape_vector_2_dev_mem_blocked() {
     let result = runner().test_dev_mem_escape();
     assert!(
@@ -166,6 +190,10 @@ fn gate_escape_vector_2_dev_mem_blocked() {
 }
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_escape_vector_3_ptrace_proc_mem_blocked() {
     let result = runner().test_ptrace_escape();
     assert!(
@@ -176,6 +204,10 @@ fn gate_escape_vector_3_ptrace_proc_mem_blocked() {
 }
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_escape_vector_4_mount_blocked() {
     let result = runner().test_mount_escape();
     assert!(
@@ -186,6 +218,10 @@ fn gate_escape_vector_4_mount_blocked() {
 }
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_escape_vector_5_fork_bomb_contained() {
     let result = runner().test_fork_bomb_escape();
     assert!(
@@ -198,7 +234,7 @@ fn gate_escape_vector_5_fork_bomb_contained() {
 // ─── Gate 4: Zero Escapes Stress Test ───────────────────────────────
 
 #[test]
-#[ignore = "slow: 100 Docker executions (~10 minutes)"]
+#[cfg_attr(not(feature = "slow_tests"), ignore = "requires --features slow_tests")]
 fn gate_zero_escapes_in_100_executions() {
     let r = runner();
     let mut escape_count = 0;
@@ -238,6 +274,10 @@ fn gate_zero_escapes_in_100_executions() {
 // ─── Gate 5: Network Still Isolated ─────────────────────────────────
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn gate_network_remains_isolated_in_hardened_mode() {
     let r = runner();
     let out = r
@@ -265,6 +305,10 @@ fn main() {
 // ─── Final Gate ──────────────────────────────────────────────────────
 
 #[test]
+#[cfg_attr(
+    not(feature = "docker_tests"),
+    ignore = "requires --features docker_tests"
+)]
 fn week16_gate_complete() {
     let r = runner();
 

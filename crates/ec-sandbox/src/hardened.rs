@@ -407,6 +407,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn hardened_compiles_hello_world() {
         let r = runner();
         let out = r
@@ -421,6 +425,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn hardened_blocks_proc_sysrq() {
         let r = runner();
         let result = r.test_proc_escape();
@@ -428,6 +436,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn hardened_blocks_dev_mem() {
         let r = runner();
         let result = r.test_dev_mem_escape();
@@ -435,6 +447,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn hardened_blocks_ptrace() {
         let r = runner();
         let result = r.test_ptrace_escape();
@@ -442,6 +458,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn hardened_blocks_mount() {
         let r = runner();
         let result = r.test_mount_escape();
@@ -449,6 +469,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn hardened_contains_fork_bomb() {
         let r = runner();
         let result = r.test_fork_bomb_escape();

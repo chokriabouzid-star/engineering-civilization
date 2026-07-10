@@ -21,4 +21,5 @@ rand              = "0.8"
 proptest     = "1.6"
 
 [features]
+docker_tests = []
 slow_tests = []

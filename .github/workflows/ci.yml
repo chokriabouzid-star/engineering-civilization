@@ -48,10 +48,8 @@ jobs:
       - uses: actions/checkout@v7.0.0
       - uses: dtolnay/rust-toolchain@1.96.0
       - uses: Swatinem/rust-cache@v2.9.1
-      - name: Run workspace tests excluding Docker-dependent crates
-        run: >
-          cargo test --workspace --locked --no-fail-fast
-          --exclude ec-sandbox --exclude ec-app
+      - name: Run workspace tests (Docker tests auto-ignored without docker_tests feature)
+        run: cargo test --workspace --locked --no-fail-fast
 
   # ── 4. اختبارات Docker: معزولة، --test-threads=1 لمنع التزاحم الحقيقي (داخل كل
   #     binary، لا بين binaries — cargo يُشغّل الـ binaries تسلسليًا أصلًا افتراضيًا،
@@ -67,7 +65,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2.9.1
       - name: Verify Docker daemon is available
         run: docker info
-      - name: Run ec-sandbox tests (serial)
-        run: cargo test -p ec-sandbox --locked --no-fail-fast -- --test-threads=1
-      - name: Run ec-app tests (serial)
-        run: cargo test -p ec-app --locked --no-fail-fast -- --test-threads=1
+      - name: Run ec-sandbox tests (docker_tests feature, serial)
+        run: cargo test -p ec-sandbox --locked --no-fail-fast --features docker_tests -- --test-threads=1
+      - name: Run ec-app tests (docker_tests feature, serial)
+        run: cargo test -p ec-app --locked --no-fail-fast --features docker_tests -- --test-threads=1
