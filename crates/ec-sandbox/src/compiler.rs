@@ -161,6 +161,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn compiles_hello_world() {
         let result = compiler(1)
             .compile_and_run(r#"fn main() { println!("hello world"); }"#)
@@ -171,6 +175,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn fails_on_syntax_error() {
         let result = compiler(1).compile_and_run("this is not rust").unwrap();
 
@@ -178,6 +186,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn runs_multiple_times() {
         let result = compiler(3)
             .compile_and_run(r#"fn main() { println!("stable"); }"#)
@@ -188,6 +200,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn deterministic_output_has_same_hash() {
         let result = compiler(3)
             .compile_and_run(r#"fn main() { println!("deterministic"); }"#)
@@ -203,6 +219,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(
+        not(feature = "docker_tests"),
+        ignore = "requires --features docker_tests"
+    )]
     fn network_access_fails_inside_container() {
         let result = compiler(1)
             .compile_and_run(
