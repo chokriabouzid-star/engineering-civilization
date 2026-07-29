@@ -1,5 +1,5 @@
 # Engineering Civilization — الوثيقة المرجعية
-## v1.9 · Phase 2 CLOSED (Test Classification Policy) · 2026-07-13
+## v1.9.1 · Phase 2 CLOSED + compiler.rs gap fix · 2026-07-29
 
 ---
 
@@ -12,12 +12,12 @@ Phase 2 مغلقة بأدلة خام مباشرة. CI أخضر على commit `f1
 | البند | الحالة | الدليل |
 |---|---|---|
 | ADR-021 مكتوبة ومعتمدة | ✅ | `docs/adr/ADR-021-slow-tests-policy.md`، commit `f1cb6bd` |
-| 46 اختبار Docker مصنَّف بدقة | ✅ | 44 `docker_tests` + 2 `slow_tests`، تقاطع خماسي (كود + CI + محلي + phase2_verify.sh + مراجعة يدوية مستقلة) |
+| 51 اختبار Docker/slow مصنَّف بدقة | ✅ | 49 `docker_tests` + 2 `slow_tests` (بعد Phase 3 addendum)، تقاطع خماسي (كود + CI + محلي + phase2_verify.sh + مراجعة يدوية مستقلة) |
 | Cargo features منفصلة | ✅ | `ec-sandbox/Cargo.toml` و`ec-app/Cargo.toml`، commit `430e6ce` |
-| test-fast يعمل بلا `--exclude` | ✅ | CI test-fast: 645 passed / 0 failed / 46 ignored / 691 discovered |
+| test-fast يعمل بلا `--exclude` | ✅ | test-fast: 640 passed / 0 failed / 51 ignored / 691 discovered (بعد Phase 3 addendum؛ محلياً 2026-07-29، يؤكَّد CI بعد push) |
 | test-docker مع `--features docker_tests` | ✅ | ec-sandbox: 141/0/1، ec-app: 101/0/1 (CI ومحلي متطابقان) |
 | اختباران `slow_tests` معزولان | ✅ | `gate_zero_escapes_in_100_executions` في week16 وweek18 — يعمل يدويًا فقط، لا في CI |
-| phase2_verify.sh آلي | ✅ | يفحص التسرّب بقائمة 44 اسم صريح، exit=0 |
+| phase2_verify.sh آلي | ✅ | يفحص التسرّب بقائمة 49 اسم صريح + معيار مشتق من طول القائمة، exit=0 |
 
 ### بيئة التحقق النهائية
 runner: ubuntu-24.04 (GitHub Actions)
@@ -41,7 +41,7 @@ text
 
 ## 1. نظرة عامة (الحقائق المُتحقَّقة فقط)
 
-11 crates · ~20,635 سطر Rust · **691 اختبارًا مكتشفًا** (645 ناجح + 0 فاشل + 46 مصنَّف بحسب ADR-021).
+11 crates · ~20,635 سطر Rust · **691 اختبارًا مكتشفًا** (640 ناجح + 0 فاشل + 51 مصنَّف بحسب ADR-021 بعد سد فجوة compiler.rs).
 0 تحذيرات clippy (مُتحقَّق `f1cb6bd`) · 0 تحذيرات CI annotations (آخر تحقق مباشر بالصورة/PDF لـ`6351891`؛ الافتراض المعقول لـ`f1cb6bd`: لم تتغير إصدارات الـactions، لكن Annotations لم تُفحَص خاماً بعد) · 2 unwrap() موثَّقان في كود الإنتاج · CI أخضر عبر 4 تشغيلات متتالية (`b7ee05d`، `6351891`، `430e6ce`، `f1cb6bd`).
 
 للادّعاءات غير المُعاد فحصها، راجع القسم أعلاه صراحةً.
@@ -63,12 +63,12 @@ text
 | الفئة | الآلية | العدد |
 |---|---|---|
 | A. سريع، لا Docker | بلا وسم — يعمل دومًا | 21 اختبار |
-| B. `docker_tests` | `cfg_attr(not(feature))` مع feature منفصل | 44 اختبار |
+| B. `docker_tests` | `cfg_attr(not(feature))` مع feature منفصل | 49 اختبار (44 من Phase 2 + 5 من compiler.rs في Phase 3) |
 | C. `slow_tests` | `cfg_attr` منفصل، حصري (لا يتراكم مع B) | 2 اختبار |
 
 **التغييرات الملموسة:**
 - إضافة `docker_tests = []` و`slow_tests = []` إلى `ec-sandbox/Cargo.toml` و`ec-app/Cargo.toml`
-- تصنيف 46 اختبار Docker في 6 ملفات بعد فحص فردي لجسم كل دالة
+- تصنيف 51 اختبار Docker/slow في 7 ملفات بعد فحص فردي لجسم كل دالة (46 أصلاً في Phase 2 على 6 ملفات، ثم +5 من `compiler.rs` في Phase 3)
 - تحديث `ci.yml`: `test-docker` job يستخدم `--features docker_tests` صراحة، و`test-fast` أُزيل منه `--exclude ec-sandbox --exclude ec-app`
 - إنشاء `phase2_verify.sh` كحارس آلي ضد أي تراجع مستقبلي
 - توثيق القرار في ADR-021
@@ -79,9 +79,11 @@ text
 
 | السيناريو | passed | failed | ignored | المصدر |
 |---|---:|---:|---:|---|
-| بلا features (test-fast) | 645 | 0 | 46 | CI run #6 + phase2_verify.sh محليًا |
-| ec-sandbox --features docker_tests | 141 | 0 | 1 | CI test-docker + phase2_verify.sh |
-| ec-app --features docker_tests | 101 | 0 | 1 | CI test-docker + phase2_verify.sh |
+| بلا features (test-fast) | 640 | 0 | 51 | phase2_verify.sh محليًا (2026-07-29) |
+| ec-sandbox --features docker_tests | 141 | 0 | 1 | phase2_verify.sh محليًا (2026-07-29) |
+| ec-app --features docker_tests | 101 | 0 | 1 | phase2_verify.sh محليًا (2026-07-29) |
+
+**ملاحظة:** الأرقام أعلاه بعد سد فجوة `compiler.rs` (Phase 3 addendum). قبل الإصلاح، test-fast كان يظهر 645/46 بيئات فيها Docker متاح، وكان سيفشل بـ 640/5/46 في بيئات بلا Docker. راجع تحديث ADR-021 للتفصيل الكامل. سيؤكَّد CI بعد push.
 
 الـ ignored الوحيد في كل من ec-sandbox وec-app هو `gate_zero_escapes_in_100_executions` (اختبار stress 100 تكرار، مصنَّف `slow_tests`، يُشغَّل يدويًا فقط قبل الإصدارات).
 
