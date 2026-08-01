@@ -16,6 +16,10 @@ pub struct AnalysisReport {
     pub warnings: Vec<AnalysisWarning>,
     /// هل نجح parse الـ AST؟
     pub parse_successful: bool,
+    /// عدد دوال الاختبار المكتشفة (من TestVisitor)
+    pub test_fns: usize,
+    /// عدد دوال الإنتاج المكتشفة (من TestVisitor)
+    pub production_fns: usize,
 }
 
 impl AnalysisReport {
@@ -26,6 +30,8 @@ impl AnalysisReport {
             confidence: ConfidenceVector::zero(),
             warnings: vec![AnalysisWarning::ParseFailed(reason)],
             parse_successful: false,
+            test_fns: 0,
+            production_fns: 0,
         }
     }
 }

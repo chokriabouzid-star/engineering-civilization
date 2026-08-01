@@ -32,7 +32,13 @@ impl TestVisitor {
 
 impl<'ast> Visit<'ast> for TestVisitor {
     fn visit_item_fn(&mut self, node: &'ast syn::ItemFn) {
-        if node.attrs.iter().any(|a| a.path().is_ident("test")) {
+        if node.attrs.iter().any(|a| {
+            a.path()
+                .segments
+                .last()
+                .map(|s| s.ident == "test")
+                .unwrap_or(false)
+        }) {
             self.test_fns += 1;
         } else {
             self.production_fns += 1;

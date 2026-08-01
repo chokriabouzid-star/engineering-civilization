@@ -89,6 +89,8 @@ impl AstAnalyzer {
             confidence,
             warnings,
             parse_successful: true,
+            test_fns: test_v.test_fns,
+            production_fns: test_v.production_fns,
         }
     }
 }
