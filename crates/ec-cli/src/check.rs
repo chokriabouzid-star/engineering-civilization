@@ -206,12 +206,9 @@ fn scan_file(path: &Path) -> Option<ScannedFile> {
     let code = std::fs::read_to_string(path).ok()?;
     let analysis = analyze_code_full(&code);
     let crate_root = find_crate_root(path);
-    let is_test_or_bench = path.components().any(|c| {
-        matches!(
-            c.as_os_str().to_str(),
-            Some("tests") | Some("benches")
-        )
-    });
+    let is_test_or_bench = path
+        .components()
+        .any(|c| matches!(c.as_os_str().to_str(), Some("tests") | Some("benches")));
     Some(ScannedFile {
         path: path.to_path_buf(),
         crate_root,
