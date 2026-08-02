@@ -1,131 +1,170 @@
 # Engineering Civilization — الوثيقة المرجعية
-## v1.9.1 · Phase 2 CLOSED + compiler.rs gap fix · 2026-07-29
+
+## v1.9.2 · Phase 2 CLOSED + compiler.rs gap fix + Phase 3.1 CLOSED · 2026-08-01
+
+هذه الوثيقة مرجع حالة مضغوط ودقيق. لا تحتوي أرقامًا إلا إذا كانت:
+1) متحققة مباشرة من تشغيل فعلي، أو
+2) منقولة صراحةً من إصدار سابق متحقق، مع وسمها بأنها **موروثة** لا جديدة.
 
 ---
 
-## ⚠️ حالة التحقق (Phase 2 — سياسة تصنيف الاختبارات)
+## ⚠️ حالة التحقق الحالية
 
-Phase 2 مغلقة بأدلة خام مباشرة. CI أخضر على commit `f1cb6bd` (2m 44s، 4 jobs).
-
-### ما تحقق فعليًا في Phase 2 (لا ادّعاءات)
+### ما تحقق فعليًا في هذا التحديث (Phase 3.1)
 
 | البند | الحالة | الدليل |
 |---|---|---|
-| ADR-021 مكتوبة ومعتمدة | ✅ | `docs/adr/ADR-021-slow-tests-policy.md`، commit `f1cb6bd` |
-| 51 اختبار Docker/slow مصنَّف بدقة | ✅ | 49 `docker_tests` + 2 `slow_tests` (بعد Phase 3 addendum)، تقاطع خماسي (كود + CI + محلي + phase2_verify.sh + مراجعة يدوية مستقلة) |
-| Cargo features منفصلة | ✅ | `ec-sandbox/Cargo.toml` و`ec-app/Cargo.toml`، commit `430e6ce` |
-| test-fast يعمل بلا `--exclude` | ✅ | test-fast: 640 passed / 0 failed / 51 ignored / 691 discovered (بعد Phase 3 addendum؛ محلياً 2026-07-29، يؤكَّد CI بعد push) |
-| test-docker مع `--features docker_tests` | ✅ | ec-sandbox: 141/0/1، ec-app: 101/0/1 (CI ومحلي متطابقان) |
-| اختباران `slow_tests` معزولان | ✅ | `gate_zero_escapes_in_100_executions` في week16 وweek18 — يعمل يدويًا فقط، لا في CI |
-| phase2_verify.sh آلي | ✅ | يفحص التسرّب بقائمة 49 اسم صريح + معيار مشتق من طول القائمة، exit=0 |
+| `cargo build --workspace --locked` | ✅ | تشغيل فعلي ناجح |
+| `cargo clippy --workspace --locked -- -D warnings` | ✅ | تشغيل فعلي ناجح |
+| `cargo test --workspace --locked` | ✅ | كل suites خضراء، **0 failed** |
+| `cargo run --bin ec -- check .` | ✅ | **129 scanned / 115 passed / 14 failed / score=0.892** |
+| تقاطع مستقل للنتيجة | ✅ | النتيجة `71/129 → 115/129` و`0.874 → 0.892` طابقت تشغيلًا مستقلًا في بيئة ثانية |
 
-### بيئة التحقق النهائية
-runner: ubuntu-24.04 (GitHub Actions)
-rustc: 1.96.0
-commits: 430e6ce (كود + CI) → f1cb6bd (ADR-021)
-CI run: #6 على master، Success في 2m 44s
+### ما هو موروث ومتحقَّق سابقًا من v1.9.1 (ولم يتغير في هذه المرحلة)
 
-text
-
-
-### ⚠️ ادّعاءات موروثة من v1.6 — ما زالت غير مفحوصة
-لا تغيير عن v1.8:
-
-| الادّعاء | الحالة |
-|---|---|
-| `ec check: 71/129 files passing · score 0.874` | غير مُعاد فحصه |
-| `10 design invariants · 13 ADRs (بعد إضافة ADR-021)` | لم يُعَد عدّه فعليًا |
-| `pre-commit hook نشط على sel-agent-v4` | لم يُعَد التحقق منه |
-
----
-
-## 1. نظرة عامة (الحقائق المُتحقَّقة فقط)
-
-11 crates · ~20,635 سطر Rust · **691 اختبارًا مكتشفًا** (640 ناجح + 0 فاشل + 51 مصنَّف بحسب ADR-021 بعد سد فجوة compiler.rs).
-0 تحذيرات clippy (مُتحقَّق `f1cb6bd`) · 0 تحذيرات CI annotations (آخر تحقق مباشر بالصورة/PDF لـ`6351891`؛ الافتراض المعقول لـ`f1cb6bd`: لم تتغير إصدارات الـactions، لكن Annotations لم تُفحَص خاماً بعد) · 2 unwrap() موثَّقان في كود الإنتاج · CI أخضر عبر 4 تشغيلات متتالية (`b7ee05d`، `6351891`، `430e6ce`، `f1cb6bd`).
-
-للادّعاءات غير المُعاد فحصها، راجع القسم أعلاه صراحةً.
-
----
-
-## 2. ما الجديد في v1.9 (Phase 2)
-
-### إنجاز رئيسي: توحيد سياسة تصنيف الاختبارات
-
-قبل Phase 2، كانت اختبارات Docker موزعة على 3 آليات مختلفة:
-- 14 اختبار في `week14_gate.rs` تحت `slow_tests` (تسمية مضلِّلة تاريخيًا)
-- 2 اختبار في `week16`/`week18` تحت `#[ignore]` ثابت
-- **30 اختبار Docker يعمل بلا أي حماية** — السبب الجذري لتذبذب CI السابق
-
-### الإصلاح (commits `430e6ce` + `f1cb6bd`)
-
-**التصنيف الجديد الحصري:**
-| الفئة | الآلية | العدد |
+| البند | الحالة | المصدر |
 |---|---|---|
-| A. سريع، لا Docker | بلا وسم — يعمل دومًا | 21 اختبار |
-| B. `docker_tests` | `cfg_attr(not(feature))` مع feature منفصل | 49 اختبار (44 من Phase 2 + 5 من compiler.rs في Phase 3) |
-| C. `slow_tests` | `cfg_attr` منفصل، حصري (لا يتراكم مع B) | 2 اختبار |
+| اختبارات `test-fast` | ✅ | **640 passed / 0 failed / 51 ignored** — v1.9.1 |
+| اختبارات `ec-sandbox --features docker_tests` | ✅ | **141 passed / 0 failed / 1 ignored** — v1.9.1 |
+| اختبارات `ec-app --features docker_tests` | ✅ | **101 passed / 0 failed / 1 ignored** — v1.9.1 |
+| إجمالي الاختبارات المكتشفة | ✅ | **691** — v1.9.1 |
+| تصنيف اختبارات Docker/slow | ✅ | **49 `docker_tests` + 2 `slow_tests`** — v1.9.1 |
 
-**التغييرات الملموسة:**
-- إضافة `docker_tests = []` و`slow_tests = []` إلى `ec-sandbox/Cargo.toml` و`ec-app/Cargo.toml`
-- تصنيف 51 اختبار Docker/slow في 7 ملفات بعد فحص فردي لجسم كل دالة (46 أصلاً في Phase 2 على 6 ملفات، ثم +5 من `compiler.rs` في Phase 3)
-- تحديث `ci.yml`: `test-docker` job يستخدم `--features docker_tests` صراحة، و`test-fast` أُزيل منه `--exclude ec-sandbox --exclude ec-app`
-- إنشاء `phase2_verify.sh` كحارس آلي ضد أي تراجع مستقبلي
-- توثيق القرار في ADR-021
+### بيئة التحقق المرجعية
 
-**درس منهجي:** التسمية `slow_tests` القديمة كانت مضلِّلة — الاختبارات ليست بطيئة بحد ذاتها، بل تحتاج Docker. فصل البُعدين ("يحتاج Docker" ≠ "بطيء زمنيًا") جعل السياسة واضحة ومنعت تسرّب اختبارات بلا حماية.
-
-### أرقام التحقق النهائية (كلها من سجل خام مباشر)
-
-| السيناريو | passed | failed | ignored | المصدر |
-|---|---:|---:|---:|---|
-| بلا features (test-fast) | 640 | 0 | 51 | phase2_verify.sh محليًا (2026-07-29) |
-| ec-sandbox --features docker_tests | 141 | 0 | 1 | phase2_verify.sh محليًا (2026-07-29) |
-| ec-app --features docker_tests | 101 | 0 | 1 | phase2_verify.sh محليًا (2026-07-29) |
-
-**ملاحظة:** الأرقام أعلاه بعد سد فجوة `compiler.rs` (Phase 3 addendum). قبل الإصلاح، test-fast كان يظهر 645/46 بيئات فيها Docker متاح، وكان سيفشل بـ 640/5/46 في بيئات بلا Docker. راجع تحديث ADR-021 للتفصيل الكامل. سيؤكَّد CI بعد push.
-
-الـ ignored الوحيد في كل من ec-sandbox وec-app هو `gate_zero_escapes_in_100_executions` (اختبار stress 100 تكرار، مصنَّف `slow_tests`، يُشغَّل يدويًا فقط قبل الإصدارات).
+- محليًا: WSL2 Linux
+- CI: GitHub Actions / ubuntu-24.04
+- Rust toolchain المرجعي: `1.96.0`
 
 ---
 
-## 3. الـ Crates — مرجع بنيوي (لم يتغيّر منذ v1.8)
+## 1. نظرة عامة (الحقائق المتحققة فقط)
 
-راجع v1.8 لتفصيل كل crate. Phase 2 لم تُغيّر أي منطق، فقط سياسة تشغيل الاختبارات.
-
----
-
-## 4. البنود المفتوحة (منقولة صراحة للمراحل القادمة)
-
-| البند | الأولوية | المرحلة المقترحة |
-|---|---|---|
-| `gate_network_isolation` — لم يتذبذب بعد عزله خلف `docker_tests` + `--test-threads=1` (نجح مرتين: محليًا وعلى CI). دليل داعم للفرضية، ليس إغلاقًا | منخفضة (كانت متوسطة) | مراقبة إضافية عبر 3-5 تشغيلات CI قادمة قبل الإغلاق النهائي |
-| 2 `unwrap()` في `ec-cli/src/main.rs` | منخفضة | Phase 3 |
-| إعادة فحص `ec check` على `sel-agent-v4` | متوسطة | Phase 4 |
-| عدّ ADRs والـ invariants الفعلي | منخفضة | Phase 5 |
-| إضافة CI badge إلى README (لا يوجد README أصلًا) | منخفضة | Phase 5 |
-| فحص Annotations الخام لـ`f1cb6bd` (تأكيد "0 تحذيرات CI" حديثًا لا موروثًا) | منخفضة | متى تسنّى |
+المشروع workspace من **11 crates** يطبق نموذج "حوكمة دستورية" على الكود:
+- تقييم ساكن عبر `FitnessVector`
+- تمثيل معرفي/بايزي للثقة
+- تنفيذ معزول عبر Docker
+- ذاكرة سببية append-only
+- واجهات CLI وAPI فوق النواة
 
 ---
 
-## 5. أوامر الصيانة
+## 2. ما الجديد في v1.9.2 (Phase 3.1)
+
+### خط الأساس قبل الإصلاح
+
+من تشغيل فعلي لـ:
 
 ```bash
-# التشغيل السريع (بلا Docker)
-cargo build --workspace --locked
-cargo clippy --workspace --tests --locked -- -D warnings
-cargo test --workspace --no-fail-fast --locked
+cargo run --bin ec -- check .
+كانت النتيجة:
 
-# اختبارات Docker (تحتاج Docker daemon)
+129 files scanned
+71 passed
+58 failed
+project score = 0.874
+الأنماط التي كُشفت
+النمط	الوصف	الحالة
+أ	test_coverage كان يُحسب على مستوى الملف فقط	✅ أُصلح
+ب	ملفات tests/ وbenches/ كانت تُعاقَب بعتبتي test_coverage وreversibility	✅ أُصلح
+ج	architectural_stability منخفض بسبب سوء تصنيف pub use المحلي في CouplingVisitor	⏸️ مؤجل عمدًا
+د	#[tokio::test] ونظائرها لم تكن تُحسب كاختبارات	✅ أُصلح
+التعديل المنفذ
+الـcommit البرمجي:
+
+359b6d7
+fix(check): aggregate test_coverage per-crate, exempt test files from reversibility threshold
+الملفات المعدلة:
+
+crates/ec-analysis/src/report.rs
+crates/ec-analysis/src/ast_analyzer.rs
+crates/ec-analysis/src/visitors/test_visitor.rs
+crates/ec-cli/src/check.rs
+ما الذي تغير فعليًا
+تجميع test_coverage على مستوى الـcrate داخل ec-cli/src/check.rs
+
+ملفات src/ لم تعد تُقيَّم بعزل أعمى إذا كانت اختبارات الـcrate موجودة في tests/
+إعفاء ملفات tests/ وbenches/ من فحص العتبتين فقط
+
+test_coverage
+reversibility
+القيم ما زالت تُحسب وتظهر؛ الذي تغيّر هو احتساب الانتهاك فقط
+إصلاح اكتشاف سمات الاختبار المؤهلة
+
+#[test]
+#[tokio::test]
+#[async_std::test]
+وغيرها مما ينتهي آخر segment فيه إلى test
+ADR-020 بقي محترمًا
+
+لا تغييرات تنتهك قيود نقاء الـKernel
+لم يُضف I/O أو async إلى ec-analysis
+النتيجة النهائية المتحققة
+الحالة	Files scanned	Files passed	Files failed	Project score
+قبل الإصلاح	129	71	58	0.874
+بعد Phase 3.1	129	115	14	0.892
+ما تبقى بعد الإصلاح
+الـ14 انتهاكًا المتبقية هي:
+
+13 × architectural_stability
+./crates/ec-epistemic/src/lib.rs
+./crates/ec-codegen/src/generator.rs
+./crates/ec-constitutional/src/lib.rs
+./crates/ec-constitutional/src/engine.rs
+./crates/ec-analysis/src/visitors/mod.rs
+./crates/ec-analysis/src/analyzer.rs
+./crates/ec-api/src/handlers.rs
+./crates/ec-sandbox/src/lib.rs
+./crates/ec-sandbox/src/executor.rs
+./crates/ec-memory/src/lib.rs
+./crates/ec-memory/src/types.rs
+./crates/ec-memory/src/query.rs
+./crates/ec-memory/src/graph.rs
+1 × reversibility
+./crates/ec-cli/src/main.rs
+هذه الأخيرة على ملف إنتاج حقيقي، وليست أثرًا جانبيًا من إصلاح Phase 3.1.
+
+3. ADRs ذات الصلة
+ADR-020: الفصل بين الـKernel النقي وطبقة I/O
+ADR-021: سياسة فصل docker_tests عن slow_tests
+ADR-022: إصلاح النقاط العمياء في ec check
+الأنماط أ + ب + د: منفذة
+النمط ج: مؤجل بتشخيص مؤكد
+4. الـ Crates — مرجع بنيوي مختصر
+Crate	الدور
+ec-fitness	تمثيل FitnessVector وPareto
+ec-epistemic	الثقة/عدم اليقين والنمذجة البايزية
+ec-constitutional	التقييم الدستوري
+ec-sandbox	التنفيذ المعزول وRealityVector
+ec-analysis	التحليل الساكن عبر AST
+ec-memory	الذاكرة السببية append-only
+ec-codegen	توليد الكود
+ec-governance	الحوكمة والمقترحات والتدقيق
+ec-api	REST API
+ec-cli	واجهة سطر الأوامر
+ec-app	تكامل النظام بالكامل
+5. البنود المفتوحة الحالية
+البند	الأولوية	المرحلة المقترحة
+إصلاح النمط ج: CouplingVisitor يسيء تصنيف pub use المحلي	عالية	المرحلة التالية
+عدم تشغيل ec check على sel-agent-v4 قبل إصلاح النمط ج	عالية	بعد إغلاق النمط ج فقط
+2 unwrap() في ec-cli/src/main.rs	منخفضة	Phase 5
+مراقبة gate_network_isolation عبر CI	منخفضة	مستمر
+README / badge / عدّ ADRs الفعلي	منخفضة	لاحقًا
+6. أوامر الصيانة
+Bash
+
+# البناء والفحص السريع
+cargo build --workspace --locked
+cargo clippy --workspace --locked -- -D warnings
+cargo test --workspace --locked --no-fail-fast
+
+# فحص المشروع نفسه
+cargo run --bin ec -- check .
+
+# اختبارات Docker
 cargo test -p ec-sandbox --locked --features docker_tests -- --test-threads=1
 cargo test -p ec-app --locked --features docker_tests -- --test-threads=1
 
-# التحقق الآلي من سياسة Phase 2
+# تحقق سياسة التصنيف
 ./phase2_verify.sh
-
-# اختبارات stress اليدوية (10 دقائق تقريبًا لكل واحد، لا تعمل في CI)
-cargo test -p ec-sandbox --locked --features slow_tests gate_zero_escapes_in_100_executions -- --exact
-cargo test -p ec-app --locked --features slow_tests gate_zero_escapes_in_100_executions -- --exact
-راجع .github/workflows/ci.yml للتشغيل الآلي المطابق.
-
-نهاية الوثيقة المرجعية — Engineering Civilization v1.9 · Phase 2 CLOSED (2026-07-13)
+نهاية الوثيقة المرجعية — Engineering Civilization v1.9.2 (2026-08-01)
