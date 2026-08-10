@@ -15,7 +15,7 @@
 | البند | الحالة | الدليل |
 |---|---|---|
 | `cargo build --workspace --locked` | ✅ | تشغيل فعلي ناجح |
-| `cargo clippy --workspace --locked -- -D warnings` | ✅ | تشغيل فعلي ناجح |
+| `cargo clippy --workspace --tests --locked -- -D warnings` | ✅ | تشغيل فعلي ناجح |
 | `cargo test --workspace --locked` | ✅ | كل suites خضراء، **0 failed** |
 | `cargo run --bin ec -- check .` | ✅ | **129 scanned / 115 passed / 14 failed / score=0.892** |
 | تقاطع مستقل للنتيجة | ✅ | النتيجة `71/129 → 115/129` و`0.874 → 0.892` طابقت تشغيلًا مستقلًا في بيئة ثانية |
@@ -95,7 +95,7 @@ reversibility
 #[tokio::test]
 #[async_std::test]
 وغيرها مما ينتهي آخر segment فيه إلى test
-ADR-020 بقي محترمًا
+مبدأ نقاء الـKernel بقي محترمًا
 
 لا تغييرات تنتهك قيود نقاء الـKernel
 لم يُضف I/O أو async إلى ec-analysis
@@ -125,7 +125,7 @@ ADR-020 بقي محترمًا
 هذه الأخيرة على ملف إنتاج حقيقي، وليست أثرًا جانبيًا من إصلاح Phase 3.1.
 
 3. ADRs ذات الصلة
-ADR-020: الفصل بين الـKernel النقي وطبقة I/O
+مبدأ نقاء الـKernel: الفصل بين الـKernel النقي وطبقة I/O (غير موثق كـADR مستقل بعد)
 ADR-021: سياسة فصل docker_tests عن slow_tests
 ADR-022: إصلاح النقاط العمياء في ec check
 الأنماط أ + ب + د: منفذة
@@ -145,6 +145,7 @@ ec-cli	واجهة سطر الأوامر
 ec-app	تكامل النظام بالكامل
 5. البنود المفتوحة الحالية
 البند	الأولوية	المرحلة المقترحة
+توثيق مبدأ نقاء الـKernel كـ ADR-023	متوسطة	Phase 3.2 وما بعدها
 إصلاح النمط ج: CouplingVisitor يسيء تصنيف pub use المحلي	عالية	المرحلة التالية
 عدم تشغيل ec check على sel-agent-v4 قبل إصلاح النمط ج	عالية	بعد إغلاق النمط ج فقط
 2 unwrap() في ec-cli/src/main.rs	منخفضة	Phase 5
@@ -155,7 +156,8 @@ Bash
 
 # البناء والفحص السريع
 cargo build --workspace --locked
-cargo clippy --workspace --locked -- -D warnings
+cargo clippy --workspace --tests --locked -- -D warnings
+cargo fmt --all -- --check
 cargo test --workspace --locked --no-fail-fast
 
 # فحص المشروع نفسه
