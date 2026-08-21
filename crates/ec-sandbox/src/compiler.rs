@@ -2,9 +2,12 @@
 
 //! Rust compilation + execution داخل Docker — Week 14
 //!
-//! الكود يُمرَّر مباشرة لـ DockerRunner بدون host filesystem.
+//! الكود يُمرَّر مباشرة لـ `HardenedDockerRunner` بدون host filesystem.
+//! منذ ADR-024 (F1): المسار غير المُحصَّن أُزيل — كل تجميع/تشغيل يمر عبر
+//! الحصانة الكاملة (seccomp + cap-drop + read-only + non-root + pids-limit).
 
-use crate::docker::{DockerError, DockerOutput, DockerRunner};
+use crate::docker::{DockerError, DockerOutput};
+use crate::hardened::HardenedDockerRunner;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::time::Duration;
@@ -78,15 +81,16 @@ impl CompilationResult {
     }
 }
 
-/// Rust compiler داخل Docker.
+/// Rust compiler داخل Docker — يستخدم المسار المُحصَّن حصرًا.
 pub struct RustSandboxCompiler {
-    runner: DockerRunner,
+    runner: HardenedDockerRunner,
     runs: usize,
 }
 
 impl RustSandboxCompiler {
-    /// بناء compiler جديد.
-    pub fn new(runner: DockerRunner, runs: usize) -> Self {
+    /// بناء compiler جديد. يأخذ `HardenedDockerRunner` — لا مسار غير
+    /// محصَّن متاح (ADR-024 F1).
+    pub fn new(runner: HardenedDockerRunner, runs: usize) -> Self {
         Self {
             runner,
             runs: runs.max(1),
@@ -96,7 +100,7 @@ impl RustSandboxCompiler {
     /// compile + run source code.
     pub fn compile_and_run(&self, source_code: &str) -> Result<CompilationResult, DockerError> {
         // تشغيل أول مرة: compilation + execution
-        let first = self.runner.compile_and_run_code(source_code)?;
+        let first = self.runner.compile_and_run_hardened(source_code)?;
 
         // إذا فشل (لا يحتوي ---OUTPUT--- = فشل compilation)
         if !first.stdout.contains("---OUTPUT---") && first.exit_code != 0 {
@@ -122,7 +126,7 @@ impl RustSandboxCompiler {
 
         // تشغيلات إضافية للـ reproducibility
         for _ in 1..self.runs {
-            let out = self.runner.compile_and_run_code(source_code)?;
+            let out = self.runner.compile_and_run_hardened(source_code)?;
             let program_output = extract_program_output(&out.stdout);
             runs.push(RunOutput {
                 stdout: program_output,
@@ -154,10 +158,12 @@ fn extract_program_output(raw: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::docker::DockerRunner;
 
     fn compiler(runs: usize) -> RustSandboxCompiler {
-        RustSandboxCompiler::new(DockerRunner::default(), runs)
+        RustSandboxCompiler::new(
+            HardenedDockerRunner::for_testing().expect("hardened runner"),
+            runs,
+        )
     }
 
     #[test]

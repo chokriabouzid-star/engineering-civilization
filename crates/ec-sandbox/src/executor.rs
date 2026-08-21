@@ -8,6 +8,7 @@
 use crate::compiler::RustSandboxCompiler;
 use crate::config::{SandboxConfig, SandboxMode};
 use crate::docker::DockerRunner;
+use crate::hardened::{HardenedConfig, HardenedDockerRunner};
 use crate::metrics::compute_metrics;
 use crate::reality::{LatencyMeasurement, RealityVector};
 use crate::security::SecurityViolation;
@@ -137,12 +138,26 @@ impl SandboxExecutor {
     // ─── Docker (Week 14) ────────────────────────────────────────────
 
     fn execute_docker(&self, execution_id: Uuid, code: &str, start: Instant) -> ExecutionResult {
-        let runner = DockerRunner::new(
+        let base = DockerRunner::new(
             "rust:1.75-slim",
             self.config.limits.max_memory_mb,
             self.config.limits.max_cpu_percent,
             self.config.limits.max_execution_time,
         );
+
+        let runner = match HardenedDockerRunner::new(base, HardenedConfig::default()) {
+            Ok(r) => r,
+            Err(e) => {
+                return ExecutionResult {
+                    execution_id,
+                    reality: None,
+                    violations: vec![],
+                    success: false,
+                    error_message: Some(format!("Hardened sandbox config error: {}", e)),
+                    elapsed: start.elapsed(),
+                };
+            }
+        };
 
         let compiler = RustSandboxCompiler::new(runner, self.config.runs_for_reproducibility);
 

@@ -116,6 +116,7 @@ impl HardenedDockerRunner {
 
     /// تجميع وتشغيل Rust code بأمان كامل.
     pub fn compile_and_run_hardened(&self, source_code: &str) -> Result<DockerOutput, DockerError> {
+        self.base.check_docker_available()?;
         let escaped = source_code.replace('\'', r#"'"'"'"#);
 
         let script = format!(
