@@ -139,6 +139,9 @@ fn cmd_check(path: PathBuf, json: bool, verbose: bool) {
             }))
             .unwrap()
         );
+        if report.files_failed > 0 {
+            std::process::exit(1);
+        }
         return;
     }
 
@@ -192,6 +195,10 @@ fn cmd_check(path: PathBuf, json: bool, verbose: bool) {
                 v.path, v.dimension, v.value, v.threshold
             );
         }
+    }
+
+    if report.files_failed > 0 {
+        std::process::exit(1);
     }
 }
 

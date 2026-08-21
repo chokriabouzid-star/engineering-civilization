@@ -28,6 +28,32 @@ fn write_test_code(dir: &TempDir) -> std::path::PathBuf {
     path
 }
 
+// ─── Gate 0: check exit code (ADR-024 F3) ───────────────────────────
+
+#[test]
+fn w54_check_exits_nonzero_on_violations() {
+    let dir = TempDir::new().unwrap();
+    write_unsafe_code(&dir);
+
+    ec().arg("check").arg(dir.path()).assert().failure().code(1);
+}
+
+#[test]
+fn w54_check_exits_zero_when_clean() {
+    let dir = TempDir::new().unwrap();
+    write_sample_code(&dir);
+    let tests_path = dir.path().join("sample_tests.rs");
+    fs::write(
+        &tests_path,
+        "#[test]
+fn add_works() { let _ = 1 + 1; assert_eq!(2, 2); }
+",
+    )
+    .unwrap();
+
+    ec().arg("check").arg(dir.path()).assert().success();
+}
+
 // ─── Gate 1: analyze basic ──────────────────────────────────────────
 
 #[test]
