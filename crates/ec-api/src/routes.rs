@@ -2,14 +2,16 @@
 
 //! Route definitions
 
+use crate::auth::require_api_key;
 use crate::handlers;
 use crate::state::AppState;
+use axum::middleware;
 use axum::routing::{get, patch, post};
 use axum::Router;
 
 /// Build the API router
 pub fn build_router(state: AppState) -> Router {
-    Router::new()
+    let protected = Router::new()
         // Analysis
         .route("/api/v1/analyze", post(handlers::analyze))
         // Memory
@@ -30,7 +32,13 @@ pub fn build_router(state: AppState) -> Router {
             patch(handlers::reject_proposal),
         )
         .route("/api/v1/governance/audit", get(handlers::get_audit))
-        // Health
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            require_api_key,
+        ));
+
+    Router::new()
         .route("/api/v1/health", get(handlers::health))
+        .merge(protected)
         .with_state(state)
 }

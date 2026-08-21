@@ -16,22 +16,27 @@ pub struct AppState {
     pub audit: Arc<Mutex<AuditLog>>,
     pub memory: Arc<Mutex<CausalMemoryGraph>>,
     pub gov_storage: Arc<GovernanceStorage>,
+    pub api_key: Arc<str>,
 }
 
 impl AppState {
     /// Build state with in-memory storage (for tests)
-    pub fn in_memory() -> Result<Self, ec_governance::GovernanceError> {
+    pub fn in_memory(api_key: impl Into<Arc<str>>) -> Result<Self, ec_governance::GovernanceError> {
         let gov_storage = GovernanceStorage::in_memory()?;
         Ok(Self {
             proposals: Arc::new(Mutex::new(ProposalStore::new())),
             audit: Arc::new(Mutex::new(AuditLog::new())),
             memory: Arc::new(Mutex::new(CausalMemoryGraph::new())),
             gov_storage: Arc::new(gov_storage),
+            api_key: api_key.into(),
         })
     }
 
     /// Build state with file storage
-    pub fn open(db_path: &std::path::Path) -> Result<Self, ec_governance::GovernanceError> {
+    pub fn open(
+        db_path: &std::path::Path,
+        api_key: impl Into<Arc<str>>,
+    ) -> Result<Self, ec_governance::GovernanceError> {
         let gov_storage = GovernanceStorage::open(db_path)?;
 
         // Restore proposals from disk
@@ -46,6 +51,7 @@ impl AppState {
             audit: Arc::new(Mutex::new(AuditLog::new())),
             memory: Arc::new(Mutex::new(CausalMemoryGraph::new())),
             gov_storage: Arc::new(gov_storage),
+            api_key: api_key.into(),
         })
     }
 }

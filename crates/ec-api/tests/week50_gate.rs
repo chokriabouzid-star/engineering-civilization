@@ -2,14 +2,73 @@
 
 //! Week 50 Gate — ec-api integration tests
 
+use axum::http::{HeaderName, HeaderValue};
 use axum_test::TestServer;
+use ec_api::auth::API_KEY_HEADER;
 use ec_api::build_router;
 use ec_api::state::AppState;
 
+const TEST_API_KEY: &str = "test-key-week50-gate";
+
 fn make_server() -> TestServer {
-    let state = AppState::in_memory().unwrap();
+    let state = AppState::in_memory(TEST_API_KEY).unwrap();
+    let app = build_router(state);
+    let mut server = TestServer::new(app).unwrap();
+    server.add_header(
+        HeaderName::from_static(API_KEY_HEADER),
+        HeaderValue::from_static(TEST_API_KEY),
+    );
+    server
+}
+
+fn make_server_no_auth() -> TestServer {
+    let state = AppState::in_memory(TEST_API_KEY).unwrap();
     let app = build_router(state);
     TestServer::new(app).unwrap()
+}
+
+// ─── Gate 0: authentication (ADR-024 F2) ────────────────────────────
+
+#[tokio::test]
+async fn w50_health_works_without_api_key() {
+    let server = make_server_no_auth();
+    let res = server.get("/api/v1/health").await;
+    assert_eq!(res.status_code(), 200);
+}
+
+#[tokio::test]
+async fn w50_protected_route_rejects_missing_key() {
+    let server = make_server_no_auth();
+    let res = server.get("/api/v1/governance/audit").await;
+    assert_eq!(res.status_code(), 401);
+}
+
+#[tokio::test]
+async fn w50_protected_route_rejects_wrong_key() {
+    let mut server = make_server_no_auth();
+    server.add_header(
+        HeaderName::from_static(API_KEY_HEADER),
+        HeaderValue::from_static("wrong-key"),
+    );
+    let res = server.get("/api/v1/governance/audit").await;
+    assert_eq!(res.status_code(), 401);
+}
+
+#[tokio::test]
+async fn w50_protected_route_accepts_correct_key() {
+    let server = make_server();
+    let res = server.get("/api/v1/governance/audit").await;
+    assert_eq!(res.status_code(), 200);
+}
+
+#[tokio::test]
+async fn w50_analyze_rejects_missing_key() {
+    let server = make_server_no_auth();
+    let res = server
+        .post("/api/v1/analyze")
+        .json(&serde_json::json!({ "code": "fn f() {}" }))
+        .await;
+    assert_eq!(res.status_code(), 401);
 }
 
 // ─── Gate 1: health check ───────────────────────────────────────────

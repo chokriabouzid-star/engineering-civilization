@@ -7,6 +7,7 @@
 //! - No business logic in handlers
 //! - DTOs live here only — never in kernels
 
+pub mod auth;
 pub mod handlers;
 pub mod routes;
 pub mod state;
