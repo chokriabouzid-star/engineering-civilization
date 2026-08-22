@@ -232,40 +232,6 @@ impl ConstitutionalEngine {
         evaluation
     }
 
-    /// تقييم غير متزامن — جاهز للتكامل مع sandbox في Phase 2
-    pub async fn evaluate_async(
-        &self,
-        artifact_id: String,
-        artifact_hash: u64,
-        fitness: FitnessVector,
-        epistemic: EpistemicState,
-        _context: EvaluationContext,
-    ) -> ConstitutionalEvaluation {
-        // Cache check (متزامن للسرعة)
-        if let Some(cached) = self.cache.get(artifact_hash, &self.constitution_version) {
-            info!(counter.cache_hits_total = 1);
-            return cached;
-        }
-
-        let constitution = self.constitution.clone();
-        let version = self.constitution_version.clone();
-        let cache_ref = &self.cache;
-
-        let start = Instant::now();
-        let evaluation = tokio::task::spawn_blocking(move || {
-            constitution.evaluate(&artifact_id, &fitness, &epistemic)
-        })
-        .await
-        .expect("Evaluation task panicked");
-        let elapsed = start.elapsed();
-
-        info!(histogram.evaluation_duration_ms = elapsed.as_millis() as u64);
-        info!(counter.evaluations_total = 1);
-
-        cache_ref.insert(artifact_hash, &version, evaluation.clone());
-        evaluation
-    }
-
     pub fn compare(
         &self,
         left: &ConstitutionalEvaluation,

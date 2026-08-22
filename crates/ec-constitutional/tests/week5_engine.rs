@@ -395,38 +395,25 @@ fn concurrent_access_no_deadlocks() {
 
 // ─── Week 8: Load Test ───────────────────────────────────────────────
 
-#[tokio::test]
-async fn load_test_1000_evaluations_per_second() {
-    use std::sync::Arc;
-    use tokio::time::Instant;
+#[test]
+fn load_test_1000_evaluations_per_second() {
+    use std::time::Instant;
 
-    let engine = Arc::new(ConstitutionalEngine::with_default_cache(
-        build_test_constitution(),
-    ));
+    let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
     let fitness = good_fitness();
     let epistemic = good_epistemic();
     let context = EvaluationContext::default();
 
     let start = Instant::now();
-    let mut handles = vec![];
 
-    // 1000 evaluations متزامنة
     for i in 0..1000 {
-        let engine = engine.clone();
-        let fitness = fitness.clone();
-        let epistemic = epistemic.clone();
-        let context = context.clone();
-        let handle = tokio::spawn(async move {
-            engine
-                .evaluate_async(format!("load-{}", i), i as u64, fitness, epistemic, context)
-                .await
-        });
-        handles.push(handle);
-    }
-
-    // انتظار جميع المهام
-    for handle in handles {
-        handle.await.expect("Task panicked");
+        engine.evaluate(
+            &format!("load-{}", i),
+            i as u64,
+            &fitness,
+            &epistemic,
+            &context,
+        );
     }
 
     let elapsed = start.elapsed();
@@ -444,38 +431,25 @@ async fn load_test_1000_evaluations_per_second() {
 
 // ─── Week 8: 100 Simultaneous Evaluations ───────────────────────────
 
-#[tokio::test]
-async fn test_100_simultaneous_evaluations() {
-    use std::sync::Arc;
-    use tokio::time::Instant;
+#[test]
+fn test_100_simultaneous_evaluations() {
+    use std::time::Instant;
 
-    let engine = Arc::new(ConstitutionalEngine::with_default_cache(
-        build_test_constitution(),
-    ));
+    let engine = ConstitutionalEngine::with_default_cache(build_test_constitution());
     let fitness = good_fitness();
     let epistemic = good_epistemic();
     let context = EvaluationContext::default();
 
     let start = Instant::now();
-    let mut handles = vec![];
 
-    // 100 evaluations متزامنة
     for i in 0..100 {
-        let engine = engine.clone();
-        let fitness = fitness.clone();
-        let epistemic = epistemic.clone();
-        let context = context.clone();
-        let handle = tokio::spawn(async move {
-            engine
-                .evaluate_async(format!("sim-{}", i), i as u64, fitness, epistemic, context)
-                .await
-        });
-        handles.push(handle);
-    }
-
-    // انتظار جميع المهام
-    for handle in handles {
-        handle.await.expect("Task panicked");
+        engine.evaluate(
+            &format!("sim-{}", i),
+            i as u64,
+            &fitness,
+            &epistemic,
+            &context,
+        );
     }
 
     let elapsed = start.elapsed();
