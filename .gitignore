@@ -3,3 +3,12 @@ phase0_artifacts/
 PHASE0_REPORT.md
 phase2_artifacts/
 PHASE2_REPORT.md
+
+# Residual outputs and temp logs
+*.json
+*.log
+*.backup
+*.patch
+*.sh_out
+explore_output.txt
+read_remaining_output.txt
