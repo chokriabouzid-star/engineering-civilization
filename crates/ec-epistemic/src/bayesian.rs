@@ -5,10 +5,12 @@
 
 use crate::error::{ensure_in_range, EpistemicResult};
 
-/// أدلة Bayesian — تتبع النجاحات والفشل بشكل صريح.
+/// Evidential / Wilson confidence tracker (تراكم الأدلة وفواصل ثقة ويلسون).
 ///
-///不同于 Evidence القديم (sample_size/age/reproducibility),
-/// هذا الـ struct يُتبع outcomes فعليّة.
+/// # ملاحظة منهجية (ADR-024 F10)
+/// يراكم هذا الـ struct الملاحظات المباشرة (نجاح/فشل) ويحسب حد الثقة الأدنى
+/// باستخدام فاصل ويلسون (Wilson score interval). التسمية "Bayesian" تاريخية
+/// للتوافقية مع الـ API، والنموذج يُمثّل معايرة إحصائية مستندة إلى الأدلة.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BayesianEvidence {
     /// عدد النجاحات
