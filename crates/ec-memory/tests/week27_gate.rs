@@ -135,28 +135,26 @@ fn gate_storage_saves_and_loads_retrospective() {
 // ─── Gate 8: real file (not :memory:) ──────────────────
 #[test]
 fn gate_storage_works_with_real_file() {
-    let path = "/tmp/ec_memory_test_week27.db";
-    let _ = std::fs::remove_file(path);
+    let temp_dir = tempfile::tempdir().unwrap();
+    let db_path = temp_dir.path().join("ec_memory_test_week27.db");
 
     {
-        let storage = SqliteStorage::new(path).unwrap();
+        let storage = SqliteStorage::new(&db_path).unwrap();
         let mut graph = CausalMemoryGraph::new();
         let _id = graph
             .record_from_builder(make_builder("persist_fn"))
             .unwrap();
         storage.save(&graph).unwrap();
-        assert!(std::path::Path::new(path).exists());
+        assert!(db_path.exists());
     }
 
     {
-        let storage = SqliteStorage::new(path).unwrap();
+        let storage = SqliteStorage::new(&db_path).unwrap();
         let loaded = storage.load().unwrap();
         assert_eq!(loaded.len(), 1);
         let decisions = loaded.decisions_for_artifact("persist_fn");
         assert_eq!(decisions.len(), 1);
     }
-
-    let _ = std::fs::remove_file(path);
 }
 
 // ─── Gate 9: code preserved ────────────────────────────
