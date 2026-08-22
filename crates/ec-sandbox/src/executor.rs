@@ -145,7 +145,7 @@ impl SandboxExecutor {
             self.config.limits.max_execution_time,
         );
 
-        let runner = match HardenedDockerRunner::new(base, HardenedConfig::default()) {
+        let runner = match HardenedDockerRunner::new(base, HardenedConfig::without_seccomp()) {
             Ok(r) => r,
             Err(e) => {
                 return ExecutionResult {
