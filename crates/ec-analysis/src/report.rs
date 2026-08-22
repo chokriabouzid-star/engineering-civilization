@@ -20,6 +20,8 @@ pub struct AnalysisReport {
     pub test_fns: usize,
     /// عدد دوال الإنتاج المكتشفة (من TestVisitor)
     pub production_fns: usize,
+    /// عدد تأكيدات assert المكتشفة (من TestVisitor)
+    pub assert_count: u32,
 }
 
 impl AnalysisReport {
@@ -32,6 +34,7 @@ impl AnalysisReport {
             parse_successful: false,
             test_fns: 0,
             production_fns: 0,
+            assert_count: 0,
         }
     }
 }

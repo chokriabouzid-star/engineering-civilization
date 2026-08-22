@@ -83,21 +83,27 @@ pub fn check_workspace(root: &Path) -> WorkspaceReport {
     let mut files: Vec<ScannedFile> = Vec::new();
     collect_files(root, &mut files);
 
-    // تجميع test_fns / production_fns لكل crate
-    let mut crate_counts: HashMap<PathBuf, (usize, usize)> = HashMap::new();
+    // تجميع أعداد الدوال والتأكيدات على مستوى كل crate (ADR-024 F4)
+    let mut crate_counts: HashMap<PathBuf, (usize, usize, u32)> = HashMap::new();
     for sf in &files {
-        let entry = crate_counts.entry(sf.crate_root.clone()).or_insert((0, 0));
+        let entry = crate_counts
+            .entry(sf.crate_root.clone())
+            .or_insert((0, 0, 0));
         entry.0 += sf.analysis.test_fns;
         entry.1 += sf.analysis.production_fns;
+        entry.2 += sf.analysis.assert_count;
     }
 
-    // حساب تغطية كل crate
+    // حساب تغطية كل crate مع حماية ضد الاختبارات الفارغة الخالية من التأكيدات
     let crate_coverage: HashMap<PathBuf, f64> = crate_counts
         .iter()
-        .map(|(root, (test_fns, prod_fns))| {
+        .map(|(root, (test_fns, prod_fns, assert_count))| {
             let cov = if *prod_fns == 0 {
                 // crate بلا دوال إنتاجية — حيادي
                 1.0
+            } else if *test_fns > 0 && *assert_count == 0 {
+                // ADR-024 (F4): اختبارات شكليّة فارغة بلا أي تأكيد — التغطية 0
+                0.0
             } else {
                 (*test_fns as f64 / *prod_fns as f64).min(1.0)
             };

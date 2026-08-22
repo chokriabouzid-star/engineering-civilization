@@ -91,6 +91,7 @@ impl AstAnalyzer {
             parse_successful: true,
             test_fns: test_v.test_fns,
             production_fns: test_v.production_fns,
+            assert_count: test_v.assert_count,
         }
     }
 }
