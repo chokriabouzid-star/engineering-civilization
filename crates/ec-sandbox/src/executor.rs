@@ -52,6 +52,11 @@ impl SandboxExecutor {
         Ok(Self { config })
     }
 
+    /// وضع التشغيل المُهيَّأ فعليًا لهذا الـexecutor (ADR-025 G1).
+    pub fn mode(&self) -> SandboxMode {
+        self.config.mode
+    }
+
     /// تنفيذ artifact وقياس RealityVector.
     pub fn execute(&self, artifact_id: &str, code: &str) -> ExecutionResult {
         let execution_id = Uuid::new_v4();

@@ -154,6 +154,29 @@ impl IntegrationPipeline {
         })
     }
 
+    /// إنشاء pipeline بوضع Docker حقيقي (ADR-025 G1).
+    ///
+    /// `new_simulated` يبقى بلا تغيير عمدًا (تعليقها الأصلي: "لا يُغيَّر —
+    /// الاختبارات تعتمد عليه"). هذا منشئ **موازٍ** جديد، لا تعديل على
+    /// القديم، لمن يريد فعليًا حلقة IntegrationPipeline → HardenedDockerRunner
+    /// الحقيقية بدل المحاكاة.
+    pub fn new_docker(
+        constitution: Constitution,
+        _thresholds: CatastropheThresholds,
+    ) -> anyhow::Result<Self> {
+        let config = ec_sandbox::config::SandboxConfig {
+            mode: ec_sandbox::config::SandboxMode::Docker,
+            ..Default::default()
+        };
+        let executor = SandboxExecutor::new(config)?;
+        let engine = ConstitutionalEngine::with_default_cache(constitution);
+        Ok(Self {
+            engine,
+            executor,
+            feedback: RealityFeedback::new(),
+        })
+    }
+
     /// تشغيل الكود عبر كل الطبقات.
     pub fn run(&mut self, artifact_id: &str, code: &str) -> PipelineResult {
         let run_id = Uuid::new_v4();
@@ -220,9 +243,11 @@ impl IntegrationPipeline {
         self.feedback.mean_validity_error()
     }
 
-    /// وضع الـ sandbox.
+    /// وضع الـ sandbox المُهيَّأ فعليًا (ADR-025 G1) — كانت مُصلَّدة على
+    /// Simulated دومًا بصرف النظر عن التكوين الحقيقي؛ تُصحَّح الآن لتقرأ
+    /// من الـexecutor الفعلي بدل قيمة ثابتة كاذبة.
     pub fn sandbox_mode(&self) -> SandboxMode {
-        SandboxMode::Simulated
+        self.executor.mode()
     }
 }
 
@@ -274,9 +299,19 @@ pub struct IterativePipeline {
 }
 
 impl IterativePipeline {
-    /// إنشاء pipeline تكراري.
+    /// إنشاء pipeline تكراري (وضع simulated افتراضيًا — بلا تغيير).
     pub fn new(constitution: Constitution, max_iterations: usize) -> anyhow::Result<Self> {
         let config = ec_sandbox::config::SandboxConfig::default();
+        Self::with_sandbox_config(constitution, max_iterations, config)
+    }
+
+    /// إنشاء pipeline تكراري بتكوين sandbox مُختار صراحة (ADR-025 G1) —
+    /// يسمح باختيار `SandboxMode::Docker` فعليًا بدل الاقتصار على المحاكاة.
+    pub fn with_sandbox_config(
+        constitution: Constitution,
+        max_iterations: usize,
+        config: ec_sandbox::config::SandboxConfig,
+    ) -> anyhow::Result<Self> {
         let executor = SandboxExecutor::new(config)?;
         let engine = ConstitutionalEngine::with_default_cache(constitution);
         Ok(Self {
@@ -287,6 +322,11 @@ impl IterativePipeline {
             feedback: RealityFeedback::new(),
             max_iterations,
         })
+    }
+
+    /// وضع الـ sandbox المُهيَّأ فعليًا (ADR-025 G1).
+    pub fn sandbox_mode(&self) -> ec_sandbox::config::SandboxMode {
+        self.executor.mode()
     }
 
     /// تشغيل الدورة التكرارية.
@@ -582,6 +622,34 @@ mod tests_integration {
         .unwrap()
     }
 
+    // ─── ADR-025 G1: sandbox_mode() يعكس الواقع، new_docker يعمل ───────
+
+    #[test]
+    fn sandbox_mode_reports_simulated_for_new_simulated() {
+        let p = simulated_pipeline();
+        assert!(matches!(
+            p.sandbox_mode(),
+            ec_sandbox::config::SandboxMode::Simulated
+        ));
+    }
+
+    #[test]
+    fn new_docker_actually_configures_docker_mode() {
+        // لا يتطلب Docker فعليًا — نتحقق من انتقال الإعداد فقط، لا من
+        // تنفيذ حقيقي. هذا هو الفحص الذي كان سيفشل صامتًا لو بقيت
+        // sandbox_mode() مُصلَّدة، أو لو كان with_sandbox_mode بعد الإنشاء
+        // (بلا تأثير فعلي على self.executor) كما اقترح تقرير سابق.
+        let p = IntegrationPipeline::new_docker(
+            permissive_constitution(),
+            CatastropheThresholds::default(),
+        )
+        .unwrap();
+        assert!(matches!(
+            p.sandbox_mode(),
+            ec_sandbox::config::SandboxMode::Docker
+        ));
+    }
+
     #[test]
     fn integration_pipeline_creates() {
         assert!(IntegrationPipeline::new_simulated(
@@ -669,6 +737,30 @@ mod tests_iterative {
             Arc::new(TypeSafetyInvariant::default()),
         ];
         Constitution::new(invariants, CatastropheThresholds::default())
+    }
+
+    // ─── ADR-025 G1: IterativePipeline كانت ثاني بنية تُصلِّد Simulated ──
+
+    #[test]
+    fn with_sandbox_config_actually_threads_docker_mode() {
+        let config = ec_sandbox::config::SandboxConfig {
+            mode: ec_sandbox::config::SandboxMode::Docker,
+            ..Default::default()
+        };
+        let p = IterativePipeline::with_sandbox_config(make_constitution(), 3, config).unwrap();
+        assert!(matches!(
+            p.sandbox_mode(),
+            ec_sandbox::config::SandboxMode::Docker
+        ));
+    }
+
+    #[test]
+    fn new_defaults_to_simulated_unchanged() {
+        let p = IterativePipeline::new(make_constitution(), 3).unwrap();
+        assert!(matches!(
+            p.sandbox_mode(),
+            ec_sandbox::config::SandboxMode::Simulated
+        ));
     }
 
     #[test]
@@ -801,9 +893,18 @@ pub struct BayesianPipeline {
 }
 
 impl BayesianPipeline {
-    /// إنشاء pipeline جديد
+    /// إنشاء pipeline جديد (وضع simulated افتراضيًا — بلا تغيير).
     pub fn new(constitution: Constitution) -> anyhow::Result<Self> {
         let config = ec_sandbox::config::SandboxConfig::default();
+        Self::with_sandbox_config(constitution, config)
+    }
+
+    /// إنشاء pipeline بتكوين sandbox مُختار صراحة (ADR-025 G1) — ثالث
+    /// بنية كانت تُصلِّد Simulated، لم يذكرها أي تقرير مراجعة سابق.
+    pub fn with_sandbox_config(
+        constitution: Constitution,
+        config: ec_sandbox::config::SandboxConfig,
+    ) -> anyhow::Result<Self> {
         let executor = SandboxExecutor::new(config)?;
         let engine = ConstitutionalEngine::with_default_cache(constitution);
         Ok(Self {
@@ -812,6 +913,11 @@ impl BayesianPipeline {
             tracker: ec_sandbox::BayesianTracker::new(),
             calibration: CalibrationState::default(),
         })
+    }
+
+    /// وضع الـ sandbox المُهيَّأ فعليًا (ADR-025 G1).
+    pub fn sandbox_mode(&self) -> ec_sandbox::config::SandboxMode {
+        self.executor.mode()
     }
 
     /// تشغيل مع Bayesian tracking

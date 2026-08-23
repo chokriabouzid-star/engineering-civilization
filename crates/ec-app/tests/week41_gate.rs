@@ -28,6 +28,30 @@ fn w41_bayesian_pipeline_creates() {
     assert!(p.is_ok());
 }
 
+// ─── ADR-025 G1: ثالث بنية كانت تُصلِّد Simulated ───────────────────
+
+#[test]
+fn w41_new_defaults_to_simulated() {
+    let p = BayesianPipeline::new(permissive_constitution()).unwrap();
+    assert!(matches!(
+        p.sandbox_mode(),
+        ec_sandbox::config::SandboxMode::Simulated
+    ));
+}
+
+#[test]
+fn w41_with_sandbox_config_threads_docker_mode() {
+    let config = ec_sandbox::config::SandboxConfig {
+        mode: ec_sandbox::config::SandboxMode::Docker,
+        ..Default::default()
+    };
+    let p = BayesianPipeline::with_sandbox_config(permissive_constitution(), config).unwrap();
+    assert!(matches!(
+        p.sandbox_mode(),
+        ec_sandbox::config::SandboxMode::Docker
+    ));
+}
+
 // ─── Gate 2: single run ────────────────────────────────────────────
 
 #[test]
