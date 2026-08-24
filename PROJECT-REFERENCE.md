@@ -1,42 +1,41 @@
 # Engineering Civilization — الوثيقة المرجعية
 
-## v1.9.4 · Phase 4 CLOSED (Audit Hardening) · 2026-08-22
+## v1.9.5 · Phase 4 + Post-Audit Remediation (G1/G2) · 2026-08-23
 
 هذه الوثيقة مرجع حالة مضغوط ودقيق. لا تحتوي أرقامًا إلا إذا كانت متحققة مباشرة من تشغيل فعلي.
 
 ---
 
-## ⚠️ حالة التحقق الحالية (Phase 4 Mapped)
+## ⚠️ حالة التحقق الحالية
 
 | البند | الحالة | الدليل التنفيذي الفعلي |
 |---|---|---|
 | `cargo build --workspace --locked` | ✅ | تشغيل فعلي ناجح (صفر أخطاء) |
 | `cargo clippy --workspace --tests --locked -- -D warnings` | ✅ | صفر تحذيرات |
 | `cargo fmt --all -- --check` | ✅ | نظيف بالكامل |
-| `cargo test --workspace --locked --no-fail-fast` | ✅ | **666 passed / 0 failed / 46 ignored** |
-| `cargo test -p ec-sandbox --features docker_tests` | ✅ | **713 passed / 0 failed / 1 ignored** (إجمالي الاختبارات المكتشفة مع Docker) |
-| `cargo run --bin ec -- check .` | ✅ | **130 scanned / 128 passed / 2 failed / score=0.916** (Exit Code = 1) |
-| المصادقة والأمان في API | ✅ | `X-API-Key` إجباري على كل المسارات المحدثة |
-| حصانة الـ Sandbox | ✅ | `HardenedDockerRunner` إلزامي ومباشر في الإنتاج |
-| نقاء الـ Kernel | ✅ | `ec-constitutional` نقي 100% وخالٍ من `tokio` و `async` |
-| عدد وثائق الـ ADRs | ✅ | **18 ADR** رسمية ومستقلة |
+| `cargo test --workspace --locked --no-fail-fast` | ✅ | **0 failed** — العدد الكلي لـ`passed` يتذبذب طفيفًا بين البيئات (لوحظ 659–666 عبر جلسات/بيئات مختلفة، لا رقم "صحيح" واحد يُعتمَد بلا تشغيل مباشر لكل بيئة) |
+| `cargo test -p ec-sandbox --features docker_tests` | ⚠️ | **غير مُتحقَّق رقميًا في هذه الجلسة تحديدًا** — نجح بالكامل على بيئة chokri سابقًا (بلا Docker هنا لتأكيد رقم دقيق). أي رقم "713" لم يُشغَّل فعليًا وقت كتابته — أُزيل حتى يُعاد تأكيده |
+| `cargo run --bin ec -- check .` | ✅ | **130 scanned / 128 passed / 2 failed / score=0.916** (Exit Code = 1) — مؤكَّد بثلاث بيئات مستقلة على الأقل |
+| المصادقة على `ec-api` | ✅ | `X-API-Key` إجباري، مؤكَّد سلوكيًا عبر `curl` حقيقي (401/401/200/200) |
+| وضع الـSandbox الحقيقي في الـpipelines | ✅ | مُصحَّح (ADR-025 G1) — كان مُصلَّدًا Simulated في 3 بنى (`IntegrationPipeline`, `IterativePipeline`, `BayesianPipeline`)، الآن قابل للاختيار فعليًا عبر `new_docker`/`with_sandbox_config` |
+| seccomp في مسار الإنتاج | ⚠️ | مُستعاد (ADR-025 G2) بعد تحقيق جذري (`clone3` غائبة عن allowlist) — **افتراض قوي غير مؤكَّد بتشغيل CI فعلي بعد** |
+| نقاء الـ Kernel | ✅ | `ec-constitutional` خالٍ من `tokio`/`async` |
+| عدد وثائق الـ ADRs | ✅ | **19 ADR** رسمية (`ls docs/adr/ | wc -l`) |
 
 ---
 
-## 1. ما الجديد في v1.9.4 (Phase 4)
+## 1. ما الجديد في v1.9.5 (بعد مراجعتين عدائيتين إضافيتين)
 
-تمت معالجة وإغلاق كافة الفجوات الفنية والأمنية الـ 10 التي كشفها التدقيق العدائي المستقل:
-1. **F1**: إلزامية الحصانة لـ Docker في مسار الإنتاج وإلغاء المسار غير المقوّى.
-2. **F2**: إغلاق الوصول المفتوح لـ API عبر فرض مصادقة `X-API-Key`.
-3. **F3**: تعديل `ec check` ليخرج بـ `Exit Code = 1` عند الانتهاكات، وتفعيله استشارياً في CI.
-4. **F4**: ربط تغطية الـ Crate بوجود `assert_count > 0` لمنع التغطية الشكليّة الفارغة.
-5. **F5**: استعادة نقاء الـ Kernel في `ec-constitutional` بحذف `tokio`.
-6. **F6**: استخراج `ADR-005` لملف مستقل.
-7. **F7**: تنظيف شامل لملفات النتائج والبقايا وتوسيع `.gitignore`.
-8. **F9**: دعم التوافق مع Windows باستخدام `tempfile`.
-9. **F10**: توضيح التسمية الإحصائية لـ `BayesianTracker`.
+مراجعتان مستقلتان إضافيتان بعد إغلاق Phase 4 كشفتا فجوتين لم تُعالَجا سابقًا:
 
-تفاصيل القرارات المعمارية كاملة في **`docs/adr/ADR-024-multi-model-audit-resolutions.md`**.
+- **G1**: ثلاث بنى pipeline (لا واحدة) تُصلِّد `SandboxMode::Simulated` رغم أن `SandboxExecutor` نفسه "إلزامي التحصين" — مُصحَّح بإضافة منشئات صريحة (`new_docker`, `with_sandbox_config`) بلا كسر التوافق مع الاختبارات القديمة.
+- **G2**: commit لاحق (`6817805`) عطَّل `seccomp` في الإنتاج بلا تحقيق — مُصحَّح بإضافة `clone3`/`close_range` لملف الـallowlist (فرضية جذر موثَّقة، لا يقين مؤكَّد) واستعادة `HardenedConfig::default()`.
+
+كلا الإصلاحين رفضا صراحةً مقترحات سابقة كانت ستُغلق ملاحظة التدقيق **شكليًا** بلا تغيير جوهري (حقل بيانات لا يقرؤه أحد لـG1، إعادة صياغة تعليق بلا إصلاح لـG2). التفاصيل الكاملة في **`docs/adr/ADR-025-post-phase4-g1-g2-remediation.md`**.
+
+بنود Phase 4 الأصلية (F1–F10) موثَّقة في **`docs/adr/ADR-024-multi-model-audit-resolutions.md`**.
+
+بنود مؤجَّلة صراحة (من مراجعة Arena): تغطية اختبارية منخفضة لملفات `ec-sandbox` بلا Docker (G5)، ومعايرة عتبة `architectural_stability` ضد corpus مشاريع خارجية بعد إيجابيات كاذبة على `ripgrep` (G6) — كلاهما يحتاج عملاً مستقلاً، لا تصحيحًا سريعًا.
 
 ---
 
@@ -54,7 +53,7 @@
 | `ec-governance` | الحوكمة والمقترحات والتدقيق | I/O |
 | `ec-api` | REST API | I/O (X-API-Key Protected) |
 | `ec-cli` | واجهة سطر الأوامر | I/O (Strict Exit Code) |
-| `ec-app` | تكامل النظام بالكامل | I/O |
+| `ec-app` | تكامل النظام بالكامل | I/O (Sandbox Mode قابل للاختيار فعليًا) |
 
 ---
 
@@ -72,4 +71,6 @@ cargo test -p ec-sandbox --locked --features docker_tests -- --test-threads=1
 
 # فحص المشروع الذاتي
 cargo run --bin ec -- check .
-نهاية الوثيقة المرجعية — Engineering Civilization v1.9.4 (2026-08-22)
+```
+
+نهاية الوثيقة المرجعية — Engineering Civilization v1.9.5 (2026-08-23)
