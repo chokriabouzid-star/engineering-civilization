@@ -43,7 +43,8 @@
         "eventfd2", "epoll_create1", "dup3", "pipe2",
         "preadv", "pwritev", "prlimit64",
         "getrandom", "memfd_create", "statx",
-        "rseq", "mlock", "munlock", "mlockall", "munlockall"
+        "rseq", "mlock", "munlock", "mlockall", "munlockall",
+        "clone3", "close_range"
       ],
       "action": "SCMP_ACT_ALLOW"
     }

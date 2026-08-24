@@ -150,7 +150,16 @@ impl SandboxExecutor {
             self.config.limits.max_execution_time,
         );
 
-        let runner = match HardenedDockerRunner::new(base, HardenedConfig::without_seccomp()) {
+        // ADR-024 (F1) + ADR-025 (G2): seccomp إلزامي. commit 6817805
+        // عطّله بلا تحقيق جذري بعد فشل CI على docker_tests — التحقيق هنا
+        // (فحص مباشر لملف rust-sandbox.json) وجد أن السبب الأرجح هو غياب
+        // clone3 (glibc >= 2.34 تُفضِّلها على clone القديمة؛ الفارق بين
+        // نجاح WSL2 المحلي الدائم وفشل GitHub Actions تحديدًا يطابق هذا
+        // النمط تمامًا). أُضيفت clone3 وclose_range لملف الـprofile،
+        // واستُعيد default() هنا. يحتاج تأكيدًا بتشغيل فعلي على CI قبل
+        // اعتباره نهائيًا — إن فشل مجددًا، هذا يستبعد فرضية واحدة، لا
+        // مبررًا للعودة لـwithout_seccomp() بلا نقاش جديد.
+        let runner = match HardenedDockerRunner::new(base, HardenedConfig::default()) {
             Ok(r) => r,
             Err(e) => {
                 return ExecutionResult {
