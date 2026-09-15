@@ -40,6 +40,11 @@ impl AuditLog {
     }
 
     /// تسجيل حدث
+    /// Restore entries loaded from durable storage without re-stamping.
+    pub fn from_entries(entries: Vec<AuditEntry>) -> Self {
+        Self { entries }
+    }
+
     pub fn record(
         &mut self,
         event: GovernanceEvent,

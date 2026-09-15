@@ -102,7 +102,7 @@ impl UncertaintyDecomposition {
 /// الحالة المعرفية الكاملة.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct EpistemicState {
-    /// الثقة [0,1].
+    /// الثقة في الفترة `[0, 1]`.
     pub confidence: f64,
     /// الأدلة.
     pub evidence: Evidence,

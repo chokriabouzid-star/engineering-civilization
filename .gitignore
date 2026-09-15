@@ -6,6 +6,7 @@ PHASE2_REPORT.md
 
 # Residual outputs and temp logs
 *.json
+!crates/**/profiles/*.json
 *.log
 *.backup
 *.patch

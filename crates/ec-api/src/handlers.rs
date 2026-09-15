@@ -3,6 +3,7 @@
 //! HTTP handlers — thin adapters, no business logic
 
 use axum::extract::{Path as AxumPath, State};
+use axum::http::StatusCode;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -65,6 +66,28 @@ pub struct HealthResponse {
 
 // ─── Handlers ───────────────────────────────────────────────────────
 
+type ApiError = (StatusCode, Json<serde_json::Value>);
+
+fn api_err(status: StatusCode, msg: impl ToString) -> ApiError {
+    (
+        status,
+        Json(serde_json::json!({ "error": msg.to_string() })),
+    )
+}
+
+fn persist_latest_audit(
+    state: &AppState,
+    audit: &ec_governance::audit::AuditLog,
+) -> Result<(), ApiError> {
+    if let Some(entry) = audit.last_n(1).first() {
+        state
+            .gov_storage
+            .save_audit(entry)
+            .map_err(|e| api_err(StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    }
+    Ok(())
+}
+
 /// POST /api/v1/analyze — analyze code
 pub async fn analyze(Json(req): Json<AnalyzeRequest>) -> Json<AnalyzeResponse> {
     let report = analyze_code_full(&req.code);
@@ -85,7 +108,7 @@ pub async fn analyze(Json(req): Json<AnalyzeRequest>) -> Json<AnalyzeResponse> {
 pub async fn submit_proposal(
     State(state): State<AppState>,
     Json(req): Json<ProposalRequest>,
-) -> Json<ProposalResponse> {
+) -> Result<Json<ProposalResponse>, ApiError> {
     let direction = if req.proposed_value > req.current_value {
         ThresholdDirection::Tighten
     } else {
@@ -106,9 +129,14 @@ pub async fn submit_proposal(
     );
 
     let id = proposal.id;
+    state
+        .gov_storage
+        .save_proposal(&proposal)
+        .map_err(|e| api_err(StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
     let mut proposals = state.proposals.lock().await;
     proposals.submit(proposal.clone());
-    let _ = state.gov_storage.save_proposal(&proposal);
+    drop(proposals);
 
     let mut audit = state.audit.lock().await;
     audit.record(
@@ -119,11 +147,12 @@ pub async fn submit_proposal(
         &req.proposed_by,
         "",
     );
+    persist_latest_audit(&state, &audit)?;
 
-    Json(ProposalResponse {
+    Ok(Json(ProposalResponse {
         id: id.to_string(),
         status: "Pending".into(),
-    })
+    }))
 }
 
 /// GET /api/v1/governance/proposals — list proposals
@@ -154,17 +183,20 @@ pub async fn approve_proposal(
     State(state): State<AppState>,
     AxumPath(id_str): AxumPath<String>,
     Json(req): Json<ApproveRequest>,
-) -> Json<serde_json::Value> {
+) -> Result<Json<serde_json::Value>, ApiError> {
     let id = match Uuid::parse_str(&id_str) {
         Ok(id) => id,
-        Err(_) => return Json(serde_json::json!({ "error": "invalid id" })),
+        Err(_) => return Err(api_err(StatusCode::BAD_REQUEST, "invalid id")),
     };
 
     let mut proposals = state.proposals.lock().await;
     match proposals.approve(id, &req.by, &req.note) {
         Ok(()) => {
             if let Some(p) = proposals.find(id) {
-                let _ = state.gov_storage.save_proposal(p);
+                state
+                    .gov_storage
+                    .save_proposal(p)
+                    .map_err(|e| api_err(StatusCode::INTERNAL_SERVER_ERROR, e))?;
             }
             drop(proposals);
 
@@ -177,10 +209,11 @@ pub async fn approve_proposal(
                 &req.by,
                 "",
             );
+            persist_latest_audit(&state, &audit)?;
 
-            Json(serde_json::json!({ "status": "approved" }))
+            Ok(Json(serde_json::json!({ "status": "approved" })))
         }
-        Err(e) => Json(serde_json::json!({ "error": e.to_string() })),
+        Err(e) => Err(api_err(StatusCode::BAD_REQUEST, e)),
     }
 }
 
@@ -189,17 +222,20 @@ pub async fn reject_proposal(
     State(state): State<AppState>,
     AxumPath(id_str): AxumPath<String>,
     Json(body): Json<serde_json::Value>,
-) -> Json<serde_json::Value> {
+) -> Result<Json<serde_json::Value>, ApiError> {
     let id = match Uuid::parse_str(&id_str) {
         Ok(id) => id,
-        Err(_) => return Json(serde_json::json!({ "error": "invalid id" })),
+        Err(_) => return Err(api_err(StatusCode::BAD_REQUEST, "invalid id")),
     };
     let reason = body["reason"].as_str().unwrap_or("no reason given");
     let mut proposals = state.proposals.lock().await;
     match proposals.reject(id, reason) {
         Ok(()) => {
             if let Some(p) = proposals.find(id) {
-                let _ = state.gov_storage.save_proposal(p);
+                state
+                    .gov_storage
+                    .save_proposal(p)
+                    .map_err(|e| api_err(StatusCode::INTERNAL_SERVER_ERROR, e))?;
             }
             drop(proposals);
 
@@ -212,10 +248,11 @@ pub async fn reject_proposal(
                 "api",
                 "",
             );
+            persist_latest_audit(&state, &audit)?;
 
-            Json(serde_json::json!({ "status": "rejected" }))
+            Ok(Json(serde_json::json!({ "status": "rejected" })))
         }
-        Err(e) => Json(serde_json::json!({ "error": e.to_string() })),
+        Err(e) => Err(api_err(StatusCode::BAD_REQUEST, e)),
     }
 }
 

@@ -495,11 +495,11 @@ impl IterativePipeline {
 // ═══════════════════════════════════════════════════════════════════
 
 fn hash_code(code: &str) -> u64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    let mut hasher = DefaultHasher::new();
-    code.hash(&mut hasher);
-    hasher.finish()
+    use sha2::{Digest, Sha256};
+    let digest = Sha256::digest(code.as_bytes());
+    let mut bytes = [0u8; 8];
+    bytes.copy_from_slice(&digest[..8]);
+    u64::from_le_bytes(bytes)
 }
 
 fn build_epistemic_from_fitness(fitness: &FitnessVector) -> EpistemicState {

@@ -41,6 +41,7 @@ impl ExecutionResult {
 }
 
 /// Sandbox Executor.
+#[derive(Debug)]
 pub struct SandboxExecutor {
     config: SandboxConfig,
 }
@@ -77,13 +78,51 @@ impl SandboxExecutor {
         artifact_id: &str,
         start: Instant,
     ) -> ExecutionResult {
-        let success = !artifact_id.contains("fail");
-        let correctness = if success { 1.0 } else { 0.0 };
-        let reproducibility = if artifact_id.contains("flaky") {
-            0.6
-        } else {
-            0.98
+        // ADR-026: the name-oracle below is a TEST DOUBLE. It exists only in
+        // debug builds; in release builds SandboxConfig::validate() rejects
+        // Simulated entirely, so this branch is unreachable and fails closed.
+        #[cfg(debug_assertions)]
+        let (success, reproducibility, violations, error_message) = {
+            let success = !artifact_id.contains("fail");
+            let reproducibility = if artifact_id.contains("flaky") {
+                0.6
+            } else {
+                0.98
+            };
+            let mut violations = Vec::new();
+            if artifact_id.contains("unsafe") {
+                violations.push(SecurityViolation::ForbiddenSyscall {
+                    syscall: "execve".to_string(),
+                });
+            }
+            if artifact_id.contains("escape") {
+                violations.push(SecurityViolation::SandboxEscape {
+                    method: "ptrace".to_string(),
+                });
+            }
+            let error_message = if success {
+                None
+            } else {
+                Some("Simulated failure".to_string())
+            };
+            (success, reproducibility, violations, error_message)
         };
+        #[cfg(not(debug_assertions))]
+        let (success, reproducibility, violations, error_message): (
+            bool,
+            f64,
+            Vec<SecurityViolation>,
+            Option<String>,
+        ) = {
+            let _ = artifact_id;
+            (
+                false,
+                0.0,
+                Vec::new(),
+                Some("SandboxMode::Simulated is disabled in release builds (ADR-026)".to_string()),
+            )
+        };
+        let correctness = if success { 1.0 } else { 0.0 };
 
         let mut latencies = Vec::new();
         for i in 0..self.config.runs_for_reproducibility {
@@ -101,28 +140,12 @@ impl SandboxExecutor {
         )
         .ok();
 
-        let mut violations = Vec::new();
-        if artifact_id.contains("unsafe") {
-            violations.push(SecurityViolation::ForbiddenSyscall {
-                syscall: "execve".to_string(),
-            });
-        }
-        if artifact_id.contains("escape") {
-            violations.push(SecurityViolation::SandboxEscape {
-                method: "ptrace".to_string(),
-            });
-        }
-
         ExecutionResult {
             execution_id,
             reality,
             violations,
             success,
-            error_message: if success {
-                None
-            } else {
-                Some("Simulated failure".to_string())
-            },
+            error_message,
             elapsed: start.elapsed(),
         }
     }
@@ -144,7 +167,7 @@ impl SandboxExecutor {
 
     fn execute_docker(&self, execution_id: Uuid, code: &str, start: Instant) -> ExecutionResult {
         let base = DockerRunner::new(
-            "rust:1.75-slim",
+            crate::docker::DEFAULT_IMAGE,
             self.config.limits.max_memory_mb,
             self.config.limits.max_cpu_percent,
             self.config.limits.max_execution_time,
@@ -304,10 +327,9 @@ mod tests {
     fn local_execution_not_implemented_yet() {
         let mut config = SandboxConfig::default();
         config.mode = SandboxMode::Local;
-        let executor = SandboxExecutor::new(config).unwrap();
-        let result = executor.execute("test", "");
-        assert!(!result.success);
-        assert!(result.error_message.unwrap().contains("not implemented"));
+        // ADR-026: Local is rejected at construction (fail closed).
+        let err = SandboxExecutor::new(config).unwrap_err();
+        assert!(err.to_string().contains("not implemented"), "got: {err}");
     }
 
     // ─── Docker tests (Week 14) ──────────────────────────────────────

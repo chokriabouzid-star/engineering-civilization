@@ -173,6 +173,21 @@ impl SandboxConfig {
             "runs_for_reproducibility must be >= 1"
         );
 
+        // ADR-026: Simulated is a test double (artifact_id name-oracle).
+        // Forbidden in release builds; fail closed at config time.
+        #[cfg(not(debug_assertions))]
+        if self.mode == SandboxMode::Simulated {
+            anyhow::bail!(
+                "SandboxMode::Simulated is a test double and is disabled in release builds (ADR-026)"
+            );
+        }
+        // ADR-026: Local has no implementation; reject at config time.
+        if self.mode == SandboxMode::Local {
+            anyhow::bail!(
+                "SandboxMode::Local is not implemented; use Docker (or Simulated in debug builds)"
+            );
+        }
+
         Ok(())
     }
 }
