@@ -237,7 +237,7 @@ async fn w50_approve_invalid_id_returns_error() {
         .patch("/api/v1/governance/proposals/not-a-uuid/approve")
         .json(&serde_json::json!({ "by": "a", "note": "b" }))
         .await;
-    assert_eq!(res.status_code(), 200);
+    assert_eq!(res.status_code(), 400);
     let body: serde_json::Value = res.json();
     assert!(body["error"].is_string());
 }
@@ -252,7 +252,7 @@ async fn w50_approve_nonexistent_returns_error() {
         .patch(&format!("/api/v1/governance/proposals/{}/approve", fake_id))
         .json(&serde_json::json!({ "by": "a", "note": "b" }))
         .await;
-    assert_eq!(res.status_code(), 200);
+    assert_eq!(res.status_code(), 400);
     let body: serde_json::Value = res.json();
     assert!(body["error"].is_string());
 }

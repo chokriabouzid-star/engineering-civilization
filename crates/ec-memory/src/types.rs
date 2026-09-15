@@ -50,7 +50,7 @@ pub type ArtifactHash = u64;
 
 /// لقطة artifact — الكود + التجزئة.
 ///
-/// **Design:** نستخدم Arc<str> لتجنب تكرار الكود.
+/// **Design:** نستخدم `Arc<str>` لتجنب تكرار الكود.
 /// آلاف القرارات قد تشير لنفس الكود.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArtifactSnapshot {

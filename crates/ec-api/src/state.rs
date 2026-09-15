@@ -40,15 +40,17 @@ impl AppState {
         let gov_storage = GovernanceStorage::open(db_path)?;
 
         // Restore proposals from disk
-        let proposals_vec = gov_storage.load_proposals().unwrap_or_default();
+        let proposals_vec = gov_storage.load_proposals()?;
         let mut proposal_store = ProposalStore::new();
         for p in proposals_vec {
             proposal_store.submit(p);
         }
 
+        let audit_log = AuditLog::from_entries(gov_storage.load_audit()?);
+
         Ok(Self {
             proposals: Arc::new(Mutex::new(proposal_store)),
-            audit: Arc::new(Mutex::new(AuditLog::new())),
+            audit: Arc::new(Mutex::new(audit_log)),
             memory: Arc::new(Mutex::new(CausalMemoryGraph::new())),
             gov_storage: Arc::new(gov_storage),
             api_key: api_key.into(),

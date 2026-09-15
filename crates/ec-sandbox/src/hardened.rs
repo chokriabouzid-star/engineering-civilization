@@ -188,11 +188,24 @@ impl HardenedDockerRunner {
     }
 
     /// تشغيل args محددة.
-    fn run_args(&self, args: Vec<String>) -> Result<DockerOutput, DockerError> {
+    fn force_remove_container(name: &str) {
+        use std::process::Command;
+        let _ = Command::new("docker").args(["rm", "-f", name]).output();
+    }
+
+    fn run_args(&self, mut args: Vec<String>) -> Result<DockerOutput, DockerError> {
         use std::process::Command;
         use std::sync::mpsc;
         use std::thread;
         use std::time::Instant;
+
+        // Unique name so a timed-out `docker run` can be force-removed.
+        // `--rm` only runs after the CLI process exits; on recv_timeout it never does.
+        let container_name = format!("ec-sbx-{}", uuid::Uuid::new_v4());
+        if args.first().map(|s| s.as_str()) == Some("run") {
+            args.insert(1, "--name".to_string());
+            args.insert(2, container_name.clone());
+        }
 
         let timeout = self.base.timeout;
         let start = Instant::now();
@@ -211,10 +224,16 @@ impl HardenedDockerRunner {
                 stderr: String::from_utf8_lossy(&out.stderr).to_string(),
                 elapsed: start.elapsed(),
             }),
-            Ok(Err(e)) => Err(DockerError::Io(e)),
-            Err(_) => Err(DockerError::Timeout {
-                duration_secs: timeout.as_secs(),
-            }),
+            Ok(Err(e)) => {
+                Self::force_remove_container(&container_name);
+                Err(DockerError::Io(e))
+            }
+            Err(_) => {
+                Self::force_remove_container(&container_name);
+                Err(DockerError::Timeout {
+                    duration_secs: timeout.as_secs(),
+                })
+            }
         }
     }
 
