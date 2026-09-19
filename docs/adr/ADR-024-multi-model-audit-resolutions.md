@@ -52,5 +52,7 @@
 - **البناء والنسق:** `cargo build` ✅ · `clippy -D warnings` ✅ · `cargo fmt --check` ✅
 - **حزمة الاختبارات الشاملة (بدون Docker):** **666 passed / 0 failed / 46 ignored**
 - **حزمة اختبارات Docker الكاملة (`docker_tests`):** **713 passed / 0 failed / 1 ignored**
+  > ⚠️ تصحيح (2026-09-18): «713» لم يُشغَّل فعليًا وقت كتابته (انظر ADR-025). المُتحقَّق محليًا 2026-09-16: 136 اختبار Docker ناجح في ec-sandbox.
 - **فحص المشروعات الذاتي (`ec check .`):** **130 scanned / 128 passed / 2 failed / score 0.916** مع **Exit Code = 1**.
 - **إجمالي عدد الـ ADRs الرسمي:** **18 ADR**.
+  > ⚠️ تصحيح (2026-09-18): العدد الفعلي الآن **22 ADR** (21 وقت التصحيح + ADR-027) (ls docs/adr/*.md | wc -l).

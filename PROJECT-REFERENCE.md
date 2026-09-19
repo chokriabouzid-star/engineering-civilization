@@ -20,7 +20,7 @@
 | وضع الـSandbox الحقيقي في الـpipelines | ✅ | مُصحَّح (ADR-025 G1) — كان مُصلَّدًا Simulated في 3 بنى (`IntegrationPipeline`, `IterativePipeline`, `BayesianPipeline`)، الآن قابل للاختيار فعليًا عبر `new_docker`/`with_sandbox_config` |
 | seccomp في مسار الإنتاج | ⚠️ | مُستعاد (ADR-025 G2) بعد تحقيق جذري (`clone3` غائبة عن allowlist) — **افتراض قوي غير مؤكَّد بتشغيل CI فعلي بعد** |
 | نقاء الـ Kernel | ✅ | `ec-constitutional` خالٍ من `tokio`/`async` |
-| عدد وثائق الـ ADRs | ✅ | **19 ADR** رسمية (`ls docs/adr/ | wc -l`) |
+| عدد وثائق الـ ADRs | ✅ | **22 ADR** رسمية (`ls docs/adr/ | wc -l`) |
 
 ---
 
