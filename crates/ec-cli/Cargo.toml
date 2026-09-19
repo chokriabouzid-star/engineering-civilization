@@ -2,6 +2,8 @@
 name = "ec-cli"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
+rust-version.workspace = true
 description = "CLI — thin adapter (read args → call → print)"
 
 [[bin]]

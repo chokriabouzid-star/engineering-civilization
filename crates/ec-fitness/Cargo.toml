@@ -2,6 +2,8 @@
 name = "ec-fitness"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
+rust-version.workspace = true
 description = "Fitness Vector – 6-dimensional quality metrics with Pareto dominance"
 
 [dependencies]
