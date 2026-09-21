@@ -4,6 +4,13 @@ All notable changes are documented here. Format loosely follows Keep a Changelog
 
 [Unreleased]
 Added
+T1.1 sandbox timeout cleanup regression gate (`timeout_gate.rs`) proves
+forced container removal on timeout and zero `ec-sbx-*` orphans (ADR-026 C1).
+T1.2 sandbox seccomp parity gate (`seccomp_parity_gate.rs`) verifies five
+ABI-controlled syscall observations against the daemon-default baseline,
+runs all five legacy escape vectors through `default_hardened()`, and requires
+their runtime `BLOCKED`/`CONTAINED` markers rather than accepting infrastructure
+errors as proof of containment (ADR-026 C4, ADR-028).
 Kernel purity gate (ec-constitutional/tests/kernel_purity.rs) — fails if the
 constitutional kernel gains a runtime dependency on tokio/async-trait
 (ADR-023/ADR-027). Verified with a negative control.
