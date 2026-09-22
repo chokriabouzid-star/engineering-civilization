@@ -4,10 +4,10 @@
 //! upstream Moby at test time (no network, no moving branch).
 //!
 //! Decision under test:
-//!   * clone  -> ALLOW only when no namespace-creation bit is set
-//!               (flags & 0x7e020000) == 0, checked on arg0 (x86 ABI).
-//!   * clone3 -> ERRNO(38 = ENOSYS), so glibc falls back to the filterable
-//!               clone path. EPERM would NOT trigger that fallback.
+//! - clone -> ALLOW only when no namespace-creation bit is set
+//!   (`flags & 0x7e020000 == 0`), checked on arg0 (x86 ABI).
+//! - clone3 -> ERRNO(38 = ENOSYS), so glibc falls back to the filterable
+//!   clone path. EPERM would NOT trigger that fallback.
 //!   * mount/ptrace/namespace syscalls stay denied.
 //!   * statfs/fstatfs stay allowed (regression guard for the ADR-026 C3 breakage).
 //!
@@ -27,10 +27,26 @@ const CLONE_NS_MASK: u64 = 0x7e02_0000; // 2114060288
 const ENOSYS: u64 = 38;
 
 const MUST_NOT_BE_ALLOWED: &[&str] = &[
-    "unshare", "setns", "mount", "umount2", "pivot_root",
-    "fsopen", "fsconfig", "fsmount", "move_mount", "open_tree", "mount_setattr",
-    "ptrace", "process_vm_readv", "process_vm_writev",
-    "keyctl", "add_key", "request_key", "userfaultfd", "bpf", "perf_event_open",
+    "unshare",
+    "setns",
+    "mount",
+    "umount2",
+    "pivot_root",
+    "fsopen",
+    "fsconfig",
+    "fsmount",
+    "move_mount",
+    "open_tree",
+    "mount_setattr",
+    "ptrace",
+    "process_vm_readv",
+    "process_vm_writev",
+    "keyctl",
+    "add_key",
+    "request_key",
+    "userfaultfd",
+    "bpf",
+    "perf_event_open",
 ];
 
 const MUST_STAY_ALLOWED: &[&str] = &["statfs", "fstatfs"];
@@ -134,7 +150,9 @@ fn validate(json: &str) -> Result<(), Vec<String>> {
                 _ => errs.push("clone rule must have exactly one arg condition".to_string()),
             }
         }
-        n => errs.push(format!("clone must appear in exactly 1 ALLOW rule, found {n}")),
+        n => errs.push(format!(
+            "clone must appear in exactly 1 ALLOW rule, found {n}"
+        )),
     }
     if errno_rules.iter().any(|(n, _)| *n == "clone") {
         errs.push("clone must not also appear in an ERRNO rule".to_string());
@@ -179,7 +197,10 @@ fn validate(json: &str) -> Result<(), Vec<String>> {
 #[test]
 fn ec_profile_satisfies_least_privilege_contract() {
     if let Err(errs) = validate(PROFILE) {
-        panic!("profile violates T1.3 contract:\n  - {}", errs.join("\n  - "));
+        panic!(
+            "profile violates T1.3 contract:\n  - {}",
+            errs.join("\n  - ")
+        );
     }
 }
 
@@ -190,8 +211,7 @@ fn ec_profile_satisfies_least_privilege_contract() {
 // negative-control tests must start from a known-good fixture, then weaken
 // exactly one property.
 fn compliant_profile() -> Value {
-    let mut profile: Value =
-        serde_json::from_str(PROFILE).expect("committed base profile parses");
+    let mut profile: Value = serde_json::from_str(PROFILE).expect("committed base profile parses");
 
     let groups = profile["syscalls"]
         .as_array_mut()
@@ -251,10 +271,13 @@ fn in_memory_compliant_fixture_satisfies_contract() {
 #[test]
 fn rejects_unconditional_clone() {
     let bad = mutated(|v| {
-        v["syscalls"].as_array_mut().unwrap().push(serde_json::json!({
-            "names": ["clone"],
-            "action": "SCMP_ACT_ALLOW"
-        }));
+        v["syscalls"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "names": ["clone"],
+                "action": "SCMP_ACT_ALLOW"
+            }));
     });
     rejects(&bad, "unconditionally");
 }
@@ -294,10 +317,13 @@ fn rejects_clone_mask_on_wrong_arg_index() {
 #[test]
 fn rejects_clone3_allow() {
     let bad = mutated(|v| {
-        v["syscalls"].as_array_mut().unwrap().push(serde_json::json!({
-            "names": ["clone3"],
-            "action": "SCMP_ACT_ALLOW"
-        }));
+        v["syscalls"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "names": ["clone3"],
+                "action": "SCMP_ACT_ALLOW"
+            }));
     });
     rejects(&bad, "clone3 must not be ALLOWed");
 }
@@ -322,10 +348,13 @@ fn rejects_clone3_eperm_instead_of_enosys() {
 #[test]
 fn rejects_allowing_a_mount_api_syscall() {
     let bad = mutated(|v| {
-        v["syscalls"].as_array_mut().unwrap().push(serde_json::json!({
-            "names": ["move_mount"],
-            "action": "SCMP_ACT_ALLOW"
-        }));
+        v["syscalls"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({
+                "names": ["move_mount"],
+                "action": "SCMP_ACT_ALLOW"
+            }));
     });
     rejects(&bad, "move_mount must never be ALLOWed");
 }
