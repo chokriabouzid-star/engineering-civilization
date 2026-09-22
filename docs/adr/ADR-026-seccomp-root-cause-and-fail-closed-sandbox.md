@@ -28,3 +28,18 @@ Production executor path runs with seccomp ON (136 sandbox + 107 app docker test
 
 ## Verification
 `cargo test --workspace`: all green, 0 failed (46 feature-gated ignored). Clippy and rustdoc clean under `-D warnings`.
+
+---
+
+## Addendum (2026-09-21 - T1.3 Least-Privilege Review)
+
+Direct inspection of `rust-sandbox.json` at commit `94eba48` confirmed that the
+six mount-API syscalls (`fsopen`, `fsconfig`, `fsmount`, `move_mount`,
+`open_tree`, `mount_setattr`) are already present in the `SCMP_ACT_ERRNO` group
+with `errnoRet=1` (EPERM). The original text of this ADR listed them as
+"allowed, candidate for removal" — this description does not match the profile
+and is corrected here. No functional change is required.
+
+ADR-028 references Docker `29.1.3`. This was the Docker CLI client version. The
+T1.3 survey measured client `29.1.3` / server `29.8.0`. The server version was
+not separately recorded during T1.2.
