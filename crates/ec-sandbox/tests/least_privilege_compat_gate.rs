@@ -27,8 +27,7 @@ fn run_source(label: &str, source: &str) -> String {
     assert_eq!(
         output.exit_code, 0,
         "[{label}] expected exit code 0, got {}. stderr: {}",
-        output.exit_code,
-        output.stderr
+        output.exit_code, output.stderr
     );
 
     output.stdout
