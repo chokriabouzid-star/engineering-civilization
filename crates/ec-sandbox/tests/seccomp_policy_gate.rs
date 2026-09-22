@@ -47,6 +47,11 @@ const MUST_NOT_BE_ALLOWED: &[&str] = &[
     "userfaultfd",
     "bpf",
     "perf_event_open",
+    "pidfd_open",
+    "pidfd_getfd",
+    "kcmp",
+    "name_to_handle_at",
+    "open_by_handle_at",
 ];
 
 const MUST_STAY_ALLOWED: &[&str] = &["statfs", "fstatfs"];
