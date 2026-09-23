@@ -5,15 +5,22 @@
 use crate::auth::require_api_key;
 use crate::handlers;
 use crate::state::AppState;
+use axum::extract::DefaultBodyLimit;
 use axum::middleware;
 use axum::routing::{get, patch, post};
 use axum::Router;
 
+/// أقصى حجم مسموح به لجسم طلب التحليل: 2 ميجابايت
+pub const MAX_ANALYZE_BODY_BYTES: usize = 2 * 1024 * 1024;
+
 /// Build the API router
 pub fn build_router(state: AppState) -> Router {
     let protected = Router::new()
-        // Analysis
-        .route("/api/v1/analyze", post(handlers::analyze))
+        // Analysis — محمي بحد أقصى لحجم الجسم لمنع هجمات الاستنزاف
+        .route(
+            "/api/v1/analyze",
+            post(handlers::analyze).layer(DefaultBodyLimit::max(MAX_ANALYZE_BODY_BYTES)),
+        )
         // Memory
         .route("/api/v1/memory/nodes", get(handlers::list_nodes))
         .route("/api/v1/memory/drift", get(handlers::get_drift))
