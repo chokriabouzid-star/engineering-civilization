@@ -5,8 +5,14 @@
 use ec_api::build_router;
 use ec_api::state::AppState;
 
+fn main() {
+    // F1: يجب أن يسبق إنشاء أي وقت تشغيل — يحوّل العملية إلى عامل تحليل عند الطلب.
+    ec_analysis::isolation::install_worker_hook();
+    run();
+}
+
 #[tokio::main]
-async fn main() {
+async fn run() {
     let db = std::env::var("EC_DB").unwrap_or_else(|_| "ec.db".into());
 
     let api_key = std::env::var("EC_API_KEY").unwrap_or_else(|_| {

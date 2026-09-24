@@ -3,7 +3,7 @@
 //! ec — Engineering Civilization CLI
 
 use clap::{Parser, Subcommand};
-use ec_analysis::analyze_code_full;
+use ec_analysis::isolation::analyze_code_full_isolated;
 use ec_memory::MemoryStorage;
 use std::path::PathBuf;
 
@@ -86,6 +86,9 @@ enum ProposeAction {
 }
 
 fn main() {
+    // F1: يجب أن يسبق أي شيء آخر — يحوّل العملية إلى عامل تحليل عند الطلب.
+    ec_analysis::isolation::install_worker_hook();
+
     let cli = Cli::parse();
 
     match cli.command {
@@ -211,7 +214,13 @@ fn cmd_analyze(path: PathBuf, json: bool, verbose: bool) {
         }
     };
 
-    let report = analyze_code_full(&code);
+    let report = match analyze_code_full_isolated(&code) {
+        Ok(report) => report,
+        Err(e) => {
+            eprintln!("❌ عامل التحليل المعزول فشل: {}", e);
+            std::process::exit(2);
+        }
+    };
 
     if json {
         let output = serde_json::json!({

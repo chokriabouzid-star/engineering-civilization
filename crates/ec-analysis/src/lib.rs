@@ -9,6 +9,7 @@ pub mod analyzer;
 pub mod complexity;
 pub mod coverage;
 pub mod depth_guard;
+pub mod isolation;
 pub mod metrics;
 pub mod reversibility;
 pub mod security;
@@ -20,6 +21,7 @@ pub mod visitors;
 
 pub use ast_analyzer::AstAnalyzer;
 pub use depth_guard::{check_nesting_safety, DepthError, MAX_DELIMITER_DEPTH, MAX_UNARY_CHAIN};
+pub use isolation::{analyze_code_full_isolated, IsolationError};
 pub use report::{AnalysisReport, AnalysisWarning, ConfidenceVector};
 
 use ec_fitness::FitnessVector;

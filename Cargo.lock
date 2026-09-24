@@ -547,6 +547,7 @@ version = "0.1.0"
 dependencies = [
  "ec-fitness",
  "serde",
+ "serde_json",
  "syn",
  "thiserror 2.0.18",
 ]
