@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::state::AppState;
-use ec_analysis::analyze_code_full;
+use ec_analysis::isolation::{analyze_code_full_isolated, IsolationError};
 use ec_governance::audit::GovernanceEvent;
 use ec_governance::proposal::{
     ConstitutionalProposal, ProposalOrigin, ProposedChange, ThresholdDirection,
@@ -88,10 +88,34 @@ fn persist_latest_audit(
     Ok(())
 }
 
+/// F1: يربط سبب فشل العامل برمز HTTP صادق. المطابقة شاملة عمدًا (بلا `_`)
+/// كي يُجبر أي نوع خطأ جديد على قرار صريح.
+fn isolation_status(e: &IsolationError) -> StatusCode {
+    match e {
+        IsolationError::Timeout { .. } => StatusCode::GATEWAY_TIMEOUT,
+        IsolationError::Crashed { .. } | IsolationError::Protocol(_) => StatusCode::BAD_GATEWAY,
+        IsolationError::WorkerNotFound | IsolationError::Spawn(_) => {
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
 /// POST /api/v1/analyze — analyze code
-pub async fn analyze(Json(req): Json<AnalyzeRequest>) -> Json<AnalyzeResponse> {
-    let report = analyze_code_full(&req.code);
-    Json(AnalyzeResponse {
+///
+/// F1: التحليل يجري في عملية فرعية معزولة. موت العامل (تجاوز مكدس مثلًا)
+/// عطل بنية تحتية، لا نتيجة تقييم — فيُترجَم إلى 502 ويبقى الخادم حيًّا.
+pub async fn analyze(Json(req): Json<AnalyzeRequest>) -> Result<Json<AnalyzeResponse>, ApiError> {
+    let report = tokio::task::spawn_blocking(move || analyze_code_full_isolated(&req.code))
+        .await
+        .map_err(|e| {
+            api_err(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("analysis task panicked: {e}"),
+            )
+        })?
+        .map_err(|e| api_err(isolation_status(&e), e))?;
+
+    Ok(Json(AnalyzeResponse {
         security: report.fitness.security,
         test_coverage: report.fitness.test_coverage,
         maintainability: report.fitness.maintainability,
@@ -101,7 +125,7 @@ pub async fn analyze(Json(req): Json<AnalyzeRequest>) -> Json<AnalyzeResponse> {
         confidence_overall: report.confidence.overall(),
         parse_successful: report.parse_successful,
         warnings_count: report.warnings.len(),
-    })
+    }))
 }
 
 /// POST /api/v1/governance/proposals — submit proposal
@@ -341,4 +365,36 @@ pub async fn find_similar(State(state): State<AppState>) -> Json<serde_json::Val
         })
         .collect();
     Json(serde_json::json!(results))
+}
+
+#[cfg(test)]
+mod f1_status_tests {
+    use super::isolation_status;
+    use axum::http::StatusCode;
+    use ec_analysis::isolation::IsolationError;
+
+    #[test]
+    fn worker_failures_map_to_honest_http_statuses() {
+        let crash = IsolationError::Crashed {
+            status: "signal: 6 (SIGABRT)".into(),
+            stderr: String::new(),
+        };
+        assert_eq!(isolation_status(&crash), StatusCode::BAD_GATEWAY);
+        assert_eq!(
+            isolation_status(&IsolationError::Protocol("x".into())),
+            StatusCode::BAD_GATEWAY
+        );
+        assert_eq!(
+            isolation_status(&IsolationError::Timeout { millis: 20_000 }),
+            StatusCode::GATEWAY_TIMEOUT
+        );
+        assert_eq!(
+            isolation_status(&IsolationError::WorkerNotFound),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            isolation_status(&IsolationError::Spawn("x".into())),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+    }
 }

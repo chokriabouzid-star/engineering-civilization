@@ -4,9 +4,10 @@
 //! إضافة فقط — لا تكسر analyze_code() القديم
 
 use ec_fitness::FitnessVector;
+use serde::{Deserialize, Serialize};
 
 /// تقرير التحليل الكامل (يشمل FitnessVector + confidence)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisReport {
     /// للتوافق مع الكود القديم — نفس ما تُنتجه analyze_code()
     pub fitness: FitnessVector,
@@ -41,7 +42,7 @@ impl AnalysisReport {
 
 /// مستوى الثقة في كل بُعد من أبعاد FitnessVector
 /// D8: لا تُعدَّل FitnessVector — هذا منفصل تماماً
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfidenceVector {
     pub security: f64,
     pub test_coverage: f64,
@@ -81,7 +82,7 @@ impl ConfidenceVector {
 }
 
 /// تحذيرات من التحليل
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AnalysisWarning {
     ParseFailed(String),
     LowConfidence { dimension: String, value: f64 },

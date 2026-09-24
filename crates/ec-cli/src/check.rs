@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
-use ec_analysis::analyze_code_full;
+use ec_analysis::isolation::analyze_code_full_isolated;
+use ec_analysis::AnalysisReport;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -25,7 +26,9 @@ struct ScannedFile {
     path: PathBuf,
     crate_root: PathBuf,
     is_test_or_bench: bool,
-    analysis: ec_analysis::AnalysisReport,
+    analysis: AnalysisReport,
+    /// F1: سبب فشل العامل المعزول إن وقع — الملف يُعدّ منتهِكًا وجوبًا.
+    worker_error: Option<String>,
 }
 
 /// حالة تجميع الأبعاد أثناء المسح
@@ -145,6 +148,19 @@ pub fn check_workspace(root: &Path) -> WorkspaceReport {
 
         let path_str = sf.path.to_string_lossy().to_string();
 
+        // F1: تعذُّر التحليل ليس نجاحًا — يُسجَّل انتهاكًا صريحًا (fail-closed)
+        if let Some(reason) = &sf.worker_error {
+            eprintln!("⚠️  {} — تعذّر التحليل المعزول: {}", path_str, reason);
+            report.violations.push(FileViolation {
+                path: path_str,
+                dimension: "analysis_failed".to_string(),
+                value: 0.0,
+                threshold: 1.0,
+            });
+            report.files_failed += 1;
+            continue;
+        }
+
         // بناء قائمة العتبات — مع استثناء test_coverage و reversibility لملفات الاختبار
         let mut thresholds: Vec<(&str, f64, f64)> = vec![
             ("security", f.security, 0.70),
@@ -210,7 +226,13 @@ fn collect_files(dir: &Path, files: &mut Vec<ScannedFile>) {
 /// تحليل ملف واحد وإرجاع بياناته
 fn scan_file(path: &Path) -> Option<ScannedFile> {
     let code = std::fs::read_to_string(path).ok()?;
-    let analysis = analyze_code_full(&code);
+    let (analysis, worker_error) = match analyze_code_full_isolated(&code) {
+        Ok(report) => (report, None),
+        Err(e) => {
+            let reason = e.to_string();
+            (AnalysisReport::unparseable(reason.clone()), Some(reason))
+        }
+    };
     let crate_root = find_crate_root(path);
     let is_test_or_bench = path
         .components()
@@ -220,6 +242,7 @@ fn scan_file(path: &Path) -> Option<ScannedFile> {
         crate_root,
         is_test_or_bench,
         analysis,
+        worker_error,
     })
 }
 
