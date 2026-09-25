@@ -4,6 +4,10 @@ All notable changes are documented here. Format loosely follows Keep a Changelog
 
 [Unreleased]
 Added
+- **ADR-031**: Pin the sandbox image to the measured Rust 1.96 image by
+  digest (`rust:1.96-slim`; rustc 1.96.1, glibc 2.41, Debian trixie;
+  linux/amd64). Docker suites with the unchanged seccomp profile: 259
+  passed, 0 failed, 2 ignored across `ec-sandbox` and `ec-app`.
 - **F1**: `ec-analysis::isolation` — the analyzer now runs in a separate
   process (`EC-ANALYZE-WORKER-V1` stdin/stdout protocol) with a wall-clock
   budget and a recursive-spawn barrier. A dead worker is reported as a
