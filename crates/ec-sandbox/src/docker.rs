@@ -13,7 +13,10 @@ use std::process::Command;
 use std::time::Duration;
 
 /// Image الافتراضية.
-pub const DEFAULT_IMAGE: &str = "rust:1.75-slim";
+/// مثبتة بالبصمة (digest) لضمان الحتمية: `rust:1.96-slim`.
+/// rustc 1.96.1 · glibc 2.41 · Debian trixie (ADR-031).
+pub const DEFAULT_IMAGE: &str =
+    "rust@sha256:31ee7fc65186be7e0e0ccb3f2ca305f14e4739e7642a1ae65753aa5d7b874523";
 
 /// مخرجات تشغيل Docker container.
 #[derive(Debug, Clone)]
