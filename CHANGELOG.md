@@ -47,6 +47,7 @@ Fixed
   `analysis_failed` violation and counts the file as failed (fail-closed).
 
 Changed
+- PROJECT-REFERENCE.md refreshed to v1.9.6 against 93950e8: ADR count 22 -> 26; workspace and `ec check` figures re-measured on that commit; Docker figures tied to an identical tree; seccomp status corrected to ADR-026/028/029 evidence; ec-analysis no longer labelled a pure kernel (subprocess isolation, ADR-030).
 PROJECT-REFERENCE.md: corrected ADR count (19 -> 22).
 ADR-024: inline correction notes for unverified figures (713 tests, 18 ADRs)
 without rewriting history.
