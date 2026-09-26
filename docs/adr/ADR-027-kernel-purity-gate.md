@@ -1,5 +1,4 @@
-
-ADR-027: Kernel Purity Gate (Structural, Deterministic)
+# ADR-027: Kernel Purity Gate (Structural, Deterministic)
 Date: 2026-09-18
 Status: Accepted
 Relates to: ADR-023 (Kernel Purity)

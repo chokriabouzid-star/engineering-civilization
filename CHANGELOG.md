@@ -4,6 +4,12 @@ All notable changes are documented here. Format loosely follows Keep a Changelog
 
 [Unreleased]
 Added
+- ADR title integrity gate (`crates/ec-app/tests/adr_title_integrity.rs`):
+  every ADR file's first heading must start with `# ADR-NNN:` matching its
+  file number. Observed failing (red) before the fix on three legacy
+  mismatches: 001 titled "Self-Check: Week 1", 015 titled ADR-017, 027
+  missing `#`. 001 and 015 carry an in-file correction note (original
+  title and body preserved); 027 is a formatting-only first-line fix.
 - **ADR-031**: Pin the sandbox image to the measured Rust 1.96 image by
   digest (`rust:1.96-slim`; rustc 1.96.1, glibc 2.41, Debian trixie;
   linux/amd64). Docker suites with the unchanged seccomp profile: 259
