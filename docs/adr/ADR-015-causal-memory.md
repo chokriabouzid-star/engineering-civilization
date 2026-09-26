@@ -1,4 +1,6 @@
-# ADR-017: Causal Memory Model
+# ADR-015: Causal Memory Model
+
+> ملاحظة توثيقية (2026-09-26): العنوان الداخلي كان يحمل الرقم 017 خطأً منذ الإنشاء؛ صُحِّح إلى 015 لمطابقة اسم الملف. الملف المستقل `ADR-017-iterative-pipeline.md` غير متأثر.
 
 **Status:** ✅ Accepted  
 **Date:** 2026-05-18  
