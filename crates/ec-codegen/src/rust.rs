@@ -14,7 +14,10 @@ fn is_struct_like(spec: &GenerationSpec) -> bool {
 }
 
 fn generate_default_body(spec: &GenerationSpec) -> String {
-    let letters = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    let letters = [
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
+        "s", "t", "u", "v", "w", "x", "y", "z",
+    ];
     let args: Vec<&str> = letters
         .iter()
         .take(spec.input_types.len())
@@ -57,7 +60,10 @@ fn generate_default_body(spec: &GenerationSpec) -> String {
 }
 
 fn generate_pure_body(spec: &GenerationSpec) -> String {
-    let letters = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    let letters = [
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
+        "s", "t", "u", "v", "w", "x", "y", "z",
+    ];
     let args: Vec<&str> = letters
         .iter()
         .take(spec.input_types.len())
@@ -82,20 +88,99 @@ fn generate_pure_body(spec: &GenerationSpec) -> String {
     }
 }
 
-fn generate_tests(spec: &GenerationSpec, _body: &str) -> String {
-    let fn_name = &spec.function_name;
-    let letters = ["a", "b", "c", "d"];
-    let args: Vec<&str> = letters
-        .iter()
-        .take(spec.input_types.len())
-        .copied()
-        .collect();
-    let call_args = args.join(", ");
+fn test_arg_expr(input_type: &str, idx: usize) -> String {
+    let n = idx + 1;
+    match input_type {
+        "f32" | "f64" => format!("{n}.0_{input_type}"),
+        _ => format!("{n}_{input_type}"),
+    }
+}
 
+fn expected_value(is_pure: bool, n: usize) -> Option<i128> {
+    if n == 0 {
+        return Some(0);
+    }
+    if is_pure {
+        (1..=n as i128).try_fold(1i128, i128::checked_mul)
+    } else {
+        (1..=n as i128).try_fold(0i128, i128::checked_add)
+    }
+}
+
+fn fits_type(ty: &str, value: i128) -> bool {
+    match ty {
+        "i8" => (i8::MIN as i128..=i8::MAX as i128).contains(&value),
+        "i16" => (i16::MIN as i128..=i16::MAX as i128).contains(&value),
+        "i32" => (i32::MIN as i128..=i32::MAX as i128).contains(&value),
+        "i64" => (i64::MIN as i128..=i64::MAX as i128).contains(&value),
+        "u8" => (0..=u8::MAX as i128).contains(&value),
+        "u16" => (0..=u16::MAX as i128).contains(&value),
+        "u32" => (0..=u32::MAX as i128).contains(&value),
+        "u64" => (0..=u64::MAX as i128).contains(&value),
+        "f32" => (0..=(1_i128 << 24)).contains(&value),
+        "f64" => (0..=(1_i128 << 53)).contains(&value),
+        _ => false,
+    }
+}
+
+/// Generated tests are omitted unless every input type equals the output type,
+/// the type is one of i8/i16/i32/i64/u8/u16/u32/u64/f32/f64, the body is not
+/// `todo!()`, and the template-derived expected value fits in the output type.
+/// isize/usize/i128/u128, mixed inputs, overflow, n>26, and pure n=0 are skipped
+/// and documented; they are not silent.
+fn generate_tests(spec: &GenerationSpec, body: &str) -> String {
+    const NUMERIC: &[&str] = &[
+        "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "f32", "f64",
+    ];
+    if !spec
+        .input_types
+        .iter()
+        .all(|t| NUMERIC.contains(&t.as_str()))
+    {
+        return String::new();
+    }
+    if !spec.input_types.iter().all(|t| t == &spec.output_type) {
+        return String::new();
+    }
+    if body.contains("todo!()") {
+        return String::new();
+    }
+    if spec.input_types.len() > 26 {
+        return String::new();
+    }
+    let is_pure = spec
+        .constraints
+        .iter()
+        .any(|c| c.contains("pure") || c.contains("no_side_effects"));
+    if spec.input_types.is_empty()
+        && (is_pure || !matches!(spec.output_type.as_str(), "f32" | "f64"))
+    {
+        return String::new();
+    }
+    let Some(expected) = expected_value(is_pure, spec.input_types.len()) else {
+        return String::new();
+    };
+    if !fits_type(&spec.output_type, expected) {
+        return String::new();
+    }
+    let expected_lit = if spec.output_type == "f32" || spec.output_type == "f64" {
+        format!("{expected}.0_{}", spec.output_type)
+    } else {
+        format!("{expected}_{}", spec.output_type)
+    };
+    let fn_name = &spec.function_name;
+    let call_args = spec
+        .input_types
+        .iter()
+        .enumerate()
+        .map(|(i, input_type)| test_arg_expr(input_type, i))
+        .collect::<Vec<_>>()
+        .join(", ");
     format!(
-        "\n#[cfg(test)]\nmod tests {{\n    use super::*;\n\n    #[test]\n    fn test_{fn_name}() {{\n        let result = {fn_name}({call_args});\n        let _ = result;\n    }}\n}}\n",
+        "\n#[cfg(test)]\nmod tests {{\n    use super::*;\n\n    #[test]\n    fn test_{fn_name}() {{\n        let result = {fn_name}({call_args});\n        assert_eq!(result, {expected_lit});\n    }}\n}}\n",
         fn_name = fn_name,
         call_args = call_args,
+        expected_lit = expected_lit,
     )
 }
 

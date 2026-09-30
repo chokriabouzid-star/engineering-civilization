@@ -43,6 +43,23 @@ constitutional kernel gains a runtime dependency on tokio/async-trait
 LICENSE (MIT) and rust-version = "1.96" inherited across all 11 crates.
 README.md, SECURITY.md, CHANGELOG.md, ADR-027.
 Fixed
+- **ec-codegen generated-test correctness (F2 scope)**: generated tests for the
+  covered numeric template paths now call functions with distinct `1..n`
+  arguments and compare against a template-derived expected value instead of
+  comparing the function with a second call to itself. The regression gate
+  compiles and runs covered generated tests and uses negative controls to detect
+  deliberately wrong bodies, the former eight-parameter truncation in both
+  default and pure templates, and incorrect pure-template selection.
+  Test generation is intentionally omitted when a supported expectation cannot
+  be established: non-numeric types (including `bool`, `char`, `String`,
+  `&str`, and `Vec<i32>`), mixed input/output types, `todo!()` bodies,
+  out-of-range expected values, `n > 26`, pure templates at `n = 0`, and
+  `isize`/`usize`/`i128`/`u128`. The gate directly covers numeric `i32`/`f32`/
+  `f64` paths, n=9 behavior in both templates, and omission cases for
+  `bool`/`char`/`String`/`&str`/`Vec<i32>`, mixed inputs, `todo!()`, and pure
+  `u8` overflow at n=6. The remaining supported numeric types, numeric boundary
+  values, and omission branches for `n > 26`, pure n=0, and the unsupported
+  integer widths are implemented but not directly covered by this gate.
 - **F1**: Deeply nested generic types (`Vec<Vec<...>>`, 600 levels) in
   `POST /api/v1/analyze`, `ec analyze`, and `ec check` aborted the process
   with SIGABRT (exit 134). The lexical guard added in 4c0635c counted `{([`
