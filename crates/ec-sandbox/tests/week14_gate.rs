@@ -8,8 +8,16 @@
 //! ✅ RealityVector من تنفيذ فعلي
 //! ✅ Reproducibility من hash مقارنة حقيقية
 //! ✅ Latency من Instant::now() حقيقي
-//! ✅ 5 escape vectors موثقة ومختبرة
-//! ✅ 0 escapes في 20 execution
+//! ⚠️ Executor-level escape detection is not established here (SBX-03 open).
+//! Five raw-runner vectors are measured separately by `seccomp_parity_gate`.
+//!
+//! Known limitation (ADR-032, SBX-03 open): the Docker `SandboxExecutor`
+//! returns an empty `violations` vector and does not expose program stdout.
+//! The six executor-level escape tests below therefore cannot establish
+//! containment and are ignored when `docker_tests` is enabled.
+//! `seccomp_parity_gate` separately runs five vectors through the raw
+//! production runner and checks their `BLOCKED`/`CONTAINED` markers. This is
+//! bounded evidence for those vectors, not a general proof of isolation.
 
 use ec_sandbox::*;
 
@@ -31,7 +39,6 @@ fn gate_docker_compiles_and_runs_real_rust() {
 
     assert!(result.success, "error: {:?}", result.error_message);
     assert!(result.reality.is_some());
-    assert!(result.is_secure());
 }
 
 // ─── Gate 2: RealityVector من تنفيذ فعلي ────────────────────────────
@@ -207,6 +214,10 @@ fn gate_empirical_confidence_from_runs() {
     not(feature = "docker_tests"),
     ignore = "requires --features docker_tests"
 )]
+#[cfg_attr(
+    feature = "docker_tests",
+    ignore = "SBX-03 open: executor-level checks cannot observe containment evidence"
+)]
 fn gate_escape_vector_1_proc_sysrq() {
     // محاولة الوصول لـ /proc/sysrq-trigger
     // يجب أن تفشل: /proc غير مُعرَّض داخل container
@@ -246,6 +257,10 @@ fn main() {
     not(feature = "docker_tests"),
     ignore = "requires --features docker_tests"
 )]
+#[cfg_attr(
+    feature = "docker_tests",
+    ignore = "SBX-03 open: executor-level checks cannot observe containment evidence"
+)]
 fn gate_escape_vector_2_mount_syscall() {
     // محاولة mount — محظورة بـ --cap-drop ALL
     let config = SandboxConfig::new(SandboxMode::Docker);
@@ -279,6 +294,10 @@ fn main() {
 #[cfg_attr(
     not(feature = "docker_tests"),
     ignore = "requires --features docker_tests"
+)]
+#[cfg_attr(
+    feature = "docker_tests",
+    ignore = "SBX-03 open: executor-level checks cannot observe containment evidence"
 )]
 fn gate_escape_vector_3_ptrace() {
     // محاولة ptrace — محظورة بـ --cap-drop ALL + no-new-privileges
@@ -315,6 +334,10 @@ fn main() {
     not(feature = "docker_tests"),
     ignore = "requires --features docker_tests"
 )]
+#[cfg_attr(
+    feature = "docker_tests",
+    ignore = "SBX-03 open: executor-level checks cannot observe containment evidence"
+)]
 fn gate_escape_vector_4_dev_mem() {
     // محاولة الوصول لـ /dev/mem
     let config = SandboxConfig::new(SandboxMode::Docker);
@@ -345,6 +368,10 @@ fn main() {
 #[cfg_attr(
     not(feature = "docker_tests"),
     ignore = "requires --features docker_tests"
+)]
+#[cfg_attr(
+    feature = "docker_tests",
+    ignore = "SBX-03 open: executor-level checks cannot observe containment evidence"
 )]
 fn gate_escape_vector_5_fork_bomb() {
     // fork bomb — memory limit يقطعه
@@ -387,6 +414,10 @@ fn main() {
 #[cfg_attr(
     not(feature = "docker_tests"),
     ignore = "requires --features docker_tests"
+)]
+#[cfg_attr(
+    feature = "docker_tests",
+    ignore = "SBX-03 open: executor-level checks cannot observe containment evidence"
 )]
 fn gate_zero_escapes_in_20_executions() {
     let config = SandboxConfig::new(SandboxMode::Docker);
@@ -451,7 +482,7 @@ fn gate_simulated_mode_unchanged() {
     ignore = "requires --features docker_tests"
 )]
 fn week14_gate_complete() {
-    println!("=== WEEK 14 GATE ===");
+    println!("=== WEEK 14 FUNCTIONAL GATE ===");
 
     // 1. Docker mode
     let config = SandboxConfig::new(SandboxMode::Docker);
@@ -472,12 +503,11 @@ fn week14_gate_complete() {
     assert!(reality.is_correct());
     println!("✅ RealityVector from real execution");
 
-    // 4. Security
-    assert!(result.is_secure());
-    println!("✅ Execution secure");
+    // 4. SBX-03 detection is outside this functional test.
+    println!("⚠️ Security-violation detection remains open (ADR-032)");
 
     // 5. Truth != Fitness (compile-time: pub(crate) constructor)
     println!("✅ Truth != Fitness enforced at type level");
 
-    println!("=== WEEK 14 GATE: PASSED ===");
+    println!("=== WEEK 14 FUNCTIONAL CHECKS: PASSED (SBX-03 OPEN) ===");
 }

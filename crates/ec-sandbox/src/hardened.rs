@@ -121,7 +121,15 @@ impl HardenedDockerRunner {
 
         let script = format!(
             "printf '%s' '{escaped}' > /workspace/main.rs && \
-             rustc /workspace/main.rs -o /workspace/program 2>&1 && \
+             rustc /workspace/main.rs -o /workspace/program \
+             > /tmp/ec-sbx-compile.stdout 2> /tmp/ec-sbx-compile.stderr; \
+             rc=$?; \
+             if [ \"$rc\" -ne 0 ]; then \
+             cat /tmp/ec-sbx-compile.stdout >&2; \
+             cat /tmp/ec-sbx-compile.stderr >&2; \
+             exit \"$rc\"; \
+             fi; \
+             cat /tmp/ec-sbx-compile.stderr >&2; \
              echo '---OUTPUT---' && \
              /workspace/program"
         );

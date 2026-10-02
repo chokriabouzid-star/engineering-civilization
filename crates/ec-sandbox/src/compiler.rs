@@ -102,23 +102,19 @@ impl RustSandboxCompiler {
         // تشغيل أول مرة: compilation + execution
         let first = self.runner.compile_and_run_hardened(source_code)?;
 
-        // إذا فشل (لا يحتوي ---OUTPUT--- = فشل compilation)
-        if !first.stdout.contains("---OUTPUT---") && first.exit_code != 0 {
+        // الفاصل في stdout لا يظهر إلا بعد نجاح rustc؛ تشخيصات rustc
+        // تُرسل إلى stderr داخل HardenedDockerRunner.
+        if !first.stdout.contains("---OUTPUT---") {
             return Ok(CompilationResult::Failed {
                 stderr: format!("{}{}", first.stdout, first.stderr),
             });
         }
 
-        // استخراج output البرنامج فقط
-        let program_output = extract_program_output(&first.stdout);
+        // استخراج output البرنامج فقط مع الحفاظ على رمز خروج البرنامج.
         let first_run = RunOutput {
-            stdout: program_output,
+            stdout: extract_program_output(&first.stdout),
             stderr: first.stderr.clone(),
-            exit_code: if first.stdout.contains("---OUTPUT---") {
-                0
-            } else {
-                first.exit_code
-            },
+            exit_code: first.exit_code,
             elapsed: first.elapsed,
         };
 
@@ -127,15 +123,17 @@ impl RustSandboxCompiler {
         // تشغيلات إضافية للـ reproducibility
         for _ in 1..self.runs {
             let out = self.runner.compile_and_run_hardened(source_code)?;
-            let program_output = extract_program_output(&out.stdout);
+
+            if !out.stdout.contains("---OUTPUT---") {
+                return Ok(CompilationResult::Failed {
+                    stderr: format!("{}{}", out.stdout, out.stderr),
+                });
+            }
+
             runs.push(RunOutput {
-                stdout: program_output,
+                stdout: extract_program_output(&out.stdout),
                 stderr: out.stderr,
-                exit_code: if out.stdout.contains("---OUTPUT---") {
-                    0
-                } else {
-                    out.exit_code
-                },
+                exit_code: out.exit_code,
                 elapsed: out.elapsed,
             });
         }

@@ -43,6 +43,25 @@ constitutional kernel gains a runtime dependency on tokio/async-trait
 LICENSE (MIT) and rust-version = "1.96" inherited across all 11 crates.
 README.md, SECURITY.md, CHANGELOG.md, ADR-027.
 Fixed
+- **EC-SBX-01/02 sandbox execution truth (ADR-032)**: in the Docker path,
+  `compiler.rs` forced a run's exit code to 0 whenever `---OUTPUT---` appeared
+  in stdout and treated that marker as proof the program compiled. A program
+  that panicked (101), called `exit(3)`, or was OOM-killed (137) was therefore
+  reported `success=true, correctness=1.0`, and uncompilable source that made
+  `rustc` echo the marker text in a diagnostic was reported successful as well.
+  `hardened.rs` now keeps `rustc` output off stdout and prints the separator
+  only after a successful compile; `compiler.rs` treats a missing separator as
+  a compilation failure and keeps the program's real exit code. The new gate
+  `crates/ec-sandbox/tests/sandbox_truth_gate.rs` (6 raw-runner and 4 executor
+  tests, seccomp on) was measured red on `b8b9a1e` (6 passed / 4 failed) and
+  green after the fix (10/10). **SBX-03 remains open**: Docker execution still
+  builds an empty `violations` vector and this change adds no violation
+  detection. `week14_gate.rs` now explicitly ignores the six executor-level
+  escape-vector tests under `docker_tests`; its active functional checks no
+  longer assert `is_secure()`. The separately passing `seccomp_parity_gate`
+  checks runtime markers for five raw-runner vectors; this is bounded evidence
+  for those vectors, not a universal proof of containment. No `SecurityViolation`
+  is produced for non-zero exits and the seccomp profile is unchanged.
 - **ec-codegen generated-test correctness (F2 scope)**: generated tests for the
   covered numeric template paths now call functions with distinct `1..n`
   arguments and compare against a template-derived expected value instead of
