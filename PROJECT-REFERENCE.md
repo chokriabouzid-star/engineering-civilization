@@ -1,10 +1,10 @@
 # Engineering Civilization — الوثيقة المرجعية
 
-## v1.9.7 · تحديث الحالة بعد PR #11 · 2026-10-01
+## v1.9.8 · تحديث الحالة بعد PR #13 · 2026-10-03
 
 هذه الوثيقة مرجع حالة مضغوط. **أرقام الحالة الحالية مقاسة بتشغيل فعلي على الالتزام المرجعي أدناه**؛ وتبقى الأرقام التاريخية منسوبة إلى الالتزامات المذكورة معها. أي رقم بلا التزام مرجعي لا يُعتمد.
 
-**الالتزام المرجعي:** `505d5865f46f807456651675ebb99d73e917e7c0` على `master` (قِيس محليًا في 2026-10-01؛ وفُحصت وظائف CI على الالتزام نفسه عبر GitHub API).
+**الالتزام المرجعي:** `803a00dc5bd5c33058c696a3164674bf48cc6275` على `master` (شجرته = شجرة رأس PR `dfa6eac`؛ قِيس محليًا في 2026-10-02/03؛ وفُحصت وظائف CI على رأس PR وعلى التزام الدمج عبر GitHub API).
 
 ---
 
@@ -12,20 +12,20 @@
 
 | البند | الحالة | الدليل التنفيذي الفعلي |
 |---|---|---|
-| وظائف CI (Format & Clippy · Build · Tests بلا Docker · Tests Docker · Rustdoc · Security audit · Constitutional Check) | ✅ | 7/7 check-runs مكتملة بنتيجة `success` على `505d586`. وظيفة `Constitutional Check` **استشارية** (`continue-on-error`) لأن العتبات غير معايرة؛ خضرتها لا تثبت أن `ec check .` اجتاز. نجاح وظيفة audit قياس CI، ولم يُشغَّل `cargo audit` محليًا في هذا القياس |
-| `cargo test --workspace --locked --no-fail-fast` | ✅ | **721 passed / 0 failed / 51 ignored** عبر 78 ثنائي اختبار، على `505d586` محليًا. العدد قد يختلف بين البيئات؛ الرقم صالح لهذا الالتزام وهذه البيئة فقط |
-| `cargo test -p ec-sandbox --locked --no-fail-fast --features docker_tests -- --test-threads=1` | ✅ | **152 passed / 0 failed / 1 ignored** على `505d586` محليًا (صورة البصمة، ADR-031)؛ صفر حاويات `ec-sbx-*` قبل سويتي Docker وبعدهما (قراءتان في القياس: قبل سويت `ec-sandbox` وبعد سويت `ec-app`). رقم "713" القديم لم يُشغَّل وقت كتابته ويبقى مسحوبًا |
-| `cargo test -p ec-app --locked --no-fail-fast --features docker_tests -- --test-threads=1` | ✅ | **108 passed / 0 failed / 1 ignored** على `505d586` بنفس الظروف |
-| `cargo run --locked --bin ec -- check .` | ⚠️ | **143 scanned / 138 passed / 5 failed / score=0.911**، رمز الخروج **1**، على `505d586`. التشغيل اكتمل، لكن المشروع **لا يجتاز حكم `ec check`**. الانتهاكات: `ec-cli/src/main.rs` (reversibility 0.00)، `ec-analysis/src/depth_guard.rs` (maintainability 0.00)، `ec-api/src/handlers.rs` (architectural_stability 0.28)، `ec-sandbox/tests/seccomp_policy_gate.rs` (maintainability 0.16)، `ec-memory/src/types.rs` (architectural_stability 0.43). العتبات والقيم غير معايرة؛ لا تُقرأ كحكم مطلق على جودة هذه الملفات |
-| المصادقة على `ec-api` | ✅ (في الحالات المغطاة) | `X-API-Key` مطلوب في الحالات التي يغطيها `week50_gate` ضمن سويت workspace. تأكيد `curl` اليدوي (401/401/200/200) يعود إلى v1.9.5. سلوك الخادم عند ضبط `EC_API_KEY` على قيمة فارغة **لم يُقَس على `505d586`** |
-| وضع الـSandbox الحقيقي في الـpipelines | ✅ (قابلية الاختيار فقط) | ADR-025 G1 — قابل للاختيار عبر `new_docker`/`with_sandbox_config`. هذا لا يثبت صدق تصنيف `success`/`correctness` لكل أنماط فشل البرنامج المنفَّذ؛ ذلك **لم يُقَس على `505d586`** |
-| seccomp في مسار الإنتاج | ✅ | الجذر المقاس في ADR-026 هو `statfs`/`fstatfs`، وهو يحل محل فرضية `clone3` الواردة في ADR-025 G2. تكافؤ مقاس (ADR-028)؛ تقييد `clone`/`clone3` (ADR-029) مع `seccomp_policy_gate` (11 اختبارًا) و`least_privilege_compat_gate` (3)؛ مهمة Docker في CI ناجحة |
-| صورة الـSandbox | ✅ | `rust@sha256:31ee7fc65186be7e0e0ccb3f2ca305f14e4739e7642a1ae65753aa5d7b874523` — الصورة المحلية المحلولة من هذه البصمة هي `linux/amd64` (rustc 1.96.1، glibc 2.41، Debian 13؛ ADR-031)؛ نطاق منصات البصمة في السجل لم يُعَد قياسه على `505d586` |
+| وظائف CI (Format & Clippy · Build · Tests بلا Docker · Tests Docker · Rustdoc · Security audit · Constitutional Check) | ✅ | 7/7 check-runs مكتملة بنتيجة `success` على رأس PR `dfa6eac` وعلى التزام الدمج `803a00d` عبر GitHub API (6 مطلوبة + 1 استشارية). وظيفة `Constitutional Check` **استشارية** (`continue-on-error`)؛ خضرتها لا تثبت أن `ec check .` اجتاز. `cargo audit` ناجح محليًا وعلى CI؛ `cargo doc -D warnings` ناجح محليًا وعلى CI |
+| `cargo test --workspace --locked --no-fail-fast` | ✅ | **721 passed / 0 failed / 61 ignored** على `803a00d` محليًا (51 السابقة + 10 لاختبارات `sandbox_truth_gate`). العدد قد يختلف بين البيئات؛ الرقم صالح لهذا الالتزام وهذه البيئة فقط |
+| `cargo test -p ec-sandbox --locked --no-fail-fast --features docker_tests -- --test-threads=1` | ✅ | **156 passed / 0 failed / 7 ignored** على `803a00d` محليًا (152 السابقة + 10 للبوابة الجديدة − 6 معزولة صراحة لـSBX-03؛ صورة البصمة، ADR-031/ADR-032)؛ صفر حاويات `ec-sbx-*` قبل السويتات وبعدها. رقم "713" القديم لم يُشغَّل وقت كتابته ويبقى مسحوبًا |
+| `cargo test -p ec-app --locked --no-fail-fast --features docker_tests -- --test-threads=1` | ✅ | **108 passed / 0 failed / 1 ignored** على `803a00d` بنفس الظروف |
+| `cargo run --locked --bin ec -- check .` | ⚠️ | **144 scanned / 139 passed / 5 failed / score=0.911**، رمز الخروج **1**، على `803a00d` (ملف البوابة الجديد ضمن الممسوح؛ نفس الانتهاكات الخمسة). التشغيل اكتمل، لكن المشروع **لا يجتاز حكم `ec check`**. الانتهاكات: `ec-cli/src/main.rs` (reversibility 0.00)، `ec-analysis/src/depth_guard.rs` (maintainability 0.00)، `ec-api/src/handlers.rs` (architectural_stability 0.28)، `ec-sandbox/tests/seccomp_policy_gate.rs` (maintainability 0.16)، `ec-memory/src/types.rs` (architectural_stability 0.43). العتبات والقيم غير معايرة؛ لا تُقرأ كحكم مطلق على جودة هذه الملفات |
+| المصادقة على `ec-api` | ✅ (في الحالات المغطاة) | `X-API-Key` مطلوب في الحالات التي يغطيها `week50_gate` ضمن سويت workspace. تأكيد `curl` اليدوي (401/401/200/200) يعود إلى v1.9.5. سلوك الخادم عند ضبط `EC_API_KEY` على قيمة فارغة **لم يُقَس على `803a00d`** |
+| وضع الـSandbox الحقيقي في الـpipelines | ✅ (قابلية الاختيار فقط) | ADR-025 G1 — قابل للاختيار عبر `new_docker`/`with_sandbox_config`. صدق `success`/`correctness` لأعطال التنفيذ (panic/exit/OOM/فشل تصريف يحوي العلامة) **مقاس ومُصلَح على `803a00d`** (بوابة `sandbox_truth_gate` 10/10، ADR-032). كشف الانتهاكات (SBX-03) **ما زال مفتوحًا** |
+| seccomp في مسار الإنتاج | ✅ | الجذر المقاس في ADR-026 هو `statfs`/`fstatfs`، وهو يحل محل فرضية `clone3` الواردة في ADR-025 G2. تكافؤ مقاس (ADR-028)؛ تقييد `clone`/`clone3` (ADR-029) مع `seccomp_policy_gate` (11 اختبارًا) و`least_privilege_compat_gate` (3)؛ `seccomp_parity_gate` ناجح على `803a00d` منفردًا وضمن السويتة؛ مهمة Docker في CI ناجحة |
+| صورة الـSandbox | ✅ | `rust@sha256:31ee7fc65186be7e0e0ccb3f2ca305f14e4739e7642a1ae65753aa5d7b874523` — الصورة المحلية المحلولة من هذه البصمة هي `linux/amd64` (rustc 1.96.1، glibc 2.41، Debian 13؛ ADR-031)؛ نطاق منصات البصمة في السجل لم يُعَد قياسه على `803a00d` |
 | بقاء الخادم/CLI أمام انهيار المحلل | ✅ | ADR-030: التحليل في عملية فرعية؛ `f1_server_survival` و`f1_cli_survival` بوابتان دائمتان |
 | نقاء الـ Kernel | ✅ | `ec-constitutional` خالٍ من `tokio`/`async` — مفروض آليًا بـ`crates/ec-constitutional/tests/kernel_purity.rs` مع تحكّم سلبي (ADR-027) |
-| عدد وثائق الـ ADRs | ✅ (العدد والعناوين فقط) | **26** ملف Markdown مباشرة في `docs/adr` على `505d586` (`find docs/adr -maxdepth 1 -name '*.md' \| wc -l`)، ولا مجلدات فرعية. الترقيم غير متصل: 006–008 و011 و020 غير موجودة. الملفات 001–003 بلا بادئة `ADR-` في الاسم، لكن عناوينها مطابقة. بوابة PR #10 تطابق رقم اسم الملف مع أول عنوان غير فارغ وتشترط 26 ملفًا على الأقل؛ لا تكشف تكرار الأرقام، ولا تفحص المجلدات الفرعية، ولا تثبت صدق المحتوى |
+| عدد وثائق الـ ADRs | ✅ (العدد والعناوين فقط) | **27** ملف Markdown مباشرة في `docs/adr` على `803a00d` (الجديد ADR-032) (`find docs/adr -maxdepth 1 -name '*.md' \| wc -l`)، ولا مجلدات فرعية. الترقيم غير متصل: 006–008 و011 و020 غير موجودة. الملفات 001–003 بلا بادئة `ADR-` في الاسم، لكن عناوينها مطابقة. بوابة PR #10 تطابق رقم اسم الملف مع أول عنوان غير فارغ وتشترط 26 ملفًا على الأقل (27 يحقّق الشرط)؛ لا تكشف تكرار الأرقام، ولا تفحص المجلدات الفرعية، ولا تثبت صدق المحتوى |
 
-**سجل v1.9.6 التاريخي (المرجع `93950e8`):** workspace **697/0/51**؛ `ec-sandbox` Docker **152/0/1**؛ `ec-app` Docker **107/0/1**؛ `ec check .` **141 scanned / 136 passed / 5 failed / 0.911** مع خروج 1. هذه أرقام تلك النسخة، وليست إعادة قياس على `505d586`.
+**سجل v1.9.7 التاريخي (المرجع `505d586`):** workspace **721/0/51**؛ `ec-sandbox` Docker **152/0/1**؛ `ec-app` Docker **108/0/1**؛ `ec check .` **143 scanned / 138 passed / 5 failed / 0.911** مع خروج 1. **سجل v1.9.6 التاريخي (المرجع `93950e8`):** workspace **697/0/51**؛ `ec-sandbox` Docker **152/0/1**؛ `ec-app` Docker **107/0/1**؛ `ec check .` **141 scanned / 136 passed / 5 failed / 0.911** مع خروج 1. هذه أرقام تلك النسخ، وليست إعادة قياس على `803a00d`.
 
 ---
 
@@ -44,6 +44,8 @@
 | #9 | `345a385` | تحديث `PROJECT-REFERENCE.md` إلى v1.9.6 بأرقام مرجعها `93950e8` | — |
 | #10 | `275d326` | بوابة مطابقة عناوين ADR مع أرقام الملفات، وتصحيح ثلاثة عناوين قديمة | — |
 | #11 | `505d586` | إصلاح مسار الاختبارات المولَّدة في `ec-codegen` للمسارات الرقمية المغطاة، وإزالة سقف الأسماء الثمانية في جسمي القالبين، وبوابة انحدار من 23 اختبارًا | — |
+| #12 | `b8b9a1e` | تحديث `PROJECT-REFERENCE.md` إلى v1.9.7 بأرقام مرجعها `505d586` | — |
+| #13 | `803a00d` | صدق تنفيذ الـsandbox (SBX-01/02): حفظ رمز الخروج الحقيقي وفصل تشخيص `rustc`؛ بوابة `sandbox_truth_gate` 10/10؛ عزل 6 اختبارات Week14 لـSBX-03 المفتوح | ADR-032 |
 
 ---
 
@@ -71,6 +73,8 @@
 - **حدود تغطية F2:** البوابة تغطي حالات `i32` و`f32` و`f64` محددة، وأوراكل n=9 في القالبين، وحالات امتناع عن توليد الاختبار. الأنواع الرقمية المدعومة الأخرى، وحدود الدقة العائمة، والامتناع عند `n > 26` وعند pure بـ`n = 0` وللأنواع `isize`/`usize`/`i128`/`u128`، كلها مطبّقة وموثّقة لكنها ليست حالات مباشرة في البوابة.
 - **ديون أجسام القوالب (خارج PR #11):** `format_params` يعيد الاسم `x` ابتداءً من المعامل 27 فيتكرر مع المعامل 24؛ القالب pure عند `n = 0` ينتج `42` بلا نوع؛ أجسام `i32 -> String` (E0605) و`String` عند `n = 2` (E0308) و`RustStructTemplate` (E0425) لا تُصرَّف.
 - **توصيل L2 غير مكتمل:** `POST /analyze` عديم الحالة (لا جدول `evaluation_runs`)؛ ذاكرة الـAPI بلا تغذية ولا استعادة من القرص؛ انتهاكات مسار Docker الناجح لا تُبنى.
+- **SBX-01/02 (PR #13، `803a00d` — مُغلق ضمن نطاق البوابة):** كان `compiler.rs` يجبر رمز الخروج إلى 0 عند وجود `---OUTPUT---`، وتشخيص `rustc` في stdout يسمح بتزوير نجاح التصريف. الفاصل يُطبع بعد نجاح التصريف فقط، ورمز البرنامج الحقيقي محفوظ (101/3/137). البوابة `sandbox_truth_gate` (10 اختبارات، seccomp مفعّل) كانت حمراء قبل الإصلاح (6/4) وخضراء بعده (10/10).
+- **SBX-03 (مفتوح، ADR-032):** مسار Docker يبني `violations` فارغة دائمًا فلا يمكن لـ`is_secure()` أن يفشل هناك؛ 6 اختبارات Week14 على مستوى المُنفِّذ معزولة بسبب صريح تحت `docker_tests`. دليل المتجهات المحدود: `seccomp_parity_gate` (5 متجهات خام بعلامات `BLOCKED`/`CONTAINED`)، لا برهان عزل عام. بوابتا الـ100 تنفيذ في `week16_gate` و`week18_phase2_gate` لم تُراجعا هنا.
 - **المنصة:** seccomp والصورة مُتحقَّقتان على `x86_64` / `linux/amd64` فقط.
 - **`without_seccomp()`** يعني سياسة daemon الافتراضية (`builtin`) لا `unconfined` (ADR-028).
 - **G5/G6** من v1.9.5 ما زالا مؤجلين.
@@ -122,4 +126,4 @@ cargo run --bin ec -- check .
 
 أعد قياس كل رقم على التزام محدد واذكر الالتزام. لا تنقل أرقامًا من سجلات أو محادثات بلا hash. الرقم التاريخي يبقى مع إصداره، ولا يُمحى.
 
-نهاية الوثيقة المرجعية — Engineering Civilization v1.9.7 (505d586، 2026-10-01)
+نهاية الوثيقة المرجعية — Engineering Civilization v1.9.8 (803a00d، 2026-10-03)
