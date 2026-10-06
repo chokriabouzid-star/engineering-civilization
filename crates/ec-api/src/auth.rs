@@ -23,7 +23,9 @@ pub async fn require_api_key(
         .and_then(|v| v.to_str().ok());
 
     match provided {
-        Some(key) if key == state.api_key.as_ref() => Ok(next.run(request).await),
+        Some(key) if !key.is_empty() && key == state.api_key.as_ref() => {
+            Ok(next.run(request).await)
+        }
         _ => Err(StatusCode::UNAUTHORIZED),
     }
 }
