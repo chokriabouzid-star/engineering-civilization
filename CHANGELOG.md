@@ -43,6 +43,11 @@ constitutional kernel gains a runtime dependency on tokio/async-trait
 LICENSE (MIT) and rust-version = "1.96" inherited across all 11 crates.
 README.md, SECURITY.md, CHANGELOG.md, ADR-027.
 Fixed
+- **EC-SEC-01**: `ec-server` now refuses to start if `EC_API_KEY` is present
+  but empty (ADR-024 F2). The auth middleware rejects an explicitly empty
+  `x-api-key` header even when the configured key is empty, closing a gap
+  where `Ok("")` from `env::var` bypassed the missing-key guard. Covered by
+  `ec_sec_01_empty_key_gate.rs` (3 tests: real process exit + middleware).
 - **EC-SBX-01/02 sandbox execution truth (ADR-032)**: in the Docker path,
   `compiler.rs` forced a run's exit code to 0 whenever `---OUTPUT---` appeared
   in stdout and treated that marker as proof the program compiled. A program

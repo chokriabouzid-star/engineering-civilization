@@ -19,6 +19,10 @@ async fn run() {
         eprintln!("❌ EC_API_KEY غير مُهيَّأ. الخادم يرفض البدء بلا مفتاح مصادقة (ADR-024 F2)");
         std::process::exit(1);
     });
+    if api_key.is_empty() {
+        eprintln!("❌ EC_API_KEY فارغ. الخادم يرفض البدء بمفتاح فارغ (ADR-024 F2)");
+        std::process::exit(1);
+    }
 
     let bind_addr = std::env::var("EC_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".into());
 
