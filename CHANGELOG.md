@@ -4,6 +4,7 @@ All notable changes are documented here. Format loosely follows Keep a Changelog
 
 [Unreleased]
 Added
+- Measured-reality adjudication core (`crates/ec-app/src/adjudication.rs`, `crates/ec-constitutional/src/measured_reality.rs`, `crates/ec-epistemic/src/measured.rs`): `EpistemicState.measured` carries `MeasuredEvidence` (provenance, artifact sha256, digest-pinned image, per-run exit codes, reproducibility, oracle) validated at construction; `MeasuredRealityInvariant` makes real Docker execution a non-compensable constitutional law; `adjudicate` returns `Accepted` / `Rejected { primary, additional }` / `Unverified { reason }`. A measured non-zero exit reaches the constitution and is rejected by the law, even from a single run; a rejected verdict never carries a content-free explanation. `pipeline.rs` is untouched. Known limitation (EC-ADJ-01, PR2): a run that never returned a program result (signal, timeout, runner failure) must become an explicit execution error, not evidence.
 - ADR title integrity gate (`crates/ec-app/tests/adr_title_integrity.rs`):
   every ADR file's first heading must start with `# ADR-NNN:` matching its
   file number. Observed failing (red) before the fix on three legacy

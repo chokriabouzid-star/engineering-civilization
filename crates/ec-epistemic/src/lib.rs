@@ -13,6 +13,8 @@ pub mod calibration;
 pub mod decay;
 /// موديول تعريف الأخطاء والتحقق من النطاقات.
 pub mod error;
+/// موديول الأدلة التجريبية المقاسة من تنفيذ فعلي.
+pub mod measured;
 /// موديول دمج الحالات المعرفية بشكل محافظ.
 pub mod propagation;
 /// موديول تعريف الحالات الأساسية والأدلة وتحليل عدم اليقين.
@@ -22,6 +24,7 @@ pub use bayesian::BayesianEvidence;
 pub use calibration::*;
 pub use decay::*;
 pub use error::*;
+pub use measured::*;
 pub use propagation::*;
 pub use state::*;
 pub mod bayesian_calibration;

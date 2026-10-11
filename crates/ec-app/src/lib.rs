@@ -10,6 +10,10 @@
 //! - ec-codegen (توليد الكود)
 //! - ec-memory (ذاكرة سببية)
 
+pub mod adjudication;
+
+pub use adjudication::{adjudicate, AdjudicationOutcome, AdjudicationVerdict};
+
 pub mod pipeline;
 
 pub use pipeline::{

@@ -24,6 +24,27 @@ pub enum EpistemicError {
         /// الأقصى.
         max: f64,
     },
+    /// تجزئة SHA-256 للأثر غير صالحة (ليست 64 حرفًا سداسيًا صغيرًا).
+    #[error("invalid artifact sha256 hash: {hash}")]
+    InvalidArtifactHash {
+        /// الهاش المرفوض كما ورد.
+        hash: String,
+    },
+    /// مرجع صورة الحاوية غير صالح: غير مثبَّت بالبصمة، أو مستودعه فارغ.
+    #[error("invalid sandbox image reference (must be digest-pinned): {image}")]
+    InvalidSandboxImage {
+        /// مرجع الصورة المرفوض كما ورد.
+        image: String,
+    },
+    /// قائمة رموز الخروج فارغة: لا وجود لتشغيل واحد.
+    #[error("exit codes cannot be empty")]
+    EmptyExitCodes,
+    /// رمز خروج غير صالح — `-1` يعني أن البرنامج لم يعد نتيجة أصلًا.
+    #[error("invalid exit code {code}: -1 indicates missing execution result")]
+    InvalidExitCode {
+        /// رمز الخروج المرفوض.
+        code: i32,
+    },
 }
 
 /// نتيجة العمليات المعرفية.
