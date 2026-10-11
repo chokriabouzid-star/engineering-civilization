@@ -58,6 +58,8 @@ impl ConservativePropagation for ConservativeCombiner {
                 .map(|s| s.calibration.clone())
                 .collect::<Vec<_>>(),
         );
+        // Measured evidence is intentionally dropped to None on merge:
+        // no merged state may claim a provenance it did not observe.
         EpistemicState::new(
             confidence,
             evidence,

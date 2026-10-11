@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 use crate::calibration::CalibrationState;
 use crate::error::{ensure_finite, ensure_in_range, EpistemicResult};
+use crate::measured::MeasuredEvidence;
 use serde::{Deserialize, Serialize};
 
 /// الأدلة الداعمة للتقييم.
@@ -110,6 +111,12 @@ pub struct EpistemicState {
     pub uncertainty: UncertaintyDecomposition,
     /// المعايرة.
     pub calibration: CalibrationState,
+    /// الدليل المقاس من تنفيذ فعلي، إن وُجد.
+    ///
+    /// `#[serde(default)]` ضروري للتوافق مع الحالات المخزَّنة قبل PR1:
+    /// غياب الحقل يعني غياب الدليل، وهو الصادق.
+    #[serde(default)]
+    pub measured: Option<MeasuredEvidence>,
 }
 
 impl EpistemicState {
@@ -128,6 +135,7 @@ impl EpistemicState {
             evidence,
             uncertainty,
             calibration,
+            measured: None,
         })
     }
 
@@ -136,11 +144,32 @@ impl EpistemicState {
         self.uncertainty.total()
     }
 
+    /// إنشاء حالة معرفية حاملة لدليل مقاس.
+    ///
+    /// الثقة هنا **مشتقّة من الدليل لا من اللياقة**: `runs / (runs + 0.5)`
+    /// (الصيغة الموروثة من `ec-sandbox/src/reality.rs:115`)، مقيدة بـ`0.99`.
+    /// هذه هي النقطة التي يمرّ منها الواقع المقاس إلى الحالة المعرفية.
+    pub fn with_measured(
+        confidence: f64,
+        evidence: Evidence,
+        uncertainty: UncertaintyDecomposition,
+        calibration: CalibrationState,
+        measured: MeasuredEvidence,
+    ) -> EpistemicResult<Self> {
+        let mut state = Self::new(confidence, evidence, uncertainty, calibration)?;
+        measured.validate()?;
+        state.measured = Some(measured);
+        Ok(state)
+    }
+
     /// التحقق من صحة الحالة.
     pub fn validate(&self) -> EpistemicResult<()> {
         ensure_in_range("confidence", self.confidence, 0.0, 1.0)?;
         self.evidence.validate()?;
         self.uncertainty.validate()?;
+        if let Some(ref m) = self.measured {
+            m.validate()?;
+        }
         Ok(())
     }
 }
