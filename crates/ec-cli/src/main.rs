@@ -7,6 +7,7 @@ use ec_analysis::isolation::analyze_code_full_isolated;
 use ec_memory::MemoryStorage;
 use std::path::PathBuf;
 
+mod adjudge;
 mod check;
 
 #[derive(Parser)]
@@ -36,6 +37,12 @@ enum Commands {
         json: bool,
         #[arg(long)]
         verbose: bool,
+    },
+    /// تحكيم ملف بمسار الواقع المقاس (shadow mode — لا يحجب أبدًا)
+    Adjudge {
+        path: PathBuf,
+        #[arg(long)]
+        json: bool,
     },
     /// عرض تقرير الانجراف القيمي
     Drift {
@@ -102,6 +109,7 @@ fn main() {
             json,
             verbose,
         } => cmd_check(path, json, verbose),
+        Commands::Adjudge { path, json } => adjudge::cmd_adjudge(path, json),
         Commands::Drift { baseline, window } => cmd_drift(&cli.db, baseline, window),
         Commands::Audit { limit } => cmd_audit(&cli.db, limit),
         Commands::Health => cmd_health(),

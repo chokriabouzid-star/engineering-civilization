@@ -9,6 +9,7 @@ pub mod bayesian;
 pub mod compiler;
 pub mod config;
 pub mod docker;
+pub mod execution_outcome;
 pub mod executor;
 pub mod feedback;
 pub mod hardened;
@@ -20,6 +21,10 @@ pub mod security;
 
 pub use bayesian::BayesianTracker;
 pub use config::{NetworkPolicy, ResourceLimits, SandboxConfig, SandboxMode, SyscallPolicy};
+pub use execution_outcome::{
+    classify, measure_reproducibility_strict, ExecutionFailure, MeasuredSandboxRunner,
+    SandboxOutcome,
+};
 pub use executor::{ExecutionResult, SandboxExecutor};
 pub use feedback::{PredictionError, PredictionRecord, RealityFeedback};
 pub use reality::{LatencyMeasurement, RealityVector};

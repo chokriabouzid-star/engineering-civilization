@@ -229,3 +229,71 @@ pub fn adjudicate(code: &str, evidence: Option<&MeasuredEvidence>) -> Adjudicati
         oracle: Some(ev.oracle()),
     }
 }
+
+/// نتيجة التحكيم مع الدليل الذي بُني — يُغلق عقد ADR-033 §6 (طباعة الحكم والدليل).
+#[derive(Debug, Clone)]
+pub struct ExecutedAdjudication {
+    /// حكم التحكيم.
+    pub outcome: AdjudicationOutcome,
+    /// الدليل الذي بُني من التشغيل — `None` عند فشل التنفيذ أو رفض الدليل.
+    pub evidence: Option<MeasuredEvidence>,
+}
+
+/// تحكيم بناءً على نتيجة تنفيذ خام مُصنَّفة.
+///
+/// عند `ProgramRuns` يُبنى `MeasuredEvidence` ويُمرَّر إلى [`adjudicate`].
+/// عند `ExecutionFailed` يُرجع `Unverified` بسبب النوع المُصنَّف، بلا دليل.
+pub fn adjudicate_from_outcome(
+    code: &str,
+    outcome: &ec_sandbox::SandboxOutcome,
+) -> ExecutedAdjudication {
+    let artifact_sha256 = format!("{:x}", Sha256::digest(code.as_bytes()));
+
+    let (exit_codes, reproducibility, image) = match outcome {
+        ec_sandbox::SandboxOutcome::ExecutionFailed { failure } => {
+            return ExecutedAdjudication {
+                outcome: unverified(failure.reason(), artifact_sha256),
+                evidence: None,
+            }
+        }
+        ec_sandbox::SandboxOutcome::ProgramRuns {
+            exit_codes,
+            reproducibility,
+            image,
+        } => (exit_codes.clone(), *reproducibility, image.clone()),
+    };
+
+    // لا unwrap: رفض الباني حقيقة تُبلَّغ، لا ذعر. ولا يُطبع نص الخطأ الخام.
+    let evidence = match MeasuredEvidence::new(
+        ExecutionProvenance::Docker,
+        artifact_sha256.clone(),
+        image,
+        exit_codes,
+        reproducibility,
+        OracleId::ExitCodeZero,
+    ) {
+        Ok(e) => e,
+        Err(_) => {
+            return ExecutedAdjudication {
+                outcome: unverified(
+                    "measured evidence was rejected at construction".to_string(),
+                    artifact_sha256,
+                ),
+                evidence: None,
+            }
+        }
+    };
+
+    let outcome = adjudicate(code, Some(&evidence));
+    ExecutedAdjudication {
+        outcome,
+        evidence: Some(evidence),
+    }
+}
+
+/// المسار الكامل: تنفيذ مقاس ثم تحكيم. نقطة دخول `ec adjudge`.
+pub fn adjudicate_executed(code: &str) -> ExecutedAdjudication {
+    let runner = ec_sandbox::MeasuredSandboxRunner::new(MIN_RUNS_FOR_AUTHORITY);
+    let outcome = runner.execute(code);
+    adjudicate_from_outcome(code, &outcome)
+}

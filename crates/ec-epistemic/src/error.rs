@@ -39,8 +39,8 @@ pub enum EpistemicError {
     /// قائمة رموز الخروج فارغة: لا وجود لتشغيل واحد.
     #[error("exit codes cannot be empty")]
     EmptyExitCodes,
-    /// رمز خروج غير صالح — `-1` يعني أن البرنامج لم يعد نتيجة أصلًا.
-    #[error("invalid exit code {code}: -1 indicates missing execution result")]
+    /// رمز خروج خارج `0..=255`: ليس حالة خروج برنامج.
+    #[error("invalid exit code {code}: outside 0..=255, not a program exit status")]
     InvalidExitCode {
         /// رمز الخروج المرفوض.
         code: i32,
