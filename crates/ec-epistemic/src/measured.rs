@@ -84,10 +84,11 @@ impl MeasuredEvidence {
     /// - هاش الأثر: 64 حرفًا سداسيًا صغيرًا (صيغة SHA-256؛ الحساب في `ec-app`).
     /// - صورة الحاوية: مثبَّتة بالبصمة `@sha256:` إلزامًا (ADR-033)، وبمستودع غير فارغ.
     /// - قائمة رموز الخروج: غير فارغة.
-    /// - **`-1` مرفوض**: نظام التشغيل يحجب رمز الخروج إلى `0..=255`، فلا يمكن لبرنامج
-    ///   أن يُرجع `-1`. ظهوره علامة قاطعة على أن **البرنامج لم يعد نتيجة أصلًا**
-    ///   (قُتل بإشارة، أو انتهت المهلة، أو فشل المُشغِّل) — `hardened.rs:230`.
-    ///   قبوله كان سيجعل ادّعاء `ProgramRuns` كذبة.
+    /// - **كل رمز خارج `0..=255` مرفوض**: نظام التشغيل يحجب حالة خروج البرنامج
+    ///   في هذا المجال. خاصةً `-1`، وهو ما يكتبه `hardened.rs:230` حين لا تُرجع
+    ///   **عملية `docker` المحلية** رمز خروج (`ExitStatus::code() == None`) —
+    ///   أي فشل مُشغِّل، **لا** «قتل البرنامج بإشارة». قبول أيٍّ من ذلك كان
+    ///   سيجعل ادّعاء `ProgramRuns` كذبة.
     /// - معامل التكرار في `[0, 1]` (ويرفض NaN/∞ مجانًا عبر `ensure_in_range`).
     ///
     /// **EC-ADJ-01:** تحويل `-1` وأعطال الحاوية إلى خطأ تنفيذ صريح (لا إلى دليل)
@@ -113,8 +114,8 @@ impl MeasuredEvidence {
         if exit_codes.is_empty() {
             return Err(EpistemicError::EmptyExitCodes);
         }
-        if exit_codes.contains(&-1) {
-            return Err(EpistemicError::InvalidExitCode { code: -1 });
+        if let Some(&code) = exit_codes.iter().find(|&&c| !(0..=255).contains(&c)) {
+            return Err(EpistemicError::InvalidExitCode { code });
         }
         ensure_in_range("reproducibility", reproducibility, 0.0, 1.0)?;
         Ok(Self {
@@ -142,8 +143,8 @@ impl MeasuredEvidence {
         if self.exit_codes.is_empty() {
             return Err(EpistemicError::EmptyExitCodes);
         }
-        if self.exit_codes.contains(&-1) {
-            return Err(EpistemicError::InvalidExitCode { code: -1 });
+        if let Some(&code) = self.exit_codes.iter().find(|&&c| !(0..=255).contains(&c)) {
+            return Err(EpistemicError::InvalidExitCode { code });
         }
         ensure_in_range("reproducibility", self.reproducibility, 0.0, 1.0)?;
         Ok(())

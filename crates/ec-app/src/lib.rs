@@ -12,7 +12,10 @@
 
 pub mod adjudication;
 
-pub use adjudication::{adjudicate, AdjudicationOutcome, AdjudicationVerdict};
+pub use adjudication::{
+    adjudicate, adjudicate_executed, adjudicate_from_outcome, AdjudicationOutcome,
+    AdjudicationVerdict, ExecutedAdjudication,
+};
 
 pub mod pipeline;
 
