@@ -95,6 +95,11 @@ jobs:
   audit:
     name: Security audit (cargo audit)
     runs-on: ubuntu-latest
+    # نشر نتائج audit-check يحتاج checks: write؛ وcheckout يحتاج contents: read.
+    # إذن على مستوى هذه المهمة فقط؛ الوظائف الأخرى لا تتأثر.
+    permissions:
+      contents: read
+      checks: write
     steps:
       - uses: actions/checkout@v7.0.0
       - uses: rustsec/audit-check@v2
